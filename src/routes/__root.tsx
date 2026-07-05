@@ -77,14 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Tile Rush · Ruudukkopulma rajallisilla siirroilla" },
+      { name: "description", content: "Ratkaise ruudukkopohjaisia pulmia energia-, jää-, portaali- ja arparuutujen sekakoossa. Rajalliset siirrot, taktinen reittisuunnittelu." },
+      { name: "author", content: "Tile Rush" },
+      { property: "og:title", content: "Tile Rush" },
+      { property: "og:description", content: "Ruudukkopulma, jossa jokaista siirtoa harkitaan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

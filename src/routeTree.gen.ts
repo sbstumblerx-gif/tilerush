@@ -9,18 +9,54 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as PassRouteImport } from './routes/pass'
 import { Route as LevelsRouteImport } from './routes/levels'
+import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayRoute = PlayRouteImport.update({
   id: '/play',
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PassRoute = PassRouteImport.update({
+  id: '/pass',
+  path: '/pass',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LevelsRoute = LevelsRouteImport.update({
   id: '/levels',
   path: '/levels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomizeRoute = CustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,36 +67,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/settings': typeof SettingsRoute
+  '/shop': typeof ShopRoute
+  '/stats': typeof StatsRoute
+  '/tasks': typeof TasksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/settings': typeof SettingsRoute
+  '/shop': typeof ShopRoute
+  '/stats': typeof StatsRoute
+  '/tasks': typeof TasksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/settings': typeof SettingsRoute
+  '/shop': typeof ShopRoute
+  '/stats': typeof StatsRoute
+  '/tasks': typeof TasksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/levels' | '/play'
+  fullPaths:
+    | '/'
+    | '/customize'
+    | '/levels'
+    | '/pass'
+    | '/play'
+    | '/settings'
+    | '/shop'
+    | '/stats'
+    | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/levels' | '/play'
-  id: '__root__' | '/' | '/levels' | '/play'
+  to:
+    | '/'
+    | '/customize'
+    | '/levels'
+    | '/pass'
+    | '/play'
+    | '/settings'
+    | '/shop'
+    | '/stats'
+    | '/tasks'
+  id:
+    | '__root__'
+    | '/'
+    | '/customize'
+    | '/levels'
+    | '/pass'
+    | '/play'
+    | '/settings'
+    | '/shop'
+    | '/stats'
+    | '/tasks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CustomizeRoute: typeof CustomizeRoute
   LevelsRoute: typeof LevelsRoute
+  PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
+  SettingsRoute: typeof SettingsRoute
+  ShopRoute: typeof ShopRoute
+  StatsRoute: typeof StatsRoute
+  TasksRoute: typeof TasksRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/play': {
       id: '/play'
       path: '/play'
@@ -68,11 +184,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pass': {
+      id: '/pass'
+      path: '/pass'
+      fullPath: '/pass'
+      preLoaderRoute: typeof PassRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/levels': {
       id: '/levels'
       path: '/levels'
       fullPath: '/levels'
       preLoaderRoute: typeof LevelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customize': {
+      id: '/customize'
+      path: '/customize'
+      fullPath: '/customize'
+      preLoaderRoute: typeof CustomizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,8 +217,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CustomizeRoute: CustomizeRoute,
   LevelsRoute: LevelsRoute,
+  PassRoute: PassRoute,
   PlayRoute: PlayRoute,
+  SettingsRoute: SettingsRoute,
+  ShopRoute: ShopRoute,
+  StatsRoute: StatsRoute,
+  TasksRoute: TasksRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
