@@ -77,13 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Tile Rush · Ruudukkopulma rajallisilla siirroilla" },
-      { name: "description", content: "Ratkaise ruudukkopohjaisia pulmia energia-, jää-, portaali- ja arparuutujen sekakoossa. Rajalliset siirrot, taktinen reittisuunnittelu." },
+      { title: "Tile Rush · Ruudukkopulma" },
+      { name: "description", content: "Ratkaise ruudukkopohjaisia pulmia erilaisten ruutujen sekasotkussa. Rajalliset siirrot, taktinen reittisuunnittelu ja uniikit ruututoiminnot." },
       { name: "author", content: "Tile Rush" },
-      { property: "og:title", content: "Tile Rush" },
-      { property: "og:description", content: "Ruudukkopulma, jossa jokaista siirtoa harkitaan." },
+      { property: "og:title", content: "Tile Rush · Ruudukkopulma" },
+      { property: "og:description", content: "Ratkaise ruudukkopohjaisia pulmia erilaisten ruutujen sekasotkussa. Rajalliset siirrot, taktinen reittisuunnittelu ja uniikit ruututoiminnot." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Tile Rush · Ruudukkopulma" },
+      { name: "twitter:description", content: "Ratkaise ruudukkopohjaisia pulmia erilaisten ruutujen sekasotkussa. Rajalliset siirrot, taktinen reittisuunnittelu ja uniikit ruututoiminnot." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fe435d22-dc02-4990-9824-766110052a19/id-preview-b997a8aa--b9308cc6-5ea3-4ba9-bddd-9e1ea2df2d49.lovable.app-1783278562329.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fe435d22-dc02-4990-9824-766110052a19/id-preview-b997a8aa--b9308cc6-5ea3-4ba9-bddd-9e1ea2df2d49.lovable.app-1783278562329.png" },
     ],
     links: [
       {
