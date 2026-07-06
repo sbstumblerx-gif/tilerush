@@ -14,6 +14,7 @@ import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as PassRouteImport } from './routes/pass'
 import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as IndexRouteImport } from './routes/index'
@@ -43,6 +44,11 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PassRoute = PassRouteImport.update({
+  id: '/pass',
+  path: '/pass',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LevelsRoute = LevelsRouteImport.update({
   id: '/levels',
   path: '/levels',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/levels': typeof LevelsRoute
+  '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/levels'
+    | '/pass'
     | '/play'
     | '/settings'
     | '/shop'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/levels'
+    | '/pass'
     | '/play'
     | '/settings'
     | '/shop'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/levels'
+    | '/pass'
     | '/play'
     | '/settings'
     | '/shop'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomizeRoute: typeof CustomizeRoute
   LevelsRoute: typeof LevelsRoute
+  PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pass': {
+      id: '/pass'
+      path: '/pass'
+      fullPath: '/pass'
+      preLoaderRoute: typeof PassRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/levels': {
       id: '/levels'
       path: '/levels'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomizeRoute: CustomizeRoute,
   LevelsRoute: LevelsRoute,
+  PassRoute: PassRoute,
   PlayRoute: PlayRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
