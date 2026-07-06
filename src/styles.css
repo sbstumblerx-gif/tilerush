@@ -93,6 +93,8 @@
   --tile-portal: oklch(0.55 0.24 265);
   --tile-charger: oklch(0.75 0.18 65);
   --tile-random: oklch(0.68 0.2 320);
+  --tile-enemy: oklch(0.72 0.22 355);
+  --tile-launcher: oklch(0.85 0.19 95);
   --tile-start: oklch(0.78 0.15 150);
   --tile-goal: oklch(0.85 0.19 95);
 

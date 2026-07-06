@@ -16,6 +16,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
 import { Route as LevelsRouteImport } from './routes/levels'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -54,6 +55,11 @@ const LevelsRoute = LevelsRouteImport.update({
   path: '/levels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomizeRoute = CustomizeRouteImport.update({
   id: '/customize',
   path: '/customize',
@@ -68,6 +74,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
+  '/events': typeof EventsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
+  '/events': typeof EventsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
+  '/events': typeof EventsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/customize'
+    | '/events'
     | '/levels'
     | '/pass'
     | '/play'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/customize'
+    | '/events'
     | '/levels'
     | '/pass'
     | '/play'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/customize'
+    | '/events'
     | '/levels'
     | '/pass'
     | '/play'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomizeRoute: typeof CustomizeRoute
+  EventsRoute: typeof EventsRoute
   LevelsRoute: typeof LevelsRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LevelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customize': {
       id: '/customize'
       path: '/customize'
@@ -218,6 +238,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomizeRoute: CustomizeRoute,
+  EventsRoute: EventsRoute,
   LevelsRoute: LevelsRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
@@ -229,13 +250,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

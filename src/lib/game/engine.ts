@@ -8,6 +8,8 @@ const CHAR_MAP: Record<string, TileKind | "portalP" | "portalQ"> = {
   I: "ice",
   C: "charger",
   "?": "random",
+  X: "enemy",
+  L: "launcher",
   S: "start",
   G: "goal",
   P: "portalP",
@@ -108,6 +110,19 @@ function randomChoice<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function inEnemyAura(s: GameState, p: Pos): boolean {
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const r = p.r + dr;
+      const c = p.c + dc;
+      if (r < 0 || r >= s.rows || c < 0 || c >= s.cols) continue;
+      if (s.tiles[r][c].kind === "enemy") return true;
+    }
+  }
+  return false;
+}
+
 /** After entering a tile, resolve its effect and possible chain (ice slide, portal). */
 function resolveEnter(s: GameState): void {
   let guard = 0;
@@ -119,6 +134,27 @@ function resolveEnter(s: GameState): void {
       s.status = "won";
       s.log.push("🏁 Maali saavutettu!");
       return;
+    }
+
+    if (tile.kind === "launcher") {
+      tile.kind = "normal";
+      const dirs: Pos[] = [
+        { r: -1, c: 0 },
+        { r: 1, c: 0 },
+        { r: 0, c: -1 },
+        { r: 0, c: 1 },
+      ];
+      const d = randomChoice(dirs);
+      let cur = { ...p };
+      for (let step = 0; step < 3; step++) {
+        const nxt = { r: cur.r + d.r, c: cur.c + d.c };
+        if (!inBounds(s, nxt)) break;
+        if (s.tiles[nxt.r][nxt.c].kind === "obstacle") break;
+        cur = nxt;
+      }
+      s.player = cur;
+      s.log.push("🟨 Laukaisu!");
+      continue;
     }
 
     if (tile.kind === "charger" && !tile.used) {
@@ -194,6 +230,14 @@ function tickCurse(s: GameState): void {
   }
 }
 
+function tickEnemyAura(s: GameState): void {
+  if (s.status !== "playing") return;
+  if (inEnemyAura(s, s.player)) {
+    s.movesLeft = Math.max(0, s.movesLeft - 3);
+    s.log.push("💗 Vihollisaura −3 siirtoa");
+  }
+}
+
 function checkLoss(s: GameState): void {
   if (s.status !== "playing") return;
   if (s.movesLeft <= 0) {
@@ -217,6 +261,7 @@ export function tryMove(state: GameState, target: Pos): GameState {
   next.player = target;
   next.aimingItem = null;
   resolveEnter(next);
+  tickEnemyAura(next);
   if (cost > 0) tickCurse(next);
   checkLoss(next);
   return next;
@@ -243,6 +288,7 @@ export function tryVolleyball(state: GameState, target: Pos): GameState {
   next.aimingItem = null;
   next.log.push("🎾 Lentopallohyppy");
   resolveEnter(next);
+  tickEnemyAura(next);
   tickCurse(next);
   checkLoss(next);
   return next;
