@@ -9,10 +9,12 @@ import {
   Ticket,
   Settings,
   BarChart3,
+  Trophy,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVELS } from "@/lib/game/levels";
 import { firstUnfinished, loadProgress } from "@/lib/game/progress";
+import { themeBg } from "@/lib/game/cosmetics";
 
 export const Route = createFileRoute("/")({
   component: Lobby,
@@ -22,15 +24,27 @@ function Lobby() {
   const navigate = useNavigate();
   const [nextLevel, setNextLevel] = useState(1);
   const [completedCount, setCompletedCount] = useState(0);
+  const [coins, setCoins] = useState(0);
+  const [themeId, setThemeId] = useState("default");
 
   useEffect(() => {
-    const p = loadProgress();
-    setNextLevel(firstUnfinished(p.completed, LEVELS.map((l) => l.id)));
-    setCompletedCount(p.completed.length);
+    const load = () => {
+      const p = loadProgress();
+      setNextLevel(firstUnfinished(p.completed, LEVELS.map((l) => l.id)));
+      setCompletedCount(p.completed.length);
+      setCoins(p.coins);
+      setThemeId(p.equipped.theme);
+    };
+    load();
+    window.addEventListener("tilerush:progress", load);
+    return () => window.removeEventListener("tilerush:progress", load);
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-8 sm:py-14">
+    <div className={`min-h-screen flex flex-col items-center px-4 py-8 sm:py-14 bg-gradient-to-br ${themeBg(themeId)}`}>
+      <div className="w-full max-w-[420px] flex justify-end text-sm mb-2">
+        <span className="neon-panel px-3 py-1 font-bold">🪙 {coins}</span>
+      </div>
       <header className="text-center mb-8 sm:mb-10">
         <div className="text-xs uppercase tracking-[0.4em] text-primary/80">
           Tile
@@ -70,6 +84,20 @@ function Lobby() {
           full
         />
       </div>
+
+      <Link
+        to="/events"
+        className="mt-6 neon-panel w-full max-w-[420px] p-4 flex items-center justify-between hover:border-primary/70"
+      >
+        <div className="flex items-center gap-3">
+          <Trophy className="h-6 w-6 text-primary" />
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Tapahtuma</div>
+            <div className="font-bold">Tile Cup</div>
+          </div>
+        </div>
+        <span className="text-primary">→</span>
+      </Link>
     </div>
   );
 }

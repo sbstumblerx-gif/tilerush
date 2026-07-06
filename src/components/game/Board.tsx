@@ -17,6 +17,8 @@ const TILE_BG: Record<TileKind, string> = {
   portal: "bg-[var(--tile-portal)]",
   charger: "bg-[var(--tile-charger)]",
   random: "bg-[var(--tile-random)]",
+  enemy: "bg-[var(--tile-enemy)] text-white",
+  launcher: "bg-[var(--tile-launcher)]",
   start: "bg-[var(--tile-start)]",
   goal: "bg-[var(--tile-goal)]",
 };
@@ -28,6 +30,8 @@ const TILE_LABEL: Partial<Record<TileKind, string>> = {
   portal: "◎",
   charger: "+5",
   random: "?",
+  enemy: "💗",
+  launcher: "🚀",
   goal: "★",
 };
 

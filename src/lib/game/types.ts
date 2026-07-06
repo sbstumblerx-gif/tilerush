@@ -7,6 +7,8 @@ export type TileKind =
   | "portal"
   | "charger"
   | "random"
+  | "enemy"
+  | "launcher"
   | "start"
   | "goal";
 
