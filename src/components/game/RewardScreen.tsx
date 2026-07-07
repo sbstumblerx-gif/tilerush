@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CATEGORY_LABEL, findItem } from "@/lib/game/cosmetics";
-import { itemLabel, topRarity, type Reward } from "@/lib/game/lootbox";
+import { itemLabel, openContainer, type Reward } from "@/lib/game/lootbox";
 import { loadProgress, saveProgress } from "@/lib/game/progress";
 import { RARITY_BG_GRADIENT, RARITY_LABEL, RARITY_EMOJI } from "@/lib/game/rarity";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,6 @@ export function openInventoryContainer(id: string) {
     if (h) { kind = "heart"; rarity = h.rarity; p.inventory.hearts = p.inventory.hearts.filter((x) => x.id !== id); }
   }
   if (!kind || !rarity) return;
-  const { openContainer } = require("@/lib/game/lootbox") as typeof import("@/lib/game/lootbox");
   const rewards = openContainer(kind, rarity, (cat, iid) =>
     p.owned[cat].includes(iid),
   );
