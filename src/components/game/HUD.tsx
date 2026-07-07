@@ -1,11 +1,12 @@
 import type { GameState } from "@/lib/game/types";
 import { Button } from "@/components/ui/button";
-import { Footprints, Sparkles, Volleyball, Zap } from "lucide-react";
+import { Bomb, Footprints, Sparkles, Volleyball, Zap } from "lucide-react";
+import type { ItemKind } from "@/lib/game/types";
 
 interface Props {
   state: GameState;
   levelName: string;
-  onSelectItem: (item: "volleyball") => void;
+  onSelectItem: (item: ItemKind) => void;
   onRestart: () => void;
   onExit: () => void;
 }
@@ -51,8 +52,8 @@ export function HUD({ state, levelName, onSelectItem, onRestart, onExit }: Props
               onClick={() => onSelectItem(it)}
               className="gap-2"
             >
-              <Volleyball className="h-4 w-4" />
-              Lentopallo
+              {it === "tnt" ? <Bomb className="h-4 w-4" /> : <Volleyball className="h-4 w-4" />}
+              {it === "tnt" ? "TNT" : "Lentopallo"}
             </Button>
           ))}
         </div>
