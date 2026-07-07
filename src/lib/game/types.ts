@@ -38,7 +38,7 @@ export interface LevelDef {
   grid: string[];
 }
 
-export type ItemKind = "volleyball";
+export type ItemKind = "volleyball" | "tnt";
 
 export interface GameState {
   levelId: number;
