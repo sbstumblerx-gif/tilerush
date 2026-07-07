@@ -1,4 +1,7 @@
-const KEY = "tilerush.progress.v2";
+import type { Reward } from "./lootbox";
+
+const KEY = "tilerush.progress.v3";
+const OLD_KEYS = ["tilerush.progress.v2"];
 
 export interface Stats {
   starts: number;
@@ -43,6 +46,23 @@ export interface DailyTasks {
   tasks: DailyTask[];
 }
 
+export interface WeeklyTask extends DailyTask {}
+export interface WeeklyTasks {
+  weekKey: string; // ISO week start (YYYY-MM-DD, Monday UTC)
+  tasks: WeeklyTask[];
+  packsCompletedThisWeek: number;
+}
+
+export interface Inventory {
+  boxes: { id: string; rarity: import("./rarity").Rarity }[];
+  hearts: { id: string; rarity: import("./rarity").Rarity }[];
+}
+
+export interface Settings {
+  music: number;
+  sfx: number;
+}
+
 export interface TileCupTask {
   id: string;
   label: string;
@@ -57,11 +77,15 @@ export interface Progress {
   coins: number;
   stars: Record<number, number>; // per level best
   stats: Stats;
-  passLevel: number; // 0..30
+  passLevel: number; // 0..60
   claimedPass: number[];
   owned: Owned;
   equipped: Equipped;
   daily?: DailyTasks;
+  weekly?: WeeklyTasks;
+  inventory: Inventory;
+  pendingRewards: Reward[];
+  settings: Settings;
   tileCup: {
     goals: number;
     volleyUses: number;
@@ -111,12 +135,25 @@ const DEFAULT: Progress = {
       { id: "g75", label: "Tee 75 maalia Tile Cupissa", target: 75, progress: 0, reward: "taustakuva: jalkapallokenttä", claimed: false },
     ],
   },
+  inventory: { boxes: [], hearts: [] },
+  pendingRewards: [],
+  settings: { music: 0.4, sfx: 0.7 },
 };
 
 export function loadProgress(): Progress {
   if (typeof window === "undefined") return DEFAULT;
   try {
-    const raw = window.localStorage.getItem(KEY);
+    let raw = window.localStorage.getItem(KEY);
+    if (!raw) {
+      // migrate from older versions
+      for (const k of OLD_KEYS) {
+        const old = window.localStorage.getItem(k);
+        if (old) {
+          raw = old;
+          break;
+        }
+      }
+    }
     if (!raw) return { ...DEFAULT };
     const parsed = JSON.parse(raw) as Partial<Progress>;
     return {
@@ -126,6 +163,10 @@ export function loadProgress(): Progress {
       owned: { ...DEFAULT.owned, ...(parsed.owned ?? {}) },
       equipped: { ...DEFAULT.equipped, ...(parsed.equipped ?? {}) },
       tileCup: { ...DEFAULT.tileCup, ...(parsed.tileCup ?? {}), tasks: parsed.tileCup?.tasks ?? DEFAULT.tileCup.tasks },
+      inventory: parsed.inventory ?? { boxes: [], hearts: [] },
+      pendingRewards: parsed.pendingRewards ?? [],
+      settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
+      weekly: parsed.weekly,
     };
   } catch {
     return { ...DEFAULT };
@@ -147,6 +188,7 @@ export function updateProgress(mut: (p: Progress) => void): Progress {
 
 export function markComplete(levelId: number, opts: { movesLeft: number; totalMoves: number; stars: number }): void {
   updateProgress((p) => {
+    const wasCompleted = p.completed.includes(levelId);
     if (!p.completed.includes(levelId)) p.completed.push(levelId);
     if ((p.stars[levelId] ?? 0) < opts.stars) {
       p.stats.stars += opts.stars - (p.stars[levelId] ?? 0);
@@ -155,8 +197,20 @@ export function markComplete(levelId: number, opts: { movesLeft: number; totalMo
     p.stats.wins += 1;
     p.stats.totalMoves += opts.totalMoves;
     // pass: 1 point per new completion
-    if (p.passLevel < 30) p.passLevel += 1;
+    if (!wasCompleted && p.passLevel < 60) p.passLevel += 1;
+    if (!wasCompleted) {
+      const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
+      p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
+    }
   });
+}
+
+export function resetAllProgress(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(KEY);
+  for (const k of OLD_KEYS) window.localStorage.removeItem(k);
+  window.localStorage.removeItem("tilerush.sound.v1");
+  window.dispatchEvent(new Event("tilerush:progress"));
 }
 
 export function markLoss(totalMoves: number): void {

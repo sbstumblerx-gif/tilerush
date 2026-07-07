@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GameState, Pos, TileKind } from "@/lib/game/types";
 import { displayKind, stepCost } from "@/lib/game/engine";
 import { cn } from "@/lib/utils";
+import { PlayerToken } from "./PlayerToken";
+import { loadProgress, type Equipped } from "@/lib/game/progress";
 
 interface Props {
   state: GameState;
@@ -37,10 +39,25 @@ const TILE_LABEL: Partial<Record<TileKind, string>> = {
 
 export function Board({ state, onTileClick }: Props) {
   const { rows, cols, player, tiles, aimingItem } = state;
+  const [equipped, setEquipped] = useState<Equipped | null>(null);
+  useEffect(() => {
+    setEquipped(loadProgress().equipped);
+    const h = () => setEquipped(loadProgress().equipped);
+    window.addEventListener("tilerush:progress", h);
+    return () => window.removeEventListener("tilerush:progress", h);
+  }, []);
 
   const validTargets = useMemo(() => {
     const set = new Set<string>();
     if (state.status !== "playing") return set;
+    if (aimingItem === "tnt") {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (tiles[r][c].kind === "obstacle") set.add(`${r},${c}`);
+        }
+      }
+      return set;
+    }
     if (aimingItem === "volleyball") {
       const dirs: Pos[] = [
         { r: player.r - 2, c: player.c },
@@ -128,10 +145,14 @@ export function Board({ state, onTileClick }: Props) {
                 )}
                 {isPlayer && (
                   <span
-                    className="absolute inset-1 rounded-md bg-primary text-primary-foreground flex items-center justify-center text-base sm:text-lg font-black"
+                    className="absolute inset-1 flex items-center justify-center"
                     style={{ animation: "player-pulse 1.4s ease-in-out infinite" }}
                   >
-                    ●
+                    {equipped ? (
+                      <PlayerToken equipped={equipped} size={cellPx - 12} />
+                    ) : (
+                      <span className="h-6 w-6 rounded-full bg-primary" />
+                    )}
                   </span>
                 )}
               </button>

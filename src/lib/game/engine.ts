@@ -54,7 +54,7 @@ export function createState(level: LevelDef): GameState {
     player,
     goal,
     movesLeft: level.moves,
-    items: [],
+    items: level.id >= 81 && level.id <= 90 ? ["tnt"] : [],
     curseTurns: 0,
     status: "playing",
     log: [`Taso ${level.id}: ${level.name}`],
@@ -294,10 +294,25 @@ export function tryVolleyball(state: GameState, target: Pos): GameState {
   return next;
 }
 
-export function selectItem(state: GameState, item: "volleyball"): GameState {
+export function selectItem(state: GameState, item: import("./types").ItemKind): GameState {
   if (state.status !== "playing") return state;
   if (!state.items.includes(item)) return state;
   return { ...state, aimingItem: state.aimingItem === item ? null : item };
+}
+
+/** TNT: blow up any obstacle (any distance) → becomes normal. Consumes the item, 0 moves. */
+export function tryTnt(state: GameState, target: Pos): GameState {
+  if (state.status !== "playing") return state;
+  if (!state.items.includes("tnt")) return state;
+  if (!inBounds(state, target)) return state;
+  const t = state.tiles[target.r][target.c];
+  if (t.kind !== "obstacle") return state;
+  const next: GameState = deepClone(state);
+  next.items.splice(next.items.indexOf("tnt"), 1);
+  next.tiles[target.r][target.c] = { kind: "normal" };
+  next.aimingItem = null;
+  next.log.push("💣 TNT! Este räjäytettiin");
+  return next;
 }
 
 function deepClone<T>(v: T): T {

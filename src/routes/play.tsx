@@ -5,7 +5,7 @@ import { Board } from "@/components/game/Board";
 import { HUD } from "@/components/game/HUD";
 import { Button } from "@/components/ui/button";
 import { getLevel, LEVELS } from "@/lib/game/levels";
-import { createState, selectItem, tryMove, tryVolleyball } from "@/lib/game/engine";
+import { createState, selectItem, tryMove, tryTnt, tryVolleyball } from "@/lib/game/engine";
 import type { GameState, Pos } from "@/lib/game/types";
 import {
   calcStars,
@@ -15,6 +15,9 @@ import {
   markStart,
   saveProgress,
 } from "@/lib/game/progress";
+import { playSfx } from "@/lib/game/sound";
+import { PACKS, packProgress } from "@/lib/game/packs";
+import { openContainer } from "@/lib/game/lootbox";
 
 const searchSchema = z.object({
   level: z.coerce.number().int().min(1).default(1),
@@ -55,6 +58,7 @@ function PlayPage() {
         totalMoves: level.moves - state.movesLeft,
         stars,
       });
+      playSfx("win");
       // Track "beat new level" daily task
       if (!wasCompleted) {
         const p = loadProgress();
@@ -63,12 +67,31 @@ function PlayPage() {
             if (t.id === "beat-3") t.progress = Math.min(t.target, t.progress + 1);
             if (t.id === "stars-10") t.progress = Math.min(t.target, t.progress + stars);
           });
-          saveProgress(p);
         }
+        if (p.weekly) {
+          p.weekly.tasks.forEach((t) => {
+            if (t.id === "w-beat-15") t.progress = Math.min(t.target, t.progress + 1);
+            if (t.id === "w-stars-30") t.progress = Math.min(t.target, t.progress + stars);
+          });
+        }
+        // Pack complete? award box
+        const pack = PACKS.find((pk) => pk.levelIds.includes(state.levelId));
+        if (pack && packProgress(pack, p.completed) === pack.levelIds.length) {
+          const rarity = (["common","rare","epic","legendary","mythic","ultra"] as const)[Math.min(5, Math.floor((pack.id - 1) / 2))];
+          const rewards = openContainer("box", rarity, (cat, id) => p.owned[cat].includes(id));
+          for (const r of rewards) {
+            if (r.type === "coins") p.coins += r.amount;
+            else if (!p.owned[r.category].includes(r.itemId)) p.owned[r.category] = [...p.owned[r.category], r.itemId];
+          }
+          p.pendingRewards = [...p.pendingRewards, ...rewards];
+          if (p.weekly) p.weekly.tasks.forEach((t) => { if (t.id === "w-pack-2") t.progress = Math.min(t.target, t.progress + 1); });
+        }
+        saveProgress(p);
       }
       setEnded(true);
     } else if (state.status === "lost") {
       markLoss(level.moves - state.movesLeft);
+      playSfx("lose");
       setEnded(true);
     }
   }, [state.status, state.levelId, state.movesLeft, level.moves, ended]);
@@ -139,6 +162,7 @@ function PlayPage() {
     (p: Pos) => {
       setState((s) => {
         if (s.aimingItem === "volleyball") return tryVolleyball(s, p);
+        if (s.aimingItem === "tnt") return tryTnt(s, p);
         return tryMove(s, p);
       });
     },

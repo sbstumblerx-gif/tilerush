@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { RewardScreen } from "@/components/game/RewardScreen";
+import { installUiClickSound, loadSoundSettings, playBgm, setMusicVolume, setSfxVolume } from "@/lib/game/sound";
+import { loadProgress } from "@/lib/game/progress";
 
 function NotFoundComponent() {
   return (
@@ -119,11 +122,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    const s = loadSoundSettings();
+    const p = loadProgress();
+    setMusicVolume(p.settings.music ?? s.music);
+    setSfxVolume(p.settings.sfx ?? s.sfx);
+    installUiClickSound();
+    const start = () => {
+      playBgm();
+      document.removeEventListener("pointerdown", start);
+    };
+    document.addEventListener("pointerdown", start);
+    return () => document.removeEventListener("pointerdown", start);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <RewardScreen />
     </QueryClientProvider>
   );
 }

@@ -67,7 +67,7 @@ function ShopPage() {
         <>
           <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {CATALOGS[open].map((item) => {
+            {CATALOGS[open].filter((i) => !i.exclusive).map((item) => {
               const owned = p.owned[open].includes(item.id);
               const canBuy = !owned && p.coins >= item.price;
               return (

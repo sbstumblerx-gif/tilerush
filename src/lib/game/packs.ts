@@ -58,6 +58,30 @@ export const PACKS: Pack[] = [
     bg: "from-[oklch(0.4_0.15_355)] to-[oklch(0.2_0.05_340)]",
     reward: { color: "pink", accessory: "kruunu", theme: "hamara" },
   },
+  {
+    id: 7,
+    name: "Lennokasta menoa",
+    theme: "Painotus laukaisurampit 🟨",
+    levelIds: Array.from({ length: 10 }, (_, i) => i + 61),
+    bg: "from-[oklch(0.78_0.16_95)] to-[oklch(0.45_0.12_75)]",
+    reward: { theme: "lentaja" },
+  },
+  {
+    id: 8,
+    name: "Arpa on heitetty!",
+    theme: "Painotus arparuudut ❓",
+    levelIds: Array.from({ length: 10 }, (_, i) => i + 71),
+    bg: "from-[oklch(0.4_0.18_290)] to-[oklch(0.22_0.14_260)]",
+    reward: { theme: "mysteeri" },
+  },
+  {
+    id: 9,
+    name: "Maanalainen kaamos",
+    theme: "Uusi TNT-item käytössä 💣",
+    levelIds: Array.from({ length: 10 }, (_, i) => i + 81),
+    bg: "from-[oklch(0.18_0.03_265)] to-[oklch(0.08_0.02_265)]",
+    reward: { theme: "tumma" },
+  },
 ];
 
 export function packOf(levelId: number): Pack | undefined {
