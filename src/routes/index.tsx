@@ -98,6 +98,8 @@ function Lobby() {
         </div>
         <span className="text-primary">→</span>
       </Link>
+
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 3.0</div>
     </div>
   );
 }

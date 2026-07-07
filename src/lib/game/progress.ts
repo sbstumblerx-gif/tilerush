@@ -198,6 +198,10 @@ export function markComplete(levelId: number, opts: { movesLeft: number; totalMo
     p.stats.totalMoves += opts.totalMoves;
     // pass: 1 point per new completion
     if (!wasCompleted && p.passLevel < 60) p.passLevel += 1;
+    if (!wasCompleted) {
+      const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
+      p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
+    }
   });
 }
 
