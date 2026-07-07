@@ -1,4 +1,4 @@
-import type { DailyTask } from "./progress";
+import type { DailyTask, WeeklyTask } from "./progress";
 
 const POOL: Omit<DailyTask, "progress" | "claimed">[] = [
   { id: "use-energy-20", label: "Käytä energiaruutuja 20 kertaa", target: 20, reward: 90 },
@@ -24,6 +24,38 @@ function seed(dateStr: string): () => number {
 export function today(): string {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/** ISO Monday (UTC) key for the current week. */
+export function weekKey(): string {
+  const d = new Date();
+  const utc = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = utc.getUTCDay(); // 0..6, 0=Sun
+  const diff = (day + 6) % 7; // days since Monday
+  utc.setUTCDate(utc.getUTCDate() - diff);
+  return `${utc.getUTCFullYear()}-${utc.getUTCMonth() + 1}-${utc.getUTCDate()}`;
+}
+
+const WEEKLY_POOL: Omit<WeeklyTask, "progress" | "claimed">[] = [
+  { id: "w-stars-30", label: "Kerää 30 tähteä", target: 30, reward: 0 },
+  { id: "w-beat-15", label: "Läpäise 15 uutta tasoa", target: 15, reward: 0 },
+  { id: "w-vb-40", label: "Käytä lentopalloa 40 kertaa", target: 40, reward: 0 },
+  { id: "w-enemy-30", label: "Astu vihollisruutuun 30 kertaa", target: 30, reward: 0 },
+  { id: "w-goals-10", label: "Lennä lentopallolla maaliin 10 kertaa", target: 10, reward: 0 },
+  { id: "w-random-40", label: "Astu arparuutuun 40 kertaa", target: 40, reward: 0 },
+  { id: "w-pack-2", label: "Läpäise 2 pakettia", target: 2, reward: 0 },
+];
+
+export function generateWeekly(key: string): WeeklyTask[] {
+  const rnd = seed(key);
+  const pool = [...WEEKLY_POOL];
+  const out: WeeklyTask[] = [];
+  while (out.length < 5 && pool.length) {
+    const i = Math.floor(rnd() * pool.length);
+    const [t] = pool.splice(i, 1);
+    out.push({ ...t, progress: 0, claimed: false });
+  }
+  return out;
 }
 
 export function generateDaily(dateStr: string): DailyTask[] {
