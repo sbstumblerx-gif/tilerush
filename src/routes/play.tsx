@@ -14,6 +14,7 @@ import {
   markLoss,
   markStart,
   saveProgress,
+  awardPackCompletion,
 } from "@/lib/game/progress";
 import { playSfx } from "@/lib/game/sound";
 import { PACKS, packProgress } from "@/lib/game/packs";
@@ -85,6 +86,8 @@ function PlayPage() {
           }
           p.pendingRewards = [...p.pendingRewards, ...rewards];
           if (p.weekly) p.weekly.tasks.forEach((t) => { if (t.id === "w-pack-2") t.progress = Math.min(t.target, t.progress + 1); });
+          if (p.weekly) p.weekly.packsCompletedThisWeek = (p.weekly.packsCompletedThisWeek ?? 0) + 1;
+          awardPackCompletion(p, pack.id);
         }
         saveProgress(p);
       }
