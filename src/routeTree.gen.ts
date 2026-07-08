@@ -22,6 +22,7 @@ import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PartyCodeRouteImport } from './routes/party.$code'
 
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
@@ -88,6 +89,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartyCodeRoute = PartyCodeRouteImport.update({
+  id: '/party/$code',
+  path: '/party/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
+  '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
+  '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
+  '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/stats'
     | '/tasks'
+    | '/party/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/stats'
     | '/tasks'
+    | '/party/$code'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/stats'
     | '/tasks'
+    | '/party/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ShopRoute: typeof ShopRoute
   StatsRoute: typeof StatsRoute
   TasksRoute: typeof TasksRoute
+  PartyCodeRoute: typeof PartyCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/party/$code': {
+      id: '/party/$code'
+      path: '/party/$code'
+      fullPath: '/party/$code'
+      preLoaderRoute: typeof PartyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRoute: ShopRoute,
   StatsRoute: StatsRoute,
   TasksRoute: TasksRoute,
+  PartyCodeRoute: PartyCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
