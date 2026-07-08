@@ -247,13 +247,67 @@ export function markComplete(levelId: number, opts: { movesLeft: number; totalMo
     }
     p.stats.wins += 1;
     p.stats.totalMoves += opts.totalMoves;
-    // pass: 1 point per new completion
-    if (!wasCompleted && p.passLevel < 60) p.passLevel += 1;
+    // Tile Pass 4.0: +10 XP per new level in current season
+    if (!wasCompleted && !p.passSeasonLevels.includes(levelId)) {
+      p.passSeasonLevels.push(levelId);
+      addPassXp(p, 10);
+    }
     if (!wasCompleted) {
       const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
       p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
     }
   });
+}
+
+/** XP needed to advance a Tile Pass tier (from level -> level+1). */
+export function xpForTier(currentLevel: number): number {
+  const t = currentLevel + 1; // XP required to REACH t
+  if (t <= 10) return 50;
+  if (t <= 20) return 75;
+  if (t <= 30) return 125;
+  if (t <= 40) return 150;
+  if (t <= 50) return 175;
+  if (t <= 60) return 200;
+  return 500; // prestige loops after 60
+}
+
+/** Add XP to the pass. Advances tiers automatically; after tier 60 accumulates as prestigeXp
+ *  and awards a common box every 500 XP (upgradable). */
+export function addPassXp(p: Progress, amount: number): void {
+  if (amount <= 0) return;
+  let remaining = amount;
+  while (remaining > 0) {
+    if (p.passLevel < 60) {
+      const need = xpForTier(p.passLevel) - p.passXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.passLevel += 1;
+        p.passXp = 0;
+      } else {
+        p.passXp += remaining;
+        remaining = 0;
+      }
+    } else {
+      // prestige
+      const need = 500 - p.prestigeXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.prestigeXp = 0;
+        p.inventory.boxes.push({ id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: "common" });
+      } else {
+        p.prestigeXp += remaining;
+        remaining = 0;
+      }
+    }
+  }
+}
+
+/** Award XP for a pack completion (once per pack per season). */
+export function awardPackCompletion(p: Progress, packId: number): boolean {
+  if (p.passSeasonPacks.includes(packId)) return false;
+  p.passSeasonPacks.push(packId);
+  addPassXp(p, 40);
+  return true;
 }
 
 export function resetAllProgress(): void {
