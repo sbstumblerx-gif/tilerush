@@ -21,6 +21,7 @@ import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CustomizeRouteImport } from './routes/customize'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartyCodeRouteImport } from './routes/party.$code'
 
 const TasksRoute = TasksRouteImport.update({
@@ -83,6 +84,11 @@ const CustomizeRoute = CustomizeRouteImport.update({
   path: '/customize',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartyCodeRoute = PartyCodeRouteImport.update({
   id: '/party/$code',
   path: '/party/$code',
@@ -90,6 +96,7 @@ const PartyCodeRoute = PartyCodeRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
@@ -138,6 +147,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/customize'
     | '/events'
     | '/friends'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/party/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/customize'
     | '/events'
     | '/friends'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/party/$code'
   id:
     | '__root__'
+    | '/'
     | '/customize'
     | '/events'
     | '/friends'
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   CustomizeRoute: typeof CustomizeRoute
   EventsRoute: typeof EventsRoute
   FriendsRoute: typeof FriendsRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomizeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/party/$code': {
       id: '/party/$code'
       path: '/party/$code'
@@ -296,6 +316,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   CustomizeRoute: CustomizeRoute,
   EventsRoute: EventsRoute,
   FriendsRoute: FriendsRoute,
