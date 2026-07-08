@@ -17,6 +17,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
 import { Route as LevelsRouteImport } from './routes/levels'
+import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CustomizeRouteImport } from './routes/customize'
 import { Route as IndexRouteImport } from './routes/index'
@@ -61,6 +62,11 @@ const LevelsRoute = LevelsRouteImport.update({
   path: '/levels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FriendsRoute = FriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
+  '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
+  '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
+  '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/events'
+    | '/friends'
     | '/levels'
     | '/pass'
     | '/play'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/events'
+    | '/friends'
     | '/levels'
     | '/pass'
     | '/play'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/customize'
     | '/events'
+    | '/friends'
     | '/levels'
     | '/pass'
     | '/play'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomizeRoute: typeof CustomizeRoute
   EventsRoute: typeof EventsRoute
+  FriendsRoute: typeof FriendsRoute
   LevelsRoute: typeof LevelsRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LevelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/friends': {
+      id: '/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof FriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events': {
       id: '/events'
       path: '/events'
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomizeRoute: CustomizeRoute,
   EventsRoute: EventsRoute,
+  FriendsRoute: FriendsRoute,
   LevelsRoute: LevelsRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
