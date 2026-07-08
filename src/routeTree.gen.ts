@@ -13,6 +13,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
 import { Route as LevelsRouteImport } from './routes/levels'
@@ -38,6 +39,11 @@ const ShopRoute = ShopRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayRoute = PlayRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/levels': typeof LevelsRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/pass'
     | '/play'
+    | '/profile'
     | '/settings'
     | '/shop'
     | '/stats'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/pass'
     | '/play'
+    | '/profile'
     | '/settings'
     | '/shop'
     | '/stats'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/pass'
     | '/play'
+    | '/profile'
     | '/settings'
     | '/shop'
     | '/stats'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   LevelsRoute: typeof LevelsRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
+  ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
   StatsRoute: typeof StatsRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   LevelsRoute: LevelsRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
+  ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
   StatsRoute: StatsRoute,
