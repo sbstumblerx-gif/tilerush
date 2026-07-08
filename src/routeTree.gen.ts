@@ -16,6 +16,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
+import { Route as MultiplayerRouteImport } from './routes/multiplayer'
 import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventsRouteImport } from './routes/events'
@@ -57,6 +58,11 @@ const PassRoute = PassRouteImport.update({
   path: '/pass',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MultiplayerRoute = MultiplayerRouteImport.update({
+  id: '/multiplayer',
+  path: '/multiplayer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LevelsRoute = LevelsRouteImport.update({
   id: '/levels',
   path: '/levels',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/friends'
     | '/levels'
+    | '/multiplayer'
     | '/pass'
     | '/play'
     | '/profile'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/friends'
     | '/levels'
+    | '/multiplayer'
     | '/pass'
     | '/play'
     | '/profile'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/friends'
     | '/levels'
+    | '/multiplayer'
     | '/pass'
     | '/play'
     | '/profile'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   EventsRoute: typeof EventsRoute
   FriendsRoute: typeof FriendsRoute
   LevelsRoute: typeof LevelsRoute
+  MultiplayerRoute: typeof MultiplayerRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
   ProfileRoute: typeof ProfileRoute
@@ -237,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PassRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/multiplayer': {
+      id: '/multiplayer'
+      path: '/multiplayer'
+      fullPath: '/multiplayer'
+      preLoaderRoute: typeof MultiplayerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/levels': {
       id: '/levels'
       path: '/levels'
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsRoute: EventsRoute,
   FriendsRoute: FriendsRoute,
   LevelsRoute: LevelsRoute,
+  MultiplayerRoute: MultiplayerRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
   ProfileRoute: ProfileRoute,
