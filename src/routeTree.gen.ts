@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StatsRouteImport } from './routes/stats'
-import { Route as ShopRouteImport } from './routes/shop'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
@@ -20,8 +18,6 @@ import { Route as MultiplayerRouteImport } from './routes/multiplayer'
 import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventsRouteImport } from './routes/events'
-import { Route as CustomizeRouteImport } from './routes/customize'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartyCodeRouteImport } from './routes/party.$code'
 
 const TasksRoute = TasksRouteImport.update({
@@ -32,16 +28,6 @@ const TasksRoute = TasksRouteImport.update({
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
   path: '/stats',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShopRoute = ShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -79,16 +65,6 @@ const EventsRoute = EventsRouteImport.update({
   path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CustomizeRoute = CustomizeRouteImport.update({
-  id: '/customize',
-  path: '/customize',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PartyCodeRoute = PartyCodeRouteImport.update({
   id: '/party/$code',
   path: '/party/$code',
@@ -96,8 +72,6 @@ const PartyCodeRoute = PartyCodeRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
@@ -105,15 +79,11 @@ export interface FileRoutesByFullPath {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
@@ -121,16 +91,12 @@ export interface FileRoutesByTo {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/customize': typeof CustomizeRoute
   '/events': typeof EventsRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
@@ -138,8 +104,6 @@ export interface FileRoutesById {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/shop': typeof ShopRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
@@ -147,8 +111,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/customize'
     | '/events'
     | '/friends'
     | '/levels'
@@ -156,15 +118,11 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
-    | '/settings'
-    | '/shop'
     | '/stats'
     | '/tasks'
     | '/party/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/customize'
     | '/events'
     | '/friends'
     | '/levels'
@@ -172,15 +130,11 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
-    | '/settings'
-    | '/shop'
     | '/stats'
     | '/tasks'
     | '/party/$code'
   id:
     | '__root__'
-    | '/'
-    | '/customize'
     | '/events'
     | '/friends'
     | '/levels'
@@ -188,16 +142,12 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
-    | '/settings'
-    | '/shop'
     | '/stats'
     | '/tasks'
     | '/party/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  CustomizeRoute: typeof CustomizeRoute
   EventsRoute: typeof EventsRoute
   FriendsRoute: typeof FriendsRoute
   LevelsRoute: typeof LevelsRoute
@@ -205,8 +155,6 @@ export interface RootRouteChildren {
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
   ProfileRoute: typeof ProfileRoute
-  SettingsRoute: typeof SettingsRoute
-  ShopRoute: typeof ShopRoute
   StatsRoute: typeof StatsRoute
   TasksRoute: typeof TasksRoute
   PartyCodeRoute: typeof PartyCodeRoute
@@ -226,20 +174,6 @@ declare module '@tanstack/react-router' {
       path: '/stats'
       fullPath: '/stats'
       preLoaderRoute: typeof StatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shop': {
-      id: '/shop'
-      path: '/shop'
-      fullPath: '/shop'
-      preLoaderRoute: typeof ShopRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -291,20 +225,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/customize': {
-      id: '/customize'
-      path: '/customize'
-      fullPath: '/customize'
-      preLoaderRoute: typeof CustomizeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/party/$code': {
       id: '/party/$code'
       path: '/party/$code'
@@ -316,8 +236,6 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CustomizeRoute: CustomizeRoute,
   EventsRoute: EventsRoute,
   FriendsRoute: FriendsRoute,
   LevelsRoute: LevelsRoute,
@@ -325,8 +243,6 @@ const rootRouteChildren: RootRouteChildren = {
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
   ProfileRoute: ProfileRoute,
-  SettingsRoute: SettingsRoute,
-  ShopRoute: ShopRoute,
   StatsRoute: StatsRoute,
   TasksRoute: TasksRoute,
   PartyCodeRoute: PartyCodeRoute,
