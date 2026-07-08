@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
@@ -29,6 +30,11 @@ const TasksRoute = TasksRouteImport.update({
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
   path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/party/$code': typeof PartyCodeRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
+    | '/settings'
     | '/stats'
     | '/tasks'
     | '/party/$code'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
+    | '/settings'
     | '/stats'
     | '/tasks'
     | '/party/$code'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/pass'
     | '/play'
     | '/profile'
+    | '/settings'
     | '/stats'
     | '/tasks'
     | '/party/$code'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   TasksRoute: typeof TasksRoute
   PartyCodeRoute: typeof PartyCodeRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/stats'
       fullPath: '/stats'
       preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   TasksRoute: TasksRoute,
   PartyCodeRoute: PartyCodeRoute,
