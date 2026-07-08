@@ -196,7 +196,19 @@ function resolveEnter(s: GameState): void {
     if (tile.kind === "portal") {
       const partner = findPortalPartner(s, p);
       if (partner) {
+        // teleport once, then consume BOTH portals so we don't ping-pong or re-trigger
+        const pair = tile.portalPair;
         s.player = partner;
+        if (pair) {
+          for (let r = 0; r < s.rows; r++) {
+            for (let c = 0; c < s.cols; c++) {
+              const t = s.tiles[r][c];
+              if (t.kind === "portal" && t.portalPair === pair) {
+                s.tiles[r][c] = { kind: "normal" };
+              }
+            }
+          }
+        }
         s.log.push("🟦 Teleportti");
         continue;
       }

@@ -61,6 +61,19 @@ export interface Inventory {
 export interface Settings {
   music: number;
   sfx: number;
+  blockFriendRequests?: boolean;
+  muteChat?: boolean;
+}
+
+export interface Profile {
+  username: string;
+  friendCode: string;
+}
+
+export interface Friends {
+  list: { code: string; username: string }[];
+  incoming: { code: string; username: string }[];
+  outgoing: { code: string; username: string }[];
 }
 
 export interface TileCupTask {
@@ -79,6 +92,14 @@ export interface Progress {
   stats: Stats;
   passLevel: number; // 0..60
   claimedPass: number[];
+  /** XP accumulated toward current pass tier (rolls over between tiers). */
+  passXp: number;
+  /** XP accumulated toward post-60 prestige boxes (every 500 XP → box). */
+  prestigeXp: number;
+  /** Levels completed during the current pass season (for +10 XP counting only new ones this season). */
+  passSeasonLevels: number[];
+  /** Packs completed during current pass season (+40 XP each). */
+  passSeasonPacks: number[];
   owned: Owned;
   equipped: Equipped;
   daily?: DailyTasks;
@@ -86,11 +107,22 @@ export interface Progress {
   inventory: Inventory;
   pendingRewards: Reward[];
   settings: Settings;
+  profile: Profile;
+  friends: Friends;
+  /** ISO date YYYY-MM-DD of last claimed daily shop reward (UTC). */
+  lastDailyClaim?: string;
   tileCup: {
     goals: number;
     volleyUses: number;
     tasks: TileCupTask[];
   };
+}
+
+function randomCode(len: number): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
 }
 
 const DEFAULT: Progress = {
@@ -111,6 +143,10 @@ const DEFAULT: Progress = {
   },
   passLevel: 0,
   claimedPass: [],
+  passXp: 0,
+  prestigeXp: 0,
+  passSeasonLevels: [],
+  passSeasonPacks: [],
   owned: {
     colors: ["cyan"],
     shapes: ["circle"],
@@ -137,7 +173,9 @@ const DEFAULT: Progress = {
   },
   inventory: { boxes: [], hearts: [] },
   pendingRewards: [],
-  settings: { music: 0.4, sfx: 0.7 },
+  settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false },
+  profile: { username: "Pelaaja", friendCode: "" },
+  friends: { list: [], incoming: [], outgoing: [] },
 };
 
 export function loadProgress(): Progress {
@@ -154,9 +192,13 @@ export function loadProgress(): Progress {
         }
       }
     }
-    if (!raw) return { ...DEFAULT };
+    if (!raw) {
+      const seeded = { ...DEFAULT, profile: { ...DEFAULT.profile, friendCode: randomCode(6) } };
+      saveProgress(seeded);
+      return seeded;
+    }
     const parsed = JSON.parse(raw) as Partial<Progress>;
-    return {
+    const merged: Progress = {
       ...DEFAULT,
       ...parsed,
       stats: { ...DEFAULT.stats, ...(parsed.stats ?? {}), tileUses: { ...(parsed.stats?.tileUses ?? {}) } },
@@ -166,8 +208,17 @@ export function loadProgress(): Progress {
       inventory: parsed.inventory ?? { boxes: [], hearts: [] },
       pendingRewards: parsed.pendingRewards ?? [],
       settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
+      profile: { ...DEFAULT.profile, ...(parsed.profile ?? {}) },
+      friends: { ...DEFAULT.friends, ...(parsed.friends ?? {}) },
+      passXp: parsed.passXp ?? 0,
+      prestigeXp: parsed.prestigeXp ?? 0,
+      passSeasonLevels: parsed.passSeasonLevels ?? [],
+      passSeasonPacks: parsed.passSeasonPacks ?? [],
+      lastDailyClaim: parsed.lastDailyClaim,
       weekly: parsed.weekly,
     };
+    if (!merged.profile.friendCode) merged.profile.friendCode = randomCode(6);
+    return merged;
   } catch {
     return { ...DEFAULT };
   }
@@ -196,13 +247,67 @@ export function markComplete(levelId: number, opts: { movesLeft: number; totalMo
     }
     p.stats.wins += 1;
     p.stats.totalMoves += opts.totalMoves;
-    // pass: 1 point per new completion
-    if (!wasCompleted && p.passLevel < 60) p.passLevel += 1;
+    // Tile Pass 4.0: +10 XP per new level in current season
+    if (!wasCompleted && !p.passSeasonLevels.includes(levelId)) {
+      p.passSeasonLevels.push(levelId);
+      addPassXp(p, 10);
+    }
     if (!wasCompleted) {
       const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
       p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
     }
   });
+}
+
+/** XP needed to advance a Tile Pass tier (from level -> level+1). */
+export function xpForTier(currentLevel: number): number {
+  const t = currentLevel + 1; // XP required to REACH t
+  if (t <= 10) return 50;
+  if (t <= 20) return 75;
+  if (t <= 30) return 125;
+  if (t <= 40) return 150;
+  if (t <= 50) return 175;
+  if (t <= 60) return 200;
+  return 500; // prestige loops after 60
+}
+
+/** Add XP to the pass. Advances tiers automatically; after tier 60 accumulates as prestigeXp
+ *  and awards a common box every 500 XP (upgradable). */
+export function addPassXp(p: Progress, amount: number): void {
+  if (amount <= 0) return;
+  let remaining = amount;
+  while (remaining > 0) {
+    if (p.passLevel < 60) {
+      const need = xpForTier(p.passLevel) - p.passXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.passLevel += 1;
+        p.passXp = 0;
+      } else {
+        p.passXp += remaining;
+        remaining = 0;
+      }
+    } else {
+      // prestige
+      const need = 500 - p.prestigeXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.prestigeXp = 0;
+        p.inventory.boxes.push({ id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: "common" });
+      } else {
+        p.prestigeXp += remaining;
+        remaining = 0;
+      }
+    }
+  }
+}
+
+/** Award XP for a pack completion (once per pack per season). */
+export function awardPackCompletion(p: Progress, packId: number): boolean {
+  if (p.passSeasonPacks.includes(packId)) return false;
+  p.passSeasonPacks.push(packId);
+  addPassXp(p, 40);
+  return true;
 }
 
 export function resetAllProgress(): void {

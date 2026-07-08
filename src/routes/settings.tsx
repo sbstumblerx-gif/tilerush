@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, LogIn, LogOut, RefreshCw, Youtube, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { loadProgress, resetAllProgress, saveProgress } from "@/lib/game/progress";
 import { setMusicVolume, setSfxVolume } from "@/lib/game/sound";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,8 @@ function SettingsPage() {
   const navigate = useNavigate();
   const [music, setMusic] = useState(0.4);
   const [sfx, setSfx] = useState(0.7);
+  const [blockFR, setBlockFR] = useState(false);
+  const [mute, setMute] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -25,20 +28,28 @@ function SettingsPage() {
     const p = loadProgress();
     setMusic(p.settings.music);
     setSfx(p.settings.sfx);
+    setBlockFR(!!p.settings.blockFriendRequests);
+    setMute(!!p.settings.muteChat);
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const saveMusic = (v: number) => {
-    setMusic(v);
-    setMusicVolume(v);
+    setMusic(v); setMusicVolume(v);
     const p = loadProgress(); p.settings.music = v; saveProgress(p);
   };
   const saveSfx = (v: number) => {
-    setSfx(v);
-    setSfxVolume(v);
+    setSfx(v); setSfxVolume(v);
     const p = loadProgress(); p.settings.sfx = v; saveProgress(p);
+  };
+  const saveBlockFR = (v: boolean) => {
+    setBlockFR(v);
+    const p = loadProgress(); p.settings.blockFriendRequests = v; saveProgress(p);
+  };
+  const saveMute = (v: boolean) => {
+    setMute(v);
+    const p = loadProgress(); p.settings.muteChat = v; saveProgress(p);
   };
 
   const signIn = async () => {
@@ -70,6 +81,18 @@ function SettingsPage() {
         <div>
           <div className="flex justify-between text-sm"><span>Äänitehosteet</span><span>{Math.round(sfx * 100)}%</span></div>
           <Slider value={[sfx * 100]} onValueChange={(v) => saveSfx(v[0] / 100)} min={0} max={100} step={1} className="mt-2" />
+        </div>
+      </section>
+
+      <section className="mt-4 neon-panel p-4 space-y-3">
+        <h2 className="font-bold">Sosiaaliset</h2>
+        <div className="flex items-center justify-between text-sm">
+          <span>Estä ystäväpyynnöt</span>
+          <Switch checked={blockFR} onCheckedChange={saveBlockFR} />
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span>Mykistä chat moninpelissä</span>
+          <Switch checked={mute} onCheckedChange={saveMute} />
         </div>
       </section>
 

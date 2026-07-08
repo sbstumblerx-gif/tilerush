@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CATALOGS, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
-import { loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
-import { ArrowLeft, Check } from "lucide-react";
+import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
+import { ArrowLeft, Check, Gift } from "lucide-react";
+import { pickDailyReward, todayUtc, msUntilUtcMidnight, formatCountdown, labelReward } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
@@ -20,8 +21,29 @@ const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
 function ShopPage() {
   const [p, setP] = useState<Progress | null>(null);
   const [open, setOpen] = useState<CosmeticCategory | null>(null);
+  const [tick, setTick] = useState(0);
   useEffect(() => setP(loadProgress()), []);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
   if (!p) return null;
+
+  const today = todayUtc();
+  const dailyAvailable = p.lastDailyClaim !== today;
+  const reward = pickDailyReward(`${p.profile.friendCode}:${today}`);
+
+  const claimDaily = () => {
+    const cur = loadProgress();
+    if (cur.lastDailyClaim === today) return;
+    if (reward.type === "coins") cur.coins += reward.amount;
+    else if (reward.type === "xp") addPassXp(cur, reward.amount);
+    else if (reward.type === "heart") cur.inventory.hearts.push({ id: `heart-${Date.now()}`, rarity: reward.rarity });
+    else if (reward.type === "box") cur.inventory.boxes.push({ id: `box-${Date.now()}`, rarity: reward.rarity });
+    cur.lastDailyClaim = today;
+    saveProgress(cur);
+    setP(cur);
+  };
 
   const buy = (cat: CosmeticCategory, item: CosmeticItem) => {
     const cur = loadProgress();
@@ -48,6 +70,24 @@ function ShopPage() {
       {!open && (
         <>
           <h1 className="mt-4 text-3xl font-black">Kauppa</h1>
+
+          <div className="mt-4 neon-panel p-4 flex items-center justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Päivän palkkio</div>
+              <div className="font-bold">{labelReward(reward)}</div>
+              {!dailyAvailable && (
+                <div className="text-xs text-muted-foreground mt-1">Seuraava: {formatCountdown(msUntilUtcMidnight())}</div>
+              )}
+            </div>
+            <button
+              onClick={claimDaily}
+              disabled={!dailyAvailable}
+              className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+            >
+              <Gift className="h-4 w-4" /> {dailyAvailable ? "Lunasta" : "Lunastettu"}
+            </button>
+          </div>
+
           <div className="mt-4 grid grid-cols-2 gap-3">
             {CATS.map((c) => (
               <button key={c.key} onClick={() => setOpen(c.key)} className="neon-panel p-5 text-left hover:border-primary/70">
@@ -99,6 +139,8 @@ function ShopPage() {
           </div>
         </>
       )}
+      {/* tick keeps countdown alive */}
+      <span className="hidden">{tick}</span>
     </div>
   );
 }
