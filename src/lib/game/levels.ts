@@ -40,6 +40,12 @@ function buildGrid(id: number, size: number, alphabet: string[], weights: number
         if (enemies >= maxEnemies) pick = ".";
         else enemies++;
       }
+      // v4.5: obstacles may never be adjacent (cardinal) to another obstacle.
+      if (pick === "#") {
+        const leftIsObs = c > 0 && row[c - 1] === "#";
+        const upIsObs = r > 0 && grid[r - 1][c] === "#";
+        if (leftIsObs || upIsObs) pick = ".";
+      }
       row += pick;
     }
     grid.push(row);
