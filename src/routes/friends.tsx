@@ -149,6 +149,41 @@ function FriendsPage() {
           </p>
         </div>
       )}
+
+      {tab === "leaderboard" && (
+        <div className="mt-4 space-y-2">
+          <div className="text-xs text-muted-foreground">
+            Kaverien tulostaulu — tähdet, tasot ja kolikot. Reaaliaikaiset kaverien tulokset yhdistetään pilveen seuraavassa päivityksessä.
+          </div>
+          <div className="neon-panel p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-primary text-lg font-black w-6 text-center">1</span>
+              <div>
+                <div className="font-bold">{p.profile.username} <span className="text-xs text-primary">(Sinä)</span></div>
+                <div className="text-xs text-muted-foreground">{p.completed.length} tasoa · {p.stats.stars} ⭐</div>
+              </div>
+            </div>
+            <span className="text-sm font-mono">🪙 {p.coins}</span>
+          </div>
+          {p.friends.list.map((f, i) => (
+            <div key={f.code} className="neon-panel p-3 flex items-center justify-between opacity-80">
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground text-lg font-black w-6 text-center">{i + 2}</span>
+                <div>
+                  <div className="font-bold">{f.username}</div>
+                  <div className="text-xs text-muted-foreground font-mono">{f.code}</div>
+                </div>
+              </div>
+              <span className="text-xs text-muted-foreground">— · —</span>
+            </div>
+          ))}
+          {p.friends.list.length === 0 && (
+            <div className="text-xs text-muted-foreground text-center py-4">
+              Lisää kavereita nähdäksesi heidät tulostaululla.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
