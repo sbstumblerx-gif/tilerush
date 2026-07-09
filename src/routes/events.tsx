@@ -197,7 +197,7 @@ function TileCupGame({ onGoal }: { onGoal: () => void }) {
       cur.tileCup.goals += 1;
       cur.coins += 5;
       cur.tileCup.tasks.forEach((t) => {
-        if (t.id === "g20" || t.id === "g50" || t.id === "g75") {
+        if (t.id === "g20" || t.id === "g50" || t.id === "g75" || t.id === "g100") {
           t.progress = Math.min(t.target, t.progress + 1);
         }
       });
