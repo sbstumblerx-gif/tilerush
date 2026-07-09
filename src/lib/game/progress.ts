@@ -23,7 +23,7 @@ export interface Equipped {
   accessory: string;
   theme: string;
   /** 4 emoji reactions the player can flash mid-game / on profile. */
-  emojis: string[];
+  emojis?: string[];
 }
 
 export interface Owned {
