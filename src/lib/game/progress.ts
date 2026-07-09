@@ -236,7 +236,7 @@ export function loadProgress(): Progress {
     };
     if (!merged.profile.friendCode) merged.profile.friendCode = randomCode(6);
     if (!merged.equipped.emojis || merged.equipped.emojis.length !== 4) {
-      merged.equipped.emojis = DEFAULT.equipped.emojis.slice();
+      merged.equipped.emojis = (DEFAULT.equipped.emojis ?? ["🎮", "⚡", "🌟", "🏆"]).slice();
     }
     return merged;
   } catch {
