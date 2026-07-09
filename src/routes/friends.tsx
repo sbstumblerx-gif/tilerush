@@ -9,7 +9,7 @@ export const Route = createFileRoute("/friends")({
   component: FriendsPage,
 });
 
-type Tab = "list" | "requests" | "add";
+type Tab = "list" | "requests" | "add" | "leaderboard";
 
 function FriendsPage() {
   const [p, setP] = useState<Progress | null>(null);
@@ -72,6 +72,7 @@ function FriendsPage() {
           ["list", `Ystävät ${p.friends.list.length}/50`],
           ["requests", "Pyynnöt"],
           ["add", "Lisää"],
+          ["leaderboard", "Tulostaulu"],
         ] as [Tab, string][]).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)} className={`neon-panel px-3 py-2 text-sm ${tab === k ? "border-primary" : ""}`}>
             {label}
