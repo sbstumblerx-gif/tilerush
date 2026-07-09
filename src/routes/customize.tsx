@@ -5,6 +5,12 @@ import { loadProgress, saveProgress, type Equipped, type Progress } from "@/lib/
 import { RARITY_EMOJI, RARITY_LABEL, RARITY_ORDER, RARITY_COLOR } from "@/lib/game/rarity";
 import { ArrowLeft } from "lucide-react";
 
+const EMOJI_BANK = [
+  "🎮","⚡","🌟","🏆","🔥","💎","🚀","👑","🎯","💥",
+  "🏁","⚽","🥅","🎾","🧠","🤖","😎","🥳","😤","🫡",
+  "🥇","🥈","🥉","🎉","💯","💤","🐐","🦾","🧨","💗",
+];
+
 export const Route = createFileRoute("/customize")({
   head: () => ({ meta: [{ title: "Mukauta · Tile Rush" }] }),
   component: CustomizePage,
@@ -20,23 +26,35 @@ const CATS: { key: CosmeticCategory; label: string; equipKey: keyof Equipped }[]
 
 function CustomizePage() {
   const [p, setP] = useState<Progress | null>(null);
-  const [cat, setCat] = useState<CosmeticCategory>("colors");
+  const [cat, setCat] = useState<CosmeticCategory | "emojis">("colors");
   const [selected, setSelected] = useState<string | null>(null);
+  const [emojiSlot, setEmojiSlot] = useState<number>(0);
   useEffect(() => setP(loadProgress()), []);
 
   const sorted = useMemo(() => {
     if (!p) return [];
-    return [...CATALOGS[cat]].sort(
+    if (cat === "emojis") return [];
+    return [...CATALOGS[cat as CosmeticCategory]].sort(
       (a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity),
     );
   }, [cat, p]);
 
   if (!p) return null;
 
-  const equipKey = CATS.find((c) => c.key === cat)!.equipKey;
+  const equipKey = cat === "emojis" ? null : CATS.find((c) => c.key === cat)!.equipKey;
   const equip = (id: string) => {
+    if (!equipKey) return;
     const cur = loadProgress();
     (cur.equipped as unknown as Record<string, string>)[equipKey] = id;
+    saveProgress(cur);
+    setP(cur);
+  };
+
+  const setEmoji = (emoji: string) => {
+    const cur = loadProgress();
+    const arr = (cur.equipped.emojis ?? ["🎮","⚡","🌟","🏆"]).slice();
+    arr[emojiSlot] = emoji;
+    cur.equipped.emojis = arr;
     saveProgress(cur);
     setP(cur);
   };
