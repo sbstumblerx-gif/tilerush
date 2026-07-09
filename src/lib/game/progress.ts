@@ -22,6 +22,8 @@ export interface Equipped {
   pattern: string;
   accessory: string;
   theme: string;
+  /** 4 emoji reactions the player can flash mid-game / on profile. */
+  emojis?: string[];
 }
 
 export interface Owned {
@@ -111,6 +113,10 @@ export interface Progress {
   friends: Friends;
   /** ISO date YYYY-MM-DD of last claimed daily shop reward (UTC). */
   lastDailyClaim?: string;
+  /** v4.5: redeemed promo codes (case-insensitive). */
+  promoRedeemed: string[];
+  /** v4.5: purchased quarter-finalist team offer ids. */
+  teamOffersPurchased: string[];
   tileCup: {
     goals: number;
     volleyUses: number;
@@ -160,6 +166,7 @@ const DEFAULT: Progress = {
     pattern: "none",
     accessory: "none",
     theme: "default",
+    emojis: ["🎮", "⚡", "🌟", "🏆"],
   },
   tileCup: {
     goals: 0,
@@ -169,6 +176,8 @@ const DEFAULT: Progress = {
       { id: "g20", label: "Tee 20 maalia Tile Cupissa", target: 20, progress: 0, reward: "asuste: keltainen kortti", claimed: false },
       { id: "g50", label: "Tee 50 maalia Tile Cupissa", target: 50, progress: 0, reward: "asuste: punainen kortti", claimed: false },
       { id: "g75", label: "Tee 75 maalia Tile Cupissa", target: 75, progress: 0, reward: "taustakuva: jalkapallokenttä", claimed: false },
+      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kolikoita", claimed: false },
+      { id: "vb25", label: "Käytä lentopalloa 25 kertaa", target: 25, progress: 0, reward: "🪙 200 kolikoita", claimed: false },
     ],
   },
   inventory: { boxes: [], hearts: [] },
@@ -176,6 +185,8 @@ const DEFAULT: Progress = {
   settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false },
   profile: { username: "Pelaaja", friendCode: "" },
   friends: { list: [], incoming: [], outgoing: [] },
+  promoRedeemed: [],
+  teamOffersPurchased: [],
 };
 
 export function loadProgress(): Progress {
@@ -204,7 +215,11 @@ export function loadProgress(): Progress {
       stats: { ...DEFAULT.stats, ...(parsed.stats ?? {}), tileUses: { ...(parsed.stats?.tileUses ?? {}) } },
       owned: { ...DEFAULT.owned, ...(parsed.owned ?? {}) },
       equipped: { ...DEFAULT.equipped, ...(parsed.equipped ?? {}) },
-      tileCup: { ...DEFAULT.tileCup, ...(parsed.tileCup ?? {}), tasks: parsed.tileCup?.tasks ?? DEFAULT.tileCup.tasks },
+      tileCup: {
+        ...DEFAULT.tileCup,
+        ...(parsed.tileCup ?? {}),
+        tasks: mergeTileCupTasks(parsed.tileCup?.tasks),
+      },
       inventory: parsed.inventory ?? { boxes: [], hearts: [] },
       pendingRewards: parsed.pendingRewards ?? [],
       settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
@@ -216,12 +231,25 @@ export function loadProgress(): Progress {
       passSeasonPacks: parsed.passSeasonPacks ?? [],
       lastDailyClaim: parsed.lastDailyClaim,
       weekly: parsed.weekly,
+      promoRedeemed: parsed.promoRedeemed ?? [],
+      teamOffersPurchased: parsed.teamOffersPurchased ?? [],
     };
     if (!merged.profile.friendCode) merged.profile.friendCode = randomCode(6);
+    if (!merged.equipped.emojis || merged.equipped.emojis.length !== 4) {
+      merged.equipped.emojis = (DEFAULT.equipped.emojis ?? ["🎮", "⚡", "🌟", "🏆"]).slice();
+    }
     return merged;
   } catch {
     return { ...DEFAULT };
   }
+}
+
+/** Merge stored tile-cup tasks with defaults so newly-added task ids appear for existing users. */
+function mergeTileCupTasks(stored: TileCupTask[] | undefined): TileCupTask[] {
+  const base = DEFAULT.tileCup.tasks;
+  if (!stored) return base.map((t) => ({ ...t }));
+  const byId = new Map(stored.map((t) => [t.id, t]));
+  return base.map((t) => byId.get(t.id) ?? { ...t });
 }
 
 export function saveProgress(p: Progress): void {

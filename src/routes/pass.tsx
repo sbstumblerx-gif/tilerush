@@ -5,6 +5,7 @@ import { ArrowLeft, Coins } from "lucide-react";
 import { OpenContainer } from "@/components/game/OpenContainer";
 import { RewardScreen } from "@/components/game/RewardScreen";
 import { RARITY_EMOJI, type Rarity } from "@/lib/game/rarity";
+import { msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/pass")({
   head: () => ({ meta: [{ title: "Tile Pass · Tile Rush" }] }),
@@ -89,7 +90,10 @@ function PassPage() {
       </Link>
       <div className="mt-4 flex justify-between items-end">
         <h1 className="text-3xl font-black">Tile Pass</h1>
-        <span className="text-xs text-muted-foreground">Seuraava passi: 30.7.2026</span>
+        <span className="text-xs text-muted-foreground text-right">
+          Passi päättyy 30.7.2026<br />
+          <span className="text-primary">{formatDaysCountdown(msUntilSeasonEnd())}</span>
+        </span>
       </div>
       <div className="mt-2 text-sm text-muted-foreground">
         {p.passLevel >= 60 ? `Prestige · ${p.prestigeXp}/500 XP → laatikko` : `Taso ${p.passLevel} / 60 · ${p.passXp}/${need} XP`}

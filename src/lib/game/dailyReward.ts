@@ -44,6 +44,21 @@ export function formatCountdown(ms: number): string {
   return `${h}h ${m}m ${ss}s`;
 }
 
+/** Tile Rush season end (v4.5): 30.7.2026 00:00 UTC. */
+export const SEASON_END_UTC = Date.UTC(2026, 6, 30, 0, 0, 0);
+
+export function msUntilSeasonEnd(): number {
+  return Math.max(0, SEASON_END_UTC - Date.now());
+}
+
+export function formatDaysCountdown(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return `${d}pv ${h}h ${m}min`;
+}
+
 export function labelReward(r: DailyReward): string {
   switch (r.type) {
     case "coins": return `🪙 ${r.amount} kolikkoa`;

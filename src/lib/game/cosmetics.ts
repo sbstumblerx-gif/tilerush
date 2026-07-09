@@ -57,6 +57,15 @@ export const ACCESSORIES: CosmeticItem[] = [
   { id: "avaruus", label: "Avaruuskypärä", price: 350, rarity: "legendary", preview: "🪐" },
   { id: "yellowcard", label: "Keltainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟨" },
   { id: "redcard", label: "Punainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟥" },
+  // v4.5: FIFA quarter-final team badges — sold as offers, exclusive mythic.
+  { id: "team-fr", label: "Ranska", price: 400, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
+  { id: "team-ma", label: "Marokko", price: 400, rarity: "mythic", exclusive: true, preview: "🇲🇦" },
+  { id: "team-en", label: "Englanti", price: 400, rarity: "mythic", exclusive: true, preview: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id: "team-pt", label: "Portugali", price: 400, rarity: "mythic", exclusive: true, preview: "🇵🇹" },
+  { id: "team-br", label: "Brasilia", price: 400, rarity: "mythic", exclusive: true, preview: "🇧🇷" },
+  { id: "team-ar", label: "Argentiina", price: 400, rarity: "mythic", exclusive: true, preview: "🇦🇷" },
+  { id: "team-nl", label: "Alankomaat", price: 400, rarity: "mythic", exclusive: true, preview: "🇳🇱" },
+  { id: "team-hr", label: "Kroatia", price: 400, rarity: "mythic", exclusive: true, preview: "🇭🇷" },
 ];
 
 export const THEMES: CosmeticItem[] = [

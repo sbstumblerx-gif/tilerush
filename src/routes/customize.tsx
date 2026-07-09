@@ -5,6 +5,12 @@ import { loadProgress, saveProgress, type Equipped, type Progress } from "@/lib/
 import { RARITY_EMOJI, RARITY_LABEL, RARITY_ORDER, RARITY_COLOR } from "@/lib/game/rarity";
 import { ArrowLeft } from "lucide-react";
 
+const EMOJI_BANK = [
+  "🎮","⚡","🌟","🏆","🔥","💎","🚀","👑","🎯","💥",
+  "🏁","⚽","🥅","🎾","🧠","🤖","😎","🥳","😤","🫡",
+  "🥇","🥈","🥉","🎉","💯","💤","🐐","🦾","🧨","💗",
+];
+
 export const Route = createFileRoute("/customize")({
   head: () => ({ meta: [{ title: "Mukauta · Tile Rush" }] }),
   component: CustomizePage,
@@ -20,23 +26,35 @@ const CATS: { key: CosmeticCategory; label: string; equipKey: keyof Equipped }[]
 
 function CustomizePage() {
   const [p, setP] = useState<Progress | null>(null);
-  const [cat, setCat] = useState<CosmeticCategory>("colors");
+  const [cat, setCat] = useState<CosmeticCategory | "emojis">("colors");
   const [selected, setSelected] = useState<string | null>(null);
+  const [emojiSlot, setEmojiSlot] = useState<number>(0);
   useEffect(() => setP(loadProgress()), []);
 
   const sorted = useMemo(() => {
     if (!p) return [];
-    return [...CATALOGS[cat]].sort(
+    if (cat === "emojis") return [];
+    return [...CATALOGS[cat as CosmeticCategory]].sort(
       (a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity),
     );
   }, [cat, p]);
 
   if (!p) return null;
 
-  const equipKey = CATS.find((c) => c.key === cat)!.equipKey;
+  const equipKey = cat === "emojis" ? null : CATS.find((c) => c.key === cat)!.equipKey;
   const equip = (id: string) => {
+    if (!equipKey) return;
     const cur = loadProgress();
-    cur.equipped[equipKey] = id;
+    (cur.equipped as unknown as Record<string, string>)[equipKey] = id;
+    saveProgress(cur);
+    setP(cur);
+  };
+
+  const setEmoji = (emoji: string) => {
+    const cur = loadProgress();
+    const arr = (cur.equipped.emojis ?? ["🎮","⚡","🌟","🏆"]).slice();
+    arr[emojiSlot] = emoji;
+    cur.equipped.emojis = arr;
     saveProgress(cur);
     setP(cur);
   };
@@ -46,7 +64,10 @@ function CustomizePage() {
   const shape = SHAPES.find((s) => s.id === eq.shape)?.preview ?? "●";
   const pattern = PATTERNS.find((s) => s.id === eq.pattern)?.preview;
 
-  const selItem: CosmeticItem | null = selected ? CATALOGS[cat].find((i) => i.id === selected) ?? null : null;
+  const selItem: CosmeticItem | null =
+    selected && cat !== "emojis"
+      ? CATALOGS[cat as CosmeticCategory].find((i) => i.id === selected) ?? null
+      : null;
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[720px] mx-auto">
@@ -66,6 +87,12 @@ function CustomizePage() {
               {c.label}
             </button>
           ))}
+          <button
+            onClick={() => { setCat("emojis"); setSelected(null); }}
+            className={`neon-panel px-3 py-2 text-left text-sm ${cat === "emojis" ? "border-primary/70" : ""}`}
+          >
+            Emojit
+          </button>
         </div>
 
         <div className="neon-panel p-4 flex items-center justify-center">
@@ -85,9 +112,17 @@ function CustomizePage() {
         </div>
 
         <div className="neon-panel p-3 max-h-[360px] overflow-auto space-y-2">
-          {sorted.map((item) => {
-            const owned = p.owned[cat].includes(item.id);
-            const active = eq[equipKey] === item.id;
+          {cat === "emojis" ? (
+            <EmojiPanel
+              slots={eq.emojis ?? ["🎮","⚡","🌟","🏆"]}
+              activeSlot={emojiSlot}
+              onSelectSlot={setEmojiSlot}
+              onPick={setEmoji}
+            />
+          ) : sorted.map((item) => {
+            const ownedCat = cat as CosmeticCategory;
+            const owned = p.owned[ownedCat].includes(item.id);
+            const active = equipKey ? (eq as unknown as Record<string, string>)[equipKey] === item.id : false;
             return (
               <button
                 key={item.id}
@@ -99,7 +134,7 @@ function CustomizePage() {
                 } ${!owned && "opacity-40 cursor-not-allowed"}`}
               >
                 <span className="flex items-center gap-2">
-                  {cat === "colors" ? (
+                  {ownedCat === "colors" ? (
                     <span className="h-4 w-4 rounded" style={{ background: item.preview }} />
                   ) : (
                     <span>{item.preview}</span>
@@ -113,7 +148,7 @@ function CustomizePage() {
         </div>
       </div>
 
-      {selItem && (
+      {selItem && cat !== "emojis" && (
         <div className="mt-4 neon-panel p-4 flex items-center justify-between">
           <div>
             <div className="text-xs uppercase tracking-widest text-muted-foreground">Valittu esine</div>
@@ -122,8 +157,8 @@ function CustomizePage() {
               {RARITY_EMOJI[selItem.rarity]} {RARITY_LABEL[selItem.rarity]}
             </div>
           </div>
-          {p.owned[cat].includes(selItem.id) ? (
-            eq[equipKey] === selItem.id ? (
+          {p.owned[cat as CosmeticCategory].includes(selItem.id) ? (
+            equipKey && (eq as unknown as Record<string, string>)[equipKey] === selItem.id ? (
               <button disabled className="px-4 py-2 rounded bg-primary/60 text-primary-foreground text-sm font-bold">Valittu</button>
             ) : (
               <button onClick={() => equip(selItem.id)} className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-bold">
@@ -135,6 +170,44 @@ function CustomizePage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function EmojiPanel({
+  slots, activeSlot, onSelectSlot, onPick,
+}: {
+  slots: string[];
+  activeSlot: number;
+  onSelectSlot: (i: number) => void;
+  onPick: (e: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="text-xs uppercase tracking-widest text-muted-foreground">Valitse paikka (4)</div>
+      <div className="grid grid-cols-4 gap-2">
+        {slots.map((e, i) => (
+          <button
+            key={i}
+            onClick={() => onSelectSlot(i)}
+            className={`h-12 rounded border text-2xl flex items-center justify-center ${activeSlot === i ? "border-primary bg-primary/20" : "border-border/50 bg-background/40"}`}
+          >
+            {e}
+          </button>
+        ))}
+      </div>
+      <div className="text-xs uppercase tracking-widest text-muted-foreground">Emoji</div>
+      <div className="grid grid-cols-6 gap-2">
+        {EMOJI_BANK.map((e) => (
+          <button
+            key={e}
+            onClick={() => onPick(e)}
+            className="h-10 rounded bg-background/40 border border-border/50 text-2xl flex items-center justify-center hover:border-primary/60"
+          >
+            {e}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
