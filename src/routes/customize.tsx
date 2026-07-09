@@ -36,7 +36,7 @@ function CustomizePage() {
   const equipKey = CATS.find((c) => c.key === cat)!.equipKey;
   const equip = (id: string) => {
     const cur = loadProgress();
-    cur.equipped[equipKey] = id;
+    (cur.equipped as unknown as Record<string, string>)[equipKey] = id;
     saveProgress(cur);
     setP(cur);
   };
