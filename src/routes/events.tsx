@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { loadProgress, saveProgress, type Progress, type TileCupTask } from "@/lib/game/progress";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/events")({
   head: () => ({ meta: [{ title: "Tapahtumat · Tile Rush" }] }),
@@ -24,6 +25,8 @@ function EventsPage() {
     if (t.id === "g20") cur.owned.accessories = Array.from(new Set([...cur.owned.accessories, "yellowcard"]));
     if (t.id === "g50") cur.owned.accessories = Array.from(new Set([...cur.owned.accessories, "redcard"]));
     if (t.id === "g75") cur.owned.themes = Array.from(new Set([...cur.owned.themes, "jalkapallo"]));
+    if (t.id === "g100") cur.coins += 500;
+    if (t.id === "vb25") cur.coins += 200;
     saveProgress(cur);
     setP(cur);
   };
@@ -54,6 +57,9 @@ function EventsPage() {
         </div>
       </div>
       <h1 className="mt-4 text-3xl font-black">Tile Cup</h1>
+      <div className="mt-1 text-xs text-muted-foreground">
+        Kausi päättyy 30.7.2026 · {formatDaysCountdown(msUntilSeasonEnd())}
+      </div>
 
       {view === "tasks" && (
         <div className="mt-4 space-y-3">
