@@ -14,13 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      friend_requests: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          to_user: string
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          to_user: string
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          to_user?: string
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parties: {
+        Row: {
+          code: string
+          created_at: string
+          host_id: string
+          packs: Json
+          rounds: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          host_id: string
+          packs?: Json
+          rounds?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          host_id?: string
+          packs?: Json
+          rounds?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      party_members: {
+        Row: {
+          joined_at: string
+          party_code: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          party_code: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          party_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_members_party_code_fkey"
+            columns: ["party_code"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_team: string | null
+          created_at: string
+          friend_code: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_team?: string | null
+          created_at?: string
+          friend_code: string
+          updated_at?: string
+          user_id: string
+          username?: string
+        }
+        Update: {
+          avatar_team?: string | null
+          created_at?: string
+          friend_code?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_friend_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
+      send_friend_request_by_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
