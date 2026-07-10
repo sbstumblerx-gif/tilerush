@@ -22,9 +22,14 @@ const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
 ];
 
 const TEAM_OFFER_IDS = [
-  "team-fr", "team-ma", "team-en", "team-pt",
-  "team-br", "team-ar", "team-nl", "team-hr",
+  "team-fr", "team-ma", "team-en", "team-no",
+  "team-es", "team-be", "team-ar", "team-ch",
 ];
+
+const TEAM_EMOJI: Record<string, string> = {
+  "team-fr": "🇫🇷", "team-ma": "🇲🇦", "team-en": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "team-no": "🇳🇴",
+  "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
+};
 
 /** Promo codes → grant callback. */
 const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }> = {
@@ -87,6 +92,18 @@ function ShopPage() {
     cur.coins -= item.price;
     cur.teamOffersPurchased.push(id);
     if (!cur.owned.accessories.includes(id)) cur.owned.accessories.push(id);
+    // v4.7: also grant the flag theme and set as profile picture; add flag emoji to equipped slots.
+    if (!cur.owned.themes.includes(id)) cur.owned.themes.push(id);
+    const emoji = TEAM_EMOJI[id];
+    if (emoji) {
+      cur.profile.profilePic = emoji;
+      const slots = cur.equipped.emojis ? [...cur.equipped.emojis] : ["🎮", "⚡", "🌟", "🏆"];
+      if (!slots.includes(emoji)) {
+        // replace last slot to make room
+        slots[3] = emoji;
+      }
+      cur.equipped.emojis = slots;
+    }
     saveProgress(cur);
     setP(cur);
   };
@@ -149,7 +166,9 @@ function ShopPage() {
               <span className="text-xs text-muted-foreground">{showOffers ? "Piilota" : "Näytä"}</span>
             </button>
             {showOffers && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <>
+              <div className="mt-3 text-[11px] text-muted-foreground">Jokainen paketti sisältää lipun profiilikuvan, emojin ja asusteen.</div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 {TEAM_OFFER_IDS.map((id) => {
                   const item = ACCESSORIES.find((a) => a.id === id)!;
                   const owned = p.teamOffersPurchased.includes(id);
@@ -161,6 +180,7 @@ function ShopPage() {
                         <span className="text-[10px] uppercase text-primary">Myyttinen</span>
                       </div>
                       <div className="text-sm font-bold">{item.label}</div>
+                      <div className="text-[10px] text-muted-foreground">Profiilikuva · emoji · asuste</div>
                       <button
                         disabled={owned || !canBuy}
                         onClick={() => buyTeam(id)}
@@ -172,6 +192,7 @@ function ShopPage() {
                   );
                 })}
               </div>
+              </>
             )}
           </div>
 

@@ -57,15 +57,15 @@ export const ACCESSORIES: CosmeticItem[] = [
   { id: "avaruus", label: "Avaruuskypärä", price: 350, rarity: "legendary", preview: "🪐" },
   { id: "yellowcard", label: "Keltainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟨" },
   { id: "redcard", label: "Punainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟥" },
-  // v4.5: FIFA quarter-final team badges — sold as offers, exclusive mythic.
-  { id: "team-fr", label: "Ranska", price: 400, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
-  { id: "team-ma", label: "Marokko", price: 400, rarity: "mythic", exclusive: true, preview: "🇲🇦" },
-  { id: "team-en", label: "Englanti", price: 400, rarity: "mythic", exclusive: true, preview: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  { id: "team-pt", label: "Portugali", price: 400, rarity: "mythic", exclusive: true, preview: "🇵🇹" },
-  { id: "team-br", label: "Brasilia", price: 400, rarity: "mythic", exclusive: true, preview: "🇧🇷" },
-  { id: "team-ar", label: "Argentiina", price: 400, rarity: "mythic", exclusive: true, preview: "🇦🇷" },
-  { id: "team-nl", label: "Alankomaat", price: 400, rarity: "mythic", exclusive: true, preview: "🇳🇱" },
-  { id: "team-hr", label: "Kroatia", price: 400, rarity: "mythic", exclusive: true, preview: "🇭🇷" },
+  // v4.7: FIFA quarter-final team badges — sold as offers, exclusive mythic.
+  { id: "team-fr", label: "Ranska", price: 750, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
+  { id: "team-ma", label: "Marokko", price: 750, rarity: "mythic", exclusive: true, preview: "🇲🇦" },
+  { id: "team-en", label: "Englanti", price: 750, rarity: "mythic", exclusive: true, preview: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id: "team-no", label: "Norja", price: 750, rarity: "mythic", exclusive: true, preview: "🇳🇴" },
+  { id: "team-es", label: "Espanja", price: 750, rarity: "mythic", exclusive: true, preview: "🇪🇸" },
+  { id: "team-be", label: "Belgia", price: 750, rarity: "mythic", exclusive: true, preview: "🇧🇪" },
+  { id: "team-ar", label: "Argentiina", price: 750, rarity: "mythic", exclusive: true, preview: "🇦🇷" },
+  { id: "team-ch", label: "Sveitsi", price: 750, rarity: "mythic", exclusive: true, preview: "🇨🇭" },
 ];
 
 export const THEMES: CosmeticItem[] = [
@@ -84,6 +84,15 @@ export const THEMES: CosmeticItem[] = [
   { id: "cyber", label: "Cyberpunk", price: 250, rarity: "epic" },
   { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
   { id: "jalkapallo", label: "Jalkapallokenttä", price: 0, rarity: "legendary", exclusive: true },
+  // v4.7: flag themes granted with team offers.
+  { id: "team-fr", label: "Ranskan lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-ma", label: "Marokon lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-en", label: "Englannin lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-no", label: "Norjan lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-es", label: "Espanjan lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-be", label: "Belgian lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-ar", label: "Argentiinan lippu", price: 0, rarity: "mythic", exclusive: true },
+  { id: "team-ch", label: "Sveitsin lippu", price: 0, rarity: "mythic", exclusive: true },
 ];
 
 export const CATALOGS: Record<CosmeticCategory, CosmeticItem[]> = {
@@ -121,6 +130,14 @@ export function themeBg(themeId: string): string {
     lentaja: "from-[oklch(0.78_0.16_95)] to-[oklch(0.5_0.12_75)]",
     mysteeri: "from-[oklch(0.4_0.18_290)] to-[oklch(0.25_0.15_260)]",
     tumma: "from-[oklch(0.18_0.03_265)] to-[oklch(0.1_0.02_265)]",
+    "team-fr": "from-[#0055A4] via-white to-[#EF4135]",
+    "team-ma": "from-[#C1272D] to-[#006233]",
+    "team-en": "from-white via-[#CE1124] to-white",
+    "team-no": "from-[#EF2B2D] via-white to-[#002868]",
+    "team-es": "from-[#AA151B] via-[#F1BF00] to-[#AA151B]",
+    "team-be": "from-black via-[#FAE042] to-[#ED2939]",
+    "team-ar": "from-[#74ACDF] via-white to-[#74ACDF]",
+    "team-ch": "from-[#DA291C] to-[#DA291C]",
   };
   return map[themeId] ?? map.default;
 }

@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, X, Check } from "lucide-react";
 import { loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  acceptRequest, deleteRequest, fetchMyProfile, listFriends, listRequests,
+  removeFriend, sendFriendRequest, upsertMyProfile,
+  type CloudProfile, type FriendRequestRow,
+} from "@/lib/cloud/social";
 
 export const Route = createFileRoute("/friends")({
   head: () => ({ meta: [{ title: "Kaverit · Tile Rush" }] }),
@@ -16,48 +22,71 @@ function FriendsPage() {
   const [tab, setTab] = useState<Tab>("list");
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [me, setMe] = useState<CloudProfile | null>(null);
+  const [friends, setFriends] = useState<CloudProfile[]>([]);
+  const [incoming, setIncoming] = useState<FriendRequestRow[]>([]);
+  const [outgoing, setOutgoing] = useState<FriendRequestRow[]>([]);
 
-  useEffect(() => setP(loadProgress()), []);
+  const refresh = useCallback(async () => {
+    const [prof, fs, reqs] = await Promise.all([fetchMyProfile(), listFriends(), listRequests()]);
+    setMe(prof);
+    setFriends(fs);
+    setIncoming(reqs.incoming);
+    setOutgoing(reqs.outgoing);
+    // Sync local username → cloud (once, if differs) and cloud friend_code → local
+    const cur = loadProgress();
+    if (prof) {
+      let changed = false;
+      if (prof.friend_code && cur.profile.friendCode !== prof.friend_code) {
+        cur.profile.friendCode = prof.friend_code; changed = true;
+      }
+      if (cur.profile.username && cur.profile.username !== "Pelaaja" && cur.profile.username !== prof.username) {
+        await upsertMyProfile({ username: cur.profile.username });
+      } else if (cur.profile.username === "Pelaaja" && prof.username && prof.username !== cur.profile.username) {
+        cur.profile.username = prof.username; changed = true;
+      }
+      if (changed) saveProgress(cur);
+    }
+    setP(loadProgress());
+  }, []);
+
+  useEffect(() => {
+    setP(loadProgress());
+    supabase.auth.getUser().then(({ data }) => {
+      const yes = !!data.user;
+      setSignedIn(yes);
+      if (yes) refresh();
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      const yes = !!s?.user;
+      setSignedIn(yes);
+      if (yes) refresh();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [refresh]);
+
+  // Realtime: refresh on any friend_requests / friendships change.
+  useEffect(() => {
+    if (!signedIn) return;
+    const ch = supabase
+      .channel("friends-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "friend_requests" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, refresh)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [signedIn, refresh]);
+
   if (!p) return null;
 
-  const send = () => {
+  const send = async () => {
     const c = code.trim().toLowerCase();
     if (!c) return;
-    if (c === p.profile.friendCode) { setMsg("Et voi lisätä itseäsi kaveriksi."); return; }
-    const cur = loadProgress();
-    if (cur.friends.list.some((f) => f.code === c)) { setMsg("Tämä pelaaja on jo kaverisi."); return; }
-    if (cur.friends.outgoing.some((f) => f.code === c)) { setMsg("Pyyntö on jo lähetetty."); return; }
-    // Local stub: since backend is not built yet, we treat request as pending outgoing.
-    // Real cloud implementation coming.
-    cur.friends.outgoing.push({ code: c, username: `Koodi ${c}` });
-    saveProgress(cur);
-    setP(cur);
+    const res = await sendFriendRequest(c);
+    if (!res.ok) { setMsg(`❌ ${res.error}`); return; }
     setCode("");
-    setMsg("Kaveripyyntö lähetetty. (Kaveritoiminnot yhdistetään pilveen tulevassa päivityksessä.)");
-  };
-
-  const cancel = (c: string) => {
-    const cur = loadProgress();
-    cur.friends.outgoing = cur.friends.outgoing.filter((f) => f.code !== c);
-    saveProgress(cur); setP(cur);
-  };
-  const accept = (c: string) => {
-    const cur = loadProgress();
-    const found = cur.friends.incoming.find((f) => f.code === c);
-    if (!found) return;
-    cur.friends.incoming = cur.friends.incoming.filter((f) => f.code !== c);
-    if (cur.friends.list.length < 50) cur.friends.list.push(found);
-    saveProgress(cur); setP(cur);
-  };
-  const reject = (c: string) => {
-    const cur = loadProgress();
-    cur.friends.incoming = cur.friends.incoming.filter((f) => f.code !== c);
-    saveProgress(cur); setP(cur);
-  };
-  const removeFriend = (c: string) => {
-    const cur = loadProgress();
-    cur.friends.list = cur.friends.list.filter((f) => f.code !== c);
-    saveProgress(cur); setP(cur);
+    setMsg(res.accepted ? "✅ Kaveri lisätty (vastapyyntö).": "✅ Kaveripyyntö lähetetty.");
+    refresh();
   };
 
   return (
@@ -67,9 +96,15 @@ function FriendsPage() {
       </Link>
       <h1 className="mt-4 text-3xl font-black">Kaverit</h1>
 
+      {signedIn === false && (
+        <div className="mt-4 neon-panel p-4 text-sm">
+          Kaveritoiminnot vaativat sisäänkirjautumisen. <Link to="/settings" className="underline text-primary">Kirjaudu Googlella →</Link>
+        </div>
+      )}
+
       <div className="mt-4 flex gap-2">
         {([
-          ["list", `Ystävät ${p.friends.list.length}/50`],
+          ["list", `Ystävät ${friends.length}/50`],
           ["requests", "Pyynnöt"],
           ["add", "Lisää"],
           ["leaderboard", "Tulostaulu"],
@@ -82,14 +117,16 @@ function FriendsPage() {
 
       {tab === "list" && (
         <div className="mt-4 space-y-2">
-          {p.friends.list.length === 0 && <div className="text-sm text-muted-foreground">Ei vielä kavereita. Lisää heitä koodilla.</div>}
-          {p.friends.list.map((f) => (
-            <div key={f.code} className="neon-panel p-3 flex items-center justify-between">
+          {friends.length === 0 && <div className="text-sm text-muted-foreground">Ei vielä kavereita. Lisää heitä koodilla.</div>}
+          {friends.map((f) => (
+            <div key={f.user_id} className="neon-panel p-3 flex items-center justify-between">
               <div>
-                <div className="font-bold">{f.username}</div>
-                <div className="text-xs text-muted-foreground font-mono">{f.code}</div>
+                <div className="font-bold flex items-center gap-2">
+                  {f.avatar_team && <span>{teamFlag(f.avatar_team)}</span>}{f.username}
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">{f.friend_code}</div>
               </div>
-              <button onClick={() => removeFriend(f.code)} className="text-xs text-destructive">Poista</button>
+              <button onClick={async () => { await removeFriend(f.user_id); refresh(); }} className="text-xs text-destructive">Poista</button>
             </div>
           ))}
         </div>
@@ -99,27 +136,30 @@ function FriendsPage() {
         <div className="mt-4 space-y-4">
           <div>
             <h3 className="text-sm font-bold text-muted-foreground">Saapuvat</h3>
-            {p.friends.incoming.length === 0 && <div className="text-sm text-muted-foreground mt-2">Ei saapuvia pyyntöjä.</div>}
-            {p.friends.incoming.map((f) => (
-              <div key={f.code} className="neon-panel p-3 flex items-center justify-between mt-2">
-                <div className="font-bold">{f.username}</div>
+            {incoming.length === 0 && <div className="text-sm text-muted-foreground mt-2">Ei saapuvia pyyntöjä.</div>}
+            {incoming.map((r) => (
+              <div key={r.id} className="neon-panel p-3 flex items-center justify-between mt-2">
+                <div>
+                  <div className="font-bold">{r.profile?.username ?? "Pelaaja"}</div>
+                  <div className="text-xs text-muted-foreground font-mono">{r.profile?.friend_code}</div>
+                </div>
                 <div className="flex gap-2">
-                  <button onClick={() => accept(f.code)} className="p-2 rounded bg-primary text-primary-foreground"><Check className="h-4 w-4" /></button>
-                  <button onClick={() => reject(f.code)} className="p-2 rounded bg-destructive text-destructive-foreground"><X className="h-4 w-4" /></button>
+                  <button onClick={async () => { await acceptRequest(r.id); refresh(); }} className="p-2 rounded bg-primary text-primary-foreground"><Check className="h-4 w-4" /></button>
+                  <button onClick={async () => { await deleteRequest(r.id); refresh(); }} className="p-2 rounded bg-destructive text-destructive-foreground"><X className="h-4 w-4" /></button>
                 </div>
               </div>
             ))}
           </div>
           <div>
             <h3 className="text-sm font-bold text-muted-foreground">Lähtevät</h3>
-            {p.friends.outgoing.length === 0 && <div className="text-sm text-muted-foreground mt-2">Ei lähteviä pyyntöjä.</div>}
-            {p.friends.outgoing.map((f) => (
-              <div key={f.code} className="neon-panel p-3 flex items-center justify-between mt-2">
+            {outgoing.length === 0 && <div className="text-sm text-muted-foreground mt-2">Ei lähteviä pyyntöjä.</div>}
+            {outgoing.map((r) => (
+              <div key={r.id} className="neon-panel p-3 flex items-center justify-between mt-2">
                 <div>
-                  <div className="font-bold">{f.username}</div>
-                  <div className="text-xs text-muted-foreground font-mono">{f.code}</div>
+                  <div className="font-bold">{r.profile?.username ?? "Pelaaja"}</div>
+                  <div className="text-xs text-muted-foreground font-mono">{r.profile?.friend_code}</div>
                 </div>
-                <button onClick={() => cancel(f.code)} className="p-2 rounded bg-secondary"><X className="h-4 w-4" /></button>
+                <button onClick={async () => { await deleteRequest(r.id); refresh(); }} className="p-2 rounded bg-secondary"><X className="h-4 w-4" /></button>
               </div>
             ))}
           </div>
@@ -130,7 +170,7 @@ function FriendsPage() {
         <div className="mt-4 space-y-4">
           <div className="neon-panel p-4">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">Oma kaverikoodisi</div>
-            <div className="mt-1 text-2xl font-mono tracking-widest">{p.profile.friendCode}</div>
+            <div className="mt-1 text-2xl font-mono tracking-widest">{me?.friend_code ?? p.profile.friendCode}</div>
           </div>
           <div className="neon-panel p-4 space-y-3">
             <div className="text-sm font-bold">Lisää kaveri koodilla</div>
@@ -141,20 +181,15 @@ function FriendsPage() {
               maxLength={6}
               className="w-full rounded bg-background/60 border border-border/50 px-3 py-2 font-mono tracking-widest"
             />
-            <Button onClick={send} className="w-full">Lähetä pyyntö</Button>
+            <Button onClick={send} className="w-full" disabled={!signedIn}>Lähetä pyyntö</Button>
             {msg && <div className="text-xs text-muted-foreground">{msg}</div>}
           </div>
-          <p className="text-xs text-muted-foreground opacity-75">
-            Huom: täydet kaveritoiminnot (reaaliaikaiset pyynnöt muilta pelaajilta) yhdistetään pilveen tulevassa päivityksessä.
-          </p>
         </div>
       )}
 
       {tab === "leaderboard" && (
         <div className="mt-4 space-y-2">
-          <div className="text-xs text-muted-foreground">
-            Kaverien tulostaulu — tähdet, tasot ja kolikot. Reaaliaikaiset kaverien tulokset yhdistetään pilveen seuraavassa päivityksessä.
-          </div>
+          <div className="text-xs text-muted-foreground">Kaverien tulostaulu — omat tulokset ensin.</div>
           <div className="neon-panel p-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-primary text-lg font-black w-6 text-center">1</span>
@@ -165,19 +200,19 @@ function FriendsPage() {
             </div>
             <span className="text-sm font-mono">🪙 {p.coins}</span>
           </div>
-          {p.friends.list.map((f, i) => (
-            <div key={f.code} className="neon-panel p-3 flex items-center justify-between opacity-80">
+          {friends.map((f, i) => (
+            <div key={f.user_id} className="neon-panel p-3 flex items-center justify-between opacity-80">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground text-lg font-black w-6 text-center">{i + 2}</span>
                 <div>
                   <div className="font-bold">{f.username}</div>
-                  <div className="text-xs text-muted-foreground font-mono">{f.code}</div>
+                  <div className="text-xs text-muted-foreground font-mono">{f.friend_code}</div>
                 </div>
               </div>
               <span className="text-xs text-muted-foreground">— · —</span>
             </div>
           ))}
-          {p.friends.list.length === 0 && (
+          {friends.length === 0 && (
             <div className="text-xs text-muted-foreground text-center py-4">
               Lisää kavereita nähdäksesi heidät tulostaululla.
             </div>
@@ -186,4 +221,12 @@ function FriendsPage() {
       )}
     </div>
   );
+}
+
+function teamFlag(id: string): string {
+  const map: Record<string, string> = {
+    "team-fr": "🇫🇷", "team-ma": "🇲🇦", "team-en": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "team-no": "🇳🇴",
+    "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
+  };
+  return map[id] ?? "";
 }

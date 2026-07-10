@@ -31,6 +31,7 @@ function Lobby() {
   const [coins, setCoins] = useState(0);
   const [themeId, setThemeId] = useState("default");
   const [username, setUsername] = useState("Pelaaja");
+  const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
   const [equipped, setEquipped] = useState({ color: "cyan", shape: "circle", pattern: "none", accessory: "none", theme: "default" });
   const [dailyAvail, setDailyAvail] = useState(false);
   const [showPlay, setShowPlay] = useState(false);
@@ -43,6 +44,7 @@ function Lobby() {
       setCoins(p.coins);
       setThemeId(p.equipped.theme);
       setUsername(p.profile.username);
+      setProfilePic(p.profile.profilePic);
       setEquipped(p.equipped);
       setDailyAvail(p.lastDailyClaim !== todayUtc());
     };
@@ -55,7 +57,11 @@ function Lobby() {
     <div className={`min-h-screen flex flex-col items-center px-4 py-8 sm:py-14 bg-gradient-to-br ${themeBg(themeId)}`}>
       <div className="w-full max-w-[420px] flex justify-between items-center text-sm mb-2">
         <Link to="/profile" className="neon-panel px-2 py-1 flex items-center gap-2 hover:border-primary/70">
-          <PlayerToken equipped={equipped} size={28} showAccessory={false} />
+          {profilePic ? (
+            <span className="text-xl leading-none w-7 h-7 flex items-center justify-center">{profilePic}</span>
+          ) : (
+            <PlayerToken equipped={equipped} size={28} showAccessory={false} />
+          )}
           <span className="font-bold text-sm">{username}</span>
         </Link>
         <span className="neon-panel px-3 py-1 font-bold">🪙 {coins}</span>
@@ -108,7 +114,7 @@ function Lobby() {
         <span className="text-primary">→</span>
       </Link>
 
-      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.5</div>
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.7</div>
 
       {showPlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowPlay(false)}>

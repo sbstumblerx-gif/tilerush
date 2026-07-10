@@ -70,6 +70,8 @@ export interface Settings {
 export interface Profile {
   username: string;
   friendCode: string;
+  /** v4.7: emoji/lippu näytettävä profiilikuvana lobbyssa & profiilissa. */
+  profilePic?: string;
 }
 
 export interface Friends {
