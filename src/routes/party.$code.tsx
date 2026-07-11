@@ -45,18 +45,17 @@ function PartyPage() {
       const pr = await getParty(code);
       if (!pr) { setErr("Peliä ei löytynyt."); return; }
       
-      // Haetaan pelaajan asettama username ja varmistetaan, että se menee tietokantaan
       const username = progress?.profile?.username || "Pelaaja";
       
       const mem = await listPartyMembers(code);
       if (!mem.some((m) => m.user_id === id)) {
-        // Välitetään username eteenpäin liittyessä!
         const res = await joinParty(code, username);
         if (!res.ok) { setErr(res.error ?? "Ei voitu liittyä."); return; }
       }
       refresh();
     })();
   }, [code, refresh]);
+    
     
 
   useEffect(() => {
