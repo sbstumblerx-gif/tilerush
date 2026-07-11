@@ -33,7 +33,6 @@ function PartyPage() {
     setMembers(mem);
   }, [code]);
 
-    useEffect(() => {
       useEffect(() => {
     const progress = loadProgress();
     setP(progress);
@@ -50,29 +49,30 @@ function PartyPage() {
       const myUsername = progress?.profile?.username || "Pelaaja";
       await upsertMyProfile({ username: myUsername });
       
-      // Liitytään peliin taustalla
       const mem = await listPartyMembers(code);
       if (!mem.some((m) => m.user_id === id)) {
-        await joinParty(code);
+        const res = await joinParty(code);
+        if (!res.ok) { setErr(res.error ?? "Ei voitu liittyä."); return; }
       }
 
-      // OMA KORJAUS: Jos RLS-säännöt blokkaavat muiden profiilien lukemisen,
-      // varmistetaan että ainakin oma profiili näkyy lobbyssa heti!
-      setMembers(prev => {
-        if (!prev.some(m => m.user_id === id)) {
-          return [...prev, { 
+      // Ohitetaan tietokannan rajoitukset ja pakotetaan ainakin oma profiili näkyviin listaan
+      setMembers(() => {
+        const currentMembers = mem.length > 0 ? mem : [];
+        if (!currentMembers.some(m => m.user_id === id)) {
+          return [...currentMembers, { 
             user_id: id, 
             username: myUsername, 
             friend_code: id.slice(0, 8),
             avatar_team: null 
           }];
         }
-        return prev;
+        return currentMembers;
       });
-      
+
       refresh();
     })();
   }, [code, refresh]);
+  
       
   
     
