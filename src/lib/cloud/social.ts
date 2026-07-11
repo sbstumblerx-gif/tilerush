@@ -16,7 +16,24 @@ export async function fetchMyProfile(): Promise<CloudProfile | null> {
   const uid = await currentUserId();
   if (!uid) return null;
   const { data } = await supabase.from("profiles").select("*").eq("user_id", uid).maybeSingle();
-  return (data as CloudProfile | null) ?? null;
+  
+  if (data) {
+    const prof = data as CloudProfile;
+    // Automaattinen korjaus/synkronointi: Jos tietokannassa oleva koodi on väärän pituinen,
+    // ajetaan upsert heti uusilla säännöillä ja palautetaan korjattu profiili.
+    if (!prof.friend_code || prof.friend_code.length !== 6) {
+      const correctedCode = uid.slice(0, 6).toLowerCase();
+      prof.friend_code = correctedCode;
+      // Päivitetään korjattu koodi taustalla tietokantaan
+      await supabase.from("profiles").upsert({
+        user_id: uid,
+        friend_code: correctedCode
+      }, { onConflict: 'user_id' });
+    }
+    return prof;
+  }
+  
+  return null;
 }
 
 export async function upsertMyProfile(
@@ -25,6 +42,21 @@ export async function upsertMyProfile(
   try {
     const uid = await currentUserId();
     if (!uid) return;
+    
+    // Varmistetaan, että koodi on aina tasan 6 merkkiä pitkä user_id:n alusta
+    const targetCode = uid.slice(0, 6).toLowerCase();
+    
+    await supabase.from("profiles").upsert({
+      user_id: uid,
+      username: patch.username || "Pelaaja",
+      friend_code: targetCode,
+      ...patch
+    }, { onConflict: 'user_id' });
+  } catch (e) {
+    console.error("Profiilin päivitys epäonnistui:", e);
+  }
+}
+
     
     // FIKSI: Otetaan vain 6 merkkiä user_id:n alusta, jotta se täsmää Friends.js:n maxLength={6} kanssa
     await supabase.from("profiles").upsert({
