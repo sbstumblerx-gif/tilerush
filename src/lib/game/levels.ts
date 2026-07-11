@@ -12,7 +12,6 @@ function mulberry32(seed: number) {
   };
 }
 
-/** Build a size×size grid seeded by id, dropping tiles from `alphabet` with the given weights. Enemies capped at maxEnemies. */
 function buildGrid(id: number, size: number, alphabet: string[], weights: number[], maxEnemies: number, moves: number, name: string): LevelDef {
   const rnd = mulberry32(id * 1103515245 + 12345);
   const total = weights.reduce((a, b) => a + b, 0);
@@ -21,14 +20,64 @@ function buildGrid(id: number, size: number, alphabet: string[], weights: number
   for (let r = 0; r < size; r++) {
     let row = "";
     for (let c = 0; c < size; c++) {
-      // corners: S top-left, G bottom-right
+      // Kulmat: S ylävasen, G alaoikea
       if (r === 0 && c === 0) { row += "S"; continue; }
       if (r === size - 1 && c === size - 1) { row += "G"; continue; }
-      // guarantee neighbors of S and G are traversable
-      if ((r === 0 && c === 1) || (r === 1 && c === 0) || (r === size - 1 && c === size - 2) || (r === size - 2 && c === size - 1)) {
+      
+      // KORJAUS: Taataan kulmakulku laajentamalla vapaata aluetta ruutuihin (1,1) ja vastakkaiseen kulmaan
+      if (
+        (r === 0 && c === 1) || 
+        (r === 1 && c === 0) || 
+        (r === 1 && c === 1) || 
+        (r === size - 1 && c === size - 2) || 
+        (r === size - 2 && c === size - 1) ||
+        (r === size - 2 && c === size - 2)
+      ) {
         row += ".";
         continue;
       }
+      
+      const roll = rnd() * total;
+      let acc = 0;
+      let pick = ".";
+      for (let i = 0; i < alphabet.length; i++) {
+        acc += weights[i];
+        if (roll < acc) { pick = alphabet[i]; break; }
+      }
+      if (pick === "X") {
+        if (enemies >= maxEnemies) pick = ".";
+        else enemies++;
+      }
+      // v4.5: esteet eivät saa olla vierekkäin
+      if (pick === "#") {
+        const leftIsObs = c > 0 && row[c - 1] === "#";
+        const upIsObs = r > 0 && grid[r - 1][c] === "#";
+        if (leftIsObs || upIsObs) pick = ".";
+      }
+      row += pick;
+    }
+    grid.push(row);
+  }
+  // Varmistetaan portaaliparit
+  const pCount = grid.reduce((a, r) => a + (r.match(/P/g)?.length ?? 0), 0);
+  if (pCount === 1) {
+    outer: for (let r = grid.length - 1; r >= 0; r--) {
+      for (let c = grid[r].length - 1; c >= 0; c--) {
+        if (grid[r][c] === "." ) {
+          grid[r] = grid[r].slice(0, c) + "P" + grid[r].slice(c + 1);
+          break outer;
+        }
+      }
+    }
+  } else if (pCount > 2) {
+    let kept = 0;
+    for (let r = 0; r < grid.length; r++) {
+      grid[r] = grid[r].replace(/P/g, () => (++kept > 2 ? "." : "P"));
+    }
+  }
+  return { id, name, moves, grid };
+}
+
       const roll = rnd() * total;
       let acc = 0;
       let pick = ".";
