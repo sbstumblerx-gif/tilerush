@@ -61,7 +61,9 @@ function isEmojiEligible(emojiRarity: Rarity, boxTier: Rarity): boolean {
 function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: CosmeticCategory, id: string) => boolean): RewardCosmetic | null {
   const cats: CosmeticCategory[] = ["colors", "shapes", "patterns", "accessories", "themes", "emojis"];
   
-  // 1. Kerätään kategoriakohtaiset altaat, jotta voimme jakaa mahdollisuudet tasan eri kosmetiikkatyyppien välillä
+  // Varmistetaan, että ownedFilter on varmasti funktio
+  const safeFilter = typeof ownedFilter === "function" ? ownedFilter : () => false;
+
   const categoryPools: Record<CosmeticCategory, RewardCosmetic[]> = {
     colors: [],
     shapes: [],
@@ -75,16 +77,13 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
     if (!CATALOGS[cat]) continue;
 
     for (const it of CATALOGS[cat]) {
-      // Jos pelaaja jo omistaa tämän esineen, sitä ei tiputeta uudestaan
-      if (ownedFilter(cat, it.id)) continue;
+      // Käytetään turvallista suodatinta
+      if (safeFilter(cat, it.id)) continue;
 
       if (cat === "emojis") {
-        // Estetään ilmaisten aloitusemojien tippuminen
         if (it.preview && FREE_EMOJI_PREVIEWS.includes(it.preview)) continue;
-        // Tarkistetaan sopiiko emojin harvinaisuus tähän laatikkoon
         if (!isEmojiEligible(it.rarity, tier)) continue;
       } else {
-        // Alkuperäiset säännöt muille kosmetiikoille
         if (it.exclusive) continue;
         if (!eligible.includes(it.rarity)) continue;
       }
@@ -93,16 +92,12 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
     }
   }
 
-  // 2. Etsitään ne kategoriat, joissa on oikeasti jotain annettavaa (allas ei ole tyhjä)
   const validCategories = cats.filter((cat) => categoryPools[cat].length > 0);
-  
   if (validCategories.length === 0) return null;
 
-  // 3. Valitaan satunnainen kategoria (jokaisella kategorialla on nyt tasan sama mahdollisuus tulla valituksi!)
   const chosenCat = validCategories[Math.floor(Math.random() * validCategories.length)];
   const pool = categoryPools[chosenCat];
 
-  // 4. Palautetaan satunnainen esine valitusta kategoriasta
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -110,15 +105,12 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
 export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward {
   const { rarity } = rollUpgrade(base);
   
-  // Haetaan kosmetiikka valmiiksi
   const cos = pickCosmetic(rarity, eligibleRarities(rarity), ownedFilter);
   
-  // 50% mahdollisuus antaa kosmetiikka (jos altaissa on vielä tavaraa jäljellä)
   if (cos && Math.random() < 0.5) {
     return cos;
   }
   
-  // Muussa tapauksessa tai jos kaikki kosmetiikat on kerätty, annetaan kolikoita
   return { type: "coins", amount: COIN_BY_TIER[rarity] };
 }
 
@@ -127,8 +119,12 @@ export function openContainer(kind: ContainerKind, base: Rarity, ownedFilter: (c
   const count = kind === "box" ? 3 + Math.floor(Math.random() * 3) : 1;
   const out: Reward[] = [];
   const seenIds = new Set<string>();
+  
+  // KORJAUS: Varmistetaan että ownedFilter on olemassa ja toimii, muuten peli jämähtää klikatessa
+  const safeFilter = typeof ownedFilter === "function" ? ownedFilter : () => false;
+
   for (let i = 0; i < count; i++) {
-    const r = rollReward(base, (cat, id) => ownedFilter(cat, id) || seenIds.has(`${cat}:${id}`));
+    const r = rollReward(base, (cat, id) => safeFilter(cat, id) || seenIds.has(`${cat}:${id}`));
     if (r.type === "cosmetic") seenIds.add(`${r.category}:${r.itemId}`);
     out.push(r);
   }
