@@ -114,7 +114,8 @@ function Lobby() {
         <span className="text-primary">→</span>
       </Link>
 
-      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.7</div>
+      {/* Päivitetty versio 4.8 */}
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.8</div>
 
       {showPlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowPlay(false)}>
