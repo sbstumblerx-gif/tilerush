@@ -24,21 +24,44 @@ export function RewardScreen() {
     p.pendingRewards = p.pendingRewards.slice(1);
     saveProgress(p);
   };
+
   const equip = () => {
     if (current.type === "cosmetic") {
       const p = loadProgress();
-      const keyMap = { colors: "color", shapes: "shape", patterns: "pattern", accessories: "accessory", themes: "theme" } as const;
-      p.equipped[keyMap[current.category]] = current.itemId;
+      
+      if (current.category === "emojis") {
+        // Haetaan emojin esikatselumerkki (esim. "💀") cosmetics-luettelosta
+        const itemObj = findItem("emojis", current.itemId);
+        if (itemObj?.preview) {
+          const arr = (p.equipped.emojis ?? ["😭", "😃", "😅", "👍"]).slice();
+          // Laitetaan uusi emoji oletuksena ensimmäiseen paikkaan (slotti 0)
+          arr[0] = itemObj.preview;
+          p.equipped.emojis = arr;
+        }
+      } else {
+        // Alkuperäinen logiikka muille kosmetiikoille
+        const keyMap = { 
+          colors: "color", 
+          shapes: "shape", 
+          patterns: "pattern", 
+          accessories: "accessory", 
+          themes: "theme" 
+        } as const;
+        p.equipped[keyMap[current.category]] = current.itemId;
+      }
+      
       saveProgress(p);
     }
     consume();
   };
 
   const rarity = current.type === "cosmetic" ? current.rarity : "common";
-  const title = current.type === "coins" ? "Kolikoita!" : CATEGORY_LABEL[current.category];
+  // KORJAUS: Jos kategoria on "emojis", käytetään näkymässä oikeaa otsikkoa
+  const title = current.type === "coins" ? "Kolikoita!" : (CATEGORY_LABEL[current.category] ?? "Emoji");
   const item = current.type === "cosmetic" ? findItem(current.category, current.itemId) : null;
+  
   const previewEquipped =
-    current.type === "cosmetic"
+    current.type === "cosmetic" && current.category !== "emojis"
       ? {
           color: current.category === "colors" ? current.itemId : "cyan",
           shape: current.category === "shapes" ? current.itemId : "circle",
@@ -57,6 +80,11 @@ export function RewardScreen() {
         <div className="my-8 flex items-center justify-center">
           {current.type === "coins" ? (
             <div className="text-7xl font-black">🪙 {current.amount}</div>
+          ) : current.category === "emojis" ? (
+            // KORJAUS: Emojeille näytetään hieno iso kuvakekeskiö PlayerTokenin sijaan
+            <div className="p-8 bg-black/30 rounded-2xl text-7xl h-32 w-32 flex items-center justify-center border border-white/20 shadow-xl">
+              {item?.preview}
+            </div>
           ) : previewEquipped ? (
             <div className="p-8 bg-black/30 rounded-2xl">
               {current.category === "themes" ? (
@@ -115,12 +143,14 @@ export function openInventoryContainer(id: string) {
   }
   if (!kind || !rarity) return;
   const rewards = openContainer(kind, rarity, (cat, iid) =>
-    p.owned[cat].includes(iid),
+    p.owned[cat]?.includes(iid) ?? false,
   );
   // Apply coins immediately, queue cosmetics for reward screen
   for (const r of rewards) {
     if (r.type === "coins") p.coins += r.amount;
-    else if (!p.owned[r.category].includes(r.itemId)) p.owned[r.category] = [...p.owned[r.category], r.itemId];
+    else if (!p.owned[r.category]?.includes(r.itemId)) {
+      p.owned[r.category] = [...(p.owned[r.category] || []), r.itemId];
+    }
   }
   p.pendingRewards = [...p.pendingRewards, ...rewards];
   saveProgress(p);
