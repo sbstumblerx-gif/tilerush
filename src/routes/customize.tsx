@@ -16,7 +16,7 @@ const CATS: { key: CosmeticCategory; label: string; equipKey: keyof Equipped | n
   { key: "patterns", label: "Kuvio", equipKey: "pattern" },
   { key: "accessories", label: "Asuste", equipKey: "accessory" },
   { key: "themes", label: "Sovellusteema", equipKey: "theme" },
-  { key: "emojis", label: "Emojit", equipKey: null }, // Emojit käsitellään omalla slottilogiikalla
+  { key: "emojis", label: "Emojit", equipKey: null },
 ];
 
 function CustomizePage() {
@@ -27,7 +27,6 @@ function CustomizePage() {
   
   useEffect(() => setP(loadProgress()), []);
 
-  // KORJATTU: Poistettu cat === "emojis" -esto, jotta harvinaisuusjärjestys toimii myös emojeille!
   const sorted = useMemo(() => {
     if (!p) return [];
     return [...CATALOGS[cat]].sort(
@@ -48,7 +47,6 @@ function CustomizePage() {
     setP(cur);
   };
 
-  // Tallentaa valitun emojin esikatselukuvan (esim. "💀") valittuun paikkaan (0-3)
   const setEmojiForActiveSlot = (emojiPreview: string) => {
     const cur = loadProgress();
     const arr = (cur.equipped.emojis ?? ["😭", "😃", "😅", "👍"]).slice();
@@ -76,7 +74,7 @@ function CustomizePage() {
       <h1 className="mt-4 text-3xl font-black">Mukauta</h1>
 
       <div className="mt-6 grid grid-cols-[110px_1fr_1fr] gap-3">
-        {/* Kategoriapainikkeet vasemmassa reunassa */}
+        {/* Kategoriapainikkeet */}
         <div className="flex flex-col gap-2">
           {CATS.map((c) => (
             <button
@@ -137,9 +135,8 @@ function CustomizePage() {
             </div>
           )}
 
-          {/* Tavarat ja Emojit listataan tässä (järjestettynä harvinaisuuden mukaan) */}
+          {/* Tuotteiden listaus */}
           {sorted.map((item) => {
-            // Emojit tarkistetaan 'emojis'-taulukosta, muut omistaan
             const owned = p.owned[cat]?.includes(item.id);
             
             let isCurrentEquipped = false;
@@ -219,5 +216,6 @@ function CustomizePage() {
       )}
     </div>
   );
-    }
+}
+
               
