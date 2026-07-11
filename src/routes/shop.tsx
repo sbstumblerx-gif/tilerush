@@ -13,12 +13,14 @@ export const Route = createFileRoute("/shop")({
   component: ShopPage,
 });
 
+// Lisätty Emojit kuudenneksi kategoriaksi
 const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
   { key: "colors", label: "Värit", emoji: "🎨" },
   { key: "shapes", label: "Muodot", emoji: "🔷" },
   { key: "patterns", label: "Kuviot", emoji: "▦" },
   { key: "accessories", label: "Asusteet", emoji: "👑" },
   { key: "themes", label: "Taustat", emoji: "🖼️" },
+  { key: "emojis", label: "Emojit", emoji: "😎" }, 
 ];
 
 const TEAM_OFFER_IDS = [
@@ -40,6 +42,19 @@ const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }
       if (!p.owned.patterns.includes("fifa")) p.owned.patterns.push("fifa");
     },
   },
+};
+
+// Apufunktio tuomaan taustavärit ja reunat eri rarityille kauppaan
+const getRarityClass = (rarity: string) => {
+  switch (rarity) {
+    case "common": return "border-green-500/30 bg-green-950/20";
+    case "rare": return "border-blue-500/30 bg-blue-950/20";
+    case "epic": return "border-purple-500/30 bg-purple-950/20";
+    case "legendary": return "border-yellow-500/30 bg-yellow-950/20";
+    case "mythic": return "border-red-500/30 bg-red-950/20";
+    case "ultra": return "border-pink-500 bg-gradient-to-br from-pink-950/40 via-purple-950/40 to-indigo-950/40 animate-pulse";
+    default: return "border-border/60 bg-background/40";
+  }
 };
 
 function ShopPage() {
@@ -75,8 +90,12 @@ function ShopPage() {
 
   const buy = (cat: CosmeticCategory, item: CosmeticItem) => {
     const cur = loadProgress();
+    
+    // Tarkistetaan ettei ole jo ostettu, ettei ole exclusive (kuten ultra) ja että rahat riittää
     if (cur.owned[cat].includes(item.id)) return;
+    if (item.exclusive) return;
     if (cur.coins < item.price) return;
+    
     cur.coins -= item.price;
     cur.owned[cat] = [...cur.owned[cat], item.id];
     saveProgress(cur);
@@ -92,14 +111,12 @@ function ShopPage() {
     cur.coins -= item.price;
     cur.teamOffersPurchased.push(id);
     if (!cur.owned.accessories.includes(id)) cur.owned.accessories.push(id);
-    // v4.7: also grant the flag theme and set as profile picture; add flag emoji to equipped slots.
     if (!cur.owned.themes.includes(id)) cur.owned.themes.push(id);
     const emoji = TEAM_EMOJI[id];
     if (emoji) {
       cur.profile.profilePic = emoji;
       const slots = cur.equipped.emojis ? [...cur.equipped.emojis] : ["🎮", "⚡", "🌟", "🏆"];
       if (!slots.includes(emoji)) {
-        // replace last slot to make room
         slots[3] = emoji;
       }
       cur.equipped.emojis = slots;
@@ -159,7 +176,7 @@ function ShopPage() {
             </button>
           </div>
 
-          {/* Tarjoukset – Quarterfinal teams */}
+          {/* Tarjoukset */}
           <div className="mt-4 neon-panel p-4">
             <button onClick={() => setShowOffers((v) => !v)} className="w-full flex items-center justify-between">
               <span className="flex items-center gap-2 font-bold"><Tag className="h-4 w-4 text-primary" /> Tarjoukset · Puolivälierä</span>
@@ -218,6 +235,7 @@ function ShopPage() {
             )}
           </div>
 
+          {/* Katalogiruudukko */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             {CATS.map((c) => (
               <button key={c.key} onClick={() => setOpen(c.key)} className="neon-panel p-5 text-left hover:border-primary/70">
@@ -237,40 +255,51 @@ function ShopPage() {
         <>
           <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {CATALOGS[open].filter((i) => !i.exclusive).map((item) => {
-              const owned = p.owned[open].includes(item.id);
-              const canBuy = !owned && p.coins >= item.price;
+            {CATALOGS[open].map((item) => {
+              // Tarkistetaan onko pelaajalla tämä jo auki
+              const owned = p.owned[open]?.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
+              const canBuy = !owned && p.coins >= item.price && !item.exclusive;
+              const rarityStyle = getRarityClass(item.rarity);
+
               return (
-                <div key={item.id} className="neon-panel p-3 flex flex-col gap-2">
+                <div key={item.id} className={`neon-panel p-3 flex flex-col gap-2 border border-solid ${rarityStyle}`}>
                   <div className="flex items-center justify-between">
-                    <span className="font-bold">{item.label}</span>
+                    <span className="font-bold text-sm">{item.label}</span>
                     {owned && <Check className="h-4 w-4 text-primary" />}
                   </div>
                   <div
-                    className="h-14 rounded flex items-center justify-center text-2xl"
+                    className="h-14 rounded flex items-center justify-center text-3xl bg-slate-950/40"
                     style={
                       open === "colors" && item.preview
                         ? { background: item.preview }
-                        : { background: "oklch(0.24 0.04 265)" }
+                        : undefined
                     }
                   >
                     {open !== "colors" && (item.preview ?? "")}
                   </div>
-                  <button
-                    disabled={owned || !canBuy}
-                    onClick={() => buy(open, item)}
-                    className="rounded bg-primary text-primary-foreground text-sm font-bold py-1.5 disabled:opacity-50"
-                  >
-                    {owned ? "Omistettu" : `🪙 ${item.price}`}
-                  </button>
+                  
+                  {/* Jos tuote on exclusive (kuten Ultra-emojit), sitä ei voi ostaa */}
+                  {item.exclusive ? (
+                    <div className="text-center text-[11px] font-bold text-pink-400 py-1.5 bg-pink-500/10 rounded border border-pink-500/20">
+                      Vain laatikoista
+                    </div>
+                  ) : (
+                    <button
+                      disabled={owned || !canBuy}
+                      onClick={() => buy(open, item)}
+                      className="rounded bg-primary text-primary-foreground text-sm font-bold py-1.5 disabled:opacity-50"
+                    >
+                      {owned ? "Omistettu" : `🪙 ${item.price}`}
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
         </>
       )}
-      {/* tick keeps countdown alive */}
       <span className="hidden">{tick}</span>
     </div>
   );
-}
+                      }
+                                                           
