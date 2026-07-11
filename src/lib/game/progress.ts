@@ -78,5 +78,72 @@ export interface Profile {
 
 export interface Friends {
   list: { code: string; username: string }[];
-  incoming:
-  
+  incoming: { code: string; username: string }[];
+  outgoing: { code: string; username: string }[];
+}
+
+export interface TileCupTask {
+  id: string;
+  label: string;
+  target: number;
+  progress: number;
+  reward: string;
+  claimed: boolean;
+}
+
+export interface Progress {
+  completed: number[];
+  coins: number;
+  stars: Record<number, number>; // per level best
+  stats: Stats;
+  passLevel: number; // 0..60
+  claimedPass: number[];
+  /** XP accumulated toward current pass tier (rolls over between tiers). */
+  passXp: number;
+  /** XP accumulated toward post-60 prestige boxes (every 500 XP → box). */
+  prestigeXp: number;
+  /** Levels completed during the current pass season (for +10 XP counting only new ones this season). */
+  passSeasonLevels: number[];
+  /** Packs completed during current pass season (+40 XP each). */
+  passSeasonPacks: number[];
+  owned: Owned;
+  equipped: Equipped;
+  daily?: DailyTasks;
+  weekly?: WeeklyTasks;
+  inventory: Inventory;
+  pendingRewards: Reward[];
+  settings: Settings;
+  profile: Profile;
+  friends: Friends;
+  /** ISO date YYYY-MM-DD of last claimed daily shop reward (UTC). */
+  lastDailyClaim?: string;
+  /** v4.5: redeemed promo codes (case-insensitive). */
+  promoRedeemed: string[];
+  /** v4.5: purchased quarter-finalist team offer ids. */
+  teamOffersPurchased: string[];
+  tileCup: {
+    goals: number;
+    volleyUses: number;
+    tasks: TileCupTask[];
+  };
+}
+
+function randomCode(len: number): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+const DEFAULT: Progress = {
+  completed: [],
+  coins: 0,
+  stars: {},
+  stats: {
+    starts: 0,
+    totalMoves: 0,
+    wins: 0,
+    losses: 0,
+    stars: 0,
+    tileUses: {},
+    
