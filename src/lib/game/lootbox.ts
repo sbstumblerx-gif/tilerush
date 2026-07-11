@@ -1,5 +1,5 @@
 import { CATALOGS, findItem, type CosmeticCategory } from "./cosmetics";
-import { RARITY_ORDER, type Rarity, rarityRank } from "./rarity"; // KORJAUS: Poistettu rollUpgrade importista
+import { RARITY_ORDER, rollUpgrade, type Rarity, rarityRank } from "./rarity"; // Tuodaan rollUpgrade takaisin exporttia varten
 
 export type ContainerKind = "box" | "heart";
 
@@ -30,7 +30,7 @@ const FREE_EMOJI_PREVIEWS = ["😭", "😃", "😅", "👍"];
 
 /** * Tarkistetaan sopiiko kosmetiikan taso konttiin.
  * Sääntö kaikille kosmetiikoille (+):
- * Common kontti -> Vain Rare ja siitä ylöspäin (koska mikään ei voi dropata Commonista, tämä blokkaa kaiken kosmetiikan)
+ * Common kontti -> Vain Rare ja siitä ylöspäin
  * Rare kontti -> Epic ja ylöspäin
  * Epic kontti -> Legendary ja ylöspäin
  * Legendary kontti -> Mythic ja ylöspäin
@@ -95,7 +95,7 @@ function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory, id: str
 
 /** Roll one reward from a container of given base rarity. */
 export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward {
-  // KORJAUS: Ei enää rollUpgradea! Käytetään suoraan kontin todellista tasoa.
+  // Käytetään suoraan kontin todellista tasoa ilman salaa arpomista
   const rarity = base;
   const cos = pickCosmetic(rarity, ownedFilter);
   
@@ -111,5 +111,31 @@ export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id
 export function openContainer(kind: ContainerKind, base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward[] {
   const count = kind === "box" ? 3 + Math.floor(Math.random() * 3) : 1;
   const out: Reward[] = [];
-  const seenIds
-  
+  const seenIds = new Set<string>();
+  const safeFilter = typeof ownedFilter === "function" ? ownedFilter : () => false;
+
+  for (let i = 0; i < count; i++) {
+    const r = rollReward(base, (cat, id) => safeFilter(cat, id) || seenIds.has(`${cat}:${id}`));
+    if (r.type === "cosmetic") seenIds.add(`${r.category}:${r.itemId}`);
+    out.push(r);
+  }
+  return out;
+}
+
+export function topRarity(rewards: Reward[]): Rarity {
+  let best: Rarity = "common";
+  for (const r of rewards) {
+    const rr = r.type === "cosmetic" ? r.rarity : ("common" as Rarity);
+    if (rarityRank(rr) > rarityRank(best)) best = rr;
+  }
+  return best;
+}
+
+export function itemLabel(r: Reward): string {
+  if (r.type === "coins") return `🪙 ${r.amount}`;
+  const it = findItem(r.category, r.itemId);
+  return it?.label ?? r.itemId;
+}
+
+// Pidetään exportit täysin samana, jotta muut tiedostot eivät hajoa
+export { RARITY_ORDER, rollUpgrade };
