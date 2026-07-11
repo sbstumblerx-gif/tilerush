@@ -25,7 +25,7 @@ const COIN_BY_TIER: Record<Rarity, number> = {
   ultra: 500,
 };
 
-/** Which rarities are eligible cosmetic drops per tier. */
+/** Which rarities are eligible cosmetic drops per tier for standard items. */
 function eligibleRarities(tier: Rarity): Rarity[] {
   switch (tier) {
     case "common":
@@ -43,20 +43,25 @@ function eligibleRarities(tier: Rarity): Rarity[] {
   }
 }
 
-/** Emojien omat tasovaatimukset lopullisen varmistuneen tason (tier) mukaan */
+/** * Emojien omat tasovaatimukset. 
+ * Laatikosta voi tippua sen oman tason tai sitä alemman tason emojeja.
+ * Ultra-emojit (exclusive) tippuvat VAIN ultra-laatikoista/sydämistä.
+ */
 function isEmojiEligible(emojiRarity: Rarity, boxTier: Rarity): boolean {
-  if (emojiRarity === "common" && ["rare", "epic", "legendary", "mythic", "ultra"].includes(boxTier)) return true;
-  if (emojiRarity === "rare" && ["epic", "legendary", "mythic", "ultra"].includes(boxTier)) return true;
-  if (emojiRarity === "epic" && ["legendary", "mythic", "ultra"].includes(boxTier)) return true;
-  if (emojiRarity === "legendary" && ["mythic", "ultra"].includes(boxTier)) return true;
-  if (emojiRarity === "mythic" && boxTier === "ultra") return true;
-  if (emojiRarity === "ultra" && boxTier === "ultra") return true;
-  return false;
+  const boxRank = rarityRank(boxTier);
+  const emojiRank = rarityRank(emojiRarity);
+
+  // Ultra-emojit vaativat aina vähintään Ultra-tason kontin
+  if (emojiRarity === "ultra") {
+    return boxTier === "ultra";
+  }
+
+  // Muut emojit voivat tippua, jos kontin taso on vähintään emojin tasoinen
+  return boxRank >= emojiRank;
 }
 
 /** Pick a random non-exclusive cosmetic of one of the eligible rarities. Returns null if none available. */
 function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: CosmeticCategory, id: string) => boolean): RewardCosmetic | null {
-  // Lisätty "emojis" mukaan sallittuihin kategorioihin
   const cats: CosmeticCategory[] = ["colors", "shapes", "patterns", "accessories", "themes", "emojis"];
   const pool: RewardCosmetic[] = [];
 
@@ -65,7 +70,7 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
       // Oletusesineitä (hinta 0) ei tiputeta laatikoista, ellei kyseessä ole Ultra-emoji
       if (it.price === 0 && cat === "emojis" && it.rarity !== "ultra") continue;
       
-      // Emojeille käytetään omaa erityistä tasotarkistusta
+      // Emojeille käytetään joustavaa hierarkiatarkistusta
       if (cat === "emojis") {
         if (!isEmojiEligible(it.rarity, tier)) continue;
       } else {
@@ -84,7 +89,6 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
 
 /** Roll one reward from a container of given base rarity. */
 export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward {
-  // Tässä kohtaa arvotaan laatikon lopullinen taso päivitysmekanismin jälkeen
   const { rarity } = rollUpgrade(base);
   
   // 50% kolikot
