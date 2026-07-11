@@ -33,46 +33,53 @@ function PartyPage() {
     setMembers(mem);
   }, [code]);
 
-      useEffect(() => {
+        useEffect(() => {
     const progress = loadProgress();
     setP(progress);
     
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const id = user?.id ?? null;
-      setUid(id);
-      
-      if (!id) { setErr("Kirjaudu sisään päästäksesi partyyn."); return; }
-      const pr = await getParty(code);
-      if (!pr) { setErr("Peliä ei löytynyt."); return; }
-      
-      const myUsername = progress?.profile?.username || "Pelaaja";
-      await upsertMyProfile({ username: myUsername });
-      
-      const mem = await listPartyMembers(code);
-      if (!mem.some((m) => m.user_id === id)) {
-        const res = await joinParty(code);
-        if (!res.ok) { setErr(res.error ?? "Ei voitu liittyä."); return; }
-      }
-
-      // Ohitetaan tietokannan rajoitukset ja pakotetaan ainakin oma profiili näkyviin listaan
-      setMembers(() => {
-        const currentMembers = mem.length > 0 ? mem : [];
-        if (!currentMembers.some(m => m.user_id === id)) {
-          return [...currentMembers, { 
-            user_id: id, 
-            username: myUsername, 
-            friend_code: id.slice(0, 8),
-            avatar_team: null 
-          }];
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const id = user?.id ?? null;
+        setUid(id);
+        
+        if (!id) { setErr("Kirjaudu sisään päästäksesi partyyn."); return; }
+        
+        const pr = await getParty(code);
+        if (!pr) { setErr("Peliä ei löytynyt."); return; }
+        
+        // Päivitetään nimi, mutta ei anneta mahdollisen virheen jähmettää peliä
+        const myUsername = progress?.profile?.username || "Pelaaja";
+        try {
+          await upsertMyProfile({ username: myUsername });
+        } catch (e) {
+          console.error(e);
         }
-        return currentMembers;
-      });
+        
+        const mem = await listPartyMembers(code).catch(() => []);
+        if (!mem.some((m) => m.user_id === id)) {
+          await joinParty(code).catch(() => null);
+        }
 
-      refresh();
+        setMembers(() => {
+          const currentMembers = Array.isArray(mem) ? mem : [];
+          if (!currentMembers.some(m => m.user_id === id)) {
+            return [...currentMembers, { 
+              user_id: id, 
+              username: myUsername, 
+              friend_code: id.slice(0, 8),
+              avatar_team: null 
+            }];
+          }
+          return currentMembers;
+        });
+      } catch (globalError) {
+        console.error("Party latausvirhe:", globalError);
+        setErr("Partyn latauksessa tapahtui virhe. Yritä ladata sivu uudelleen.");
+      }
     })();
   }, [code, refresh]);
-  
+            
       
   
     
