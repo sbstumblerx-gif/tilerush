@@ -59,7 +59,7 @@ export async function listFriends(): Promise<CloudProfile[]> {
   const uid = await currentUserId();
   if (!uid) return [];
   const { data: rels } = await supabase.from("friendships").select("friend_id").eq("user_id", uid);
-  const ids = (rels ?? []).map((r) => r.friend_id as string);
+  const ids = (rels ?? []).map((r: any) => r.friend_id as string);
   if (ids.length === 0) return [];
   const { data: profs } = await supabase.from("profiles").select("*").in("user_id", ids);
   return (profs as CloudProfile[]) ?? [];
@@ -80,7 +80,7 @@ export async function listRequests(): Promise<{ incoming: FriendRequestRow[]; ou
     .select("id,from_user,to_user")
     .or(`from_user.eq.${uid},to_user.eq.${uid}`);
   const rows = (data as FriendRequestRow[]) ?? [];
-  const otherIds = Array.from(new Set(rows.map((r) => (r.from_user === uid ? r.to_user : r.from_user))));
+  const otherIds = Array.from(new Set(rows.map((r: any) => (r.from_user === uid ? r.to_user : r.from_user))));
   const { data: profs } = otherIds.length
     ? await supabase.from("profiles").select("*").in("user_id", otherIds)
     : { data: [] as CloudProfile[] };
@@ -90,8 +90,8 @@ export async function listRequests(): Promise<{ incoming: FriendRequestRow[]; ou
     profile: byId.get(r.from_user === uid ? r.to_user : r.from_user),
   });
   return {
-    incoming: rows.filter((r) => r.to_user === uid).map(attach),
-    outgoing: rows.filter((r) => r.from_user === uid).map(attach),
+    incoming: rows.filter((r: any) => r.to_user === uid).map(attach),
+    outgoing: rows.filter((r: any) => r.from_user === uid).map(attach),
   };
 }
 
@@ -168,5 +168,18 @@ export async function joinParty(code: string): Promise<{ ok: boolean; error?: st
 export async function leaveParty(code: string): Promise<void> {
   const uid = await currentUserId();
   if (!uid) return;
-  await supabase.from("party_members").delete().eq("party_code", code).
-    
+  await supabase.from("party_members").delete().eq("party_code", code).eq("user_id", uid);
+}
+
+export async function listPartyMembers(code: string): Promise<CloudProfile[]> {
+  const { data: mem } = await supabase.from("party_members").select("user_id").eq("party_code", code);
+  const ids = (mem ?? []).map((m: any) => m.user_id as string);
+  if (ids.length === 0) return [];
+  const { data: profs } = await supabase.from("profiles").select("*").in("user_id", ids);
+  return (profs as CloudProfile[]) ?? [];
+}
+
+export async function updatePartySettings(code: string, patch: Partial<Pick<PartyRow, "rounds" | "packs" | "status">>): Promise<void> {
+  await supabase.from("parties").update(patch).eq("code", code);
+       }
+
