@@ -20,7 +20,7 @@ function buildGrid(id: number, size: number, alphabet: string[], weights: number
   for (let r = 0; r < size; r++) {
     let row = "";
     for (let c = 0; c < size; c++) {
-            // Kulmat: S ylävasen, G alaoikea
+                  // Kulmat: S ylävasen, G alaoikea
       if (r === 0 && c === 0) { row += "S"; continue; }
       if (r === size - 1 && c === size - 1) { row += "G"; continue; }
       
@@ -36,6 +36,7 @@ function buildGrid(id: number, size: number, alphabet: string[], weights: number
         row += ".";
         continue;
       }
+      
       
       const roll = rnd() * total;
       let acc = 0;
