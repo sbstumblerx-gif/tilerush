@@ -21,21 +21,23 @@ function buildGrid(id: number, size: number, alphabet: string[], weights: number
     let row = "";
     for (let c = 0; c < size; c++) {
                   // Kulmat: S ylävasen, G alaoikea
+            // Kulmat: S ylävasen, G alaoikea
       if (r === 0 && c === 0) { row += "S"; continue; }
       if (r === size - 1 && c === size - 1) { row += "G"; continue; }
-      
+
       // KORJAUS: Taataan kulmakulku laajentamalla vapaata aluetta ruutuihin (1,1) ja vastakkaiseen kulmaan
       if (
-        (r === 0 && c === 1) || 
-        (r === 1 && c === 0) || 
-        (r === 1 && c === 1) || 
-        (r === size - 1 && c === size - 2) || 
+        (r === 0 && c === 1) ||
+        (r === 1 && c === 0) ||
+        (r === 1 && c === 1) ||
+        (r === size - 1 && c === size - 2) ||
         (r === size - 2 && c === size - 1) ||
         (r === size - 2 && c === size - 2)
       ) {
         row += ".";
         continue;
       }
+      
       
       
       const roll = rnd() * total;
