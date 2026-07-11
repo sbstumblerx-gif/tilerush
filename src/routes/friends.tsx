@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, X, Check } from "lucide-react";
+import { ArrowLeft, X, Check, Copy, CheckCircle2 } from "lucide-react";
 import { loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import {
   removeFriend, sendFriendRequest, upsertMyProfile,
   type CloudProfile, type FriendRequestRow,
 } from "@/lib/cloud/social";
+import { ProfileModal, type ProfileData } from "@/components/game/ProfileModal";
 
 export const Route = createFileRoute("/friends")({
   head: () => ({ meta: [{ title: "Kaverit · Tile Rush" }] }),
@@ -27,6 +28,11 @@ function FriendsPage() {
   const [friends, setFriends] = useState<CloudProfile[]>([]);
   const [incoming, setIncoming] = useState<FriendRequestRow[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequestRow[]>([]);
+  
+  // Profiilinäkymän tilanhallinta
+  const [selectedProfile, setSelectedProfile] = useState<ProfileData | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const refresh = useCallback(async () => {
     const [prof, fs, reqs] = await Promise.all([fetchMyProfile(), listFriends(), listRequests()]);
@@ -34,7 +40,7 @@ function FriendsPage() {
     setFriends(fs);
     setIncoming(reqs.incoming);
     setOutgoing(reqs.outgoing);
-    // Sync local username → cloud (once, if differs) and cloud friend_code → local
+    
     const cur = loadProgress();
     if (prof) {
       let changed = false;
@@ -66,7 +72,6 @@ function FriendsPage() {
     return () => sub.subscription.unsubscribe();
   }, [refresh]);
 
-  // Realtime: refresh on any friend_requests / friendships change.
   useEffect(() => {
     if (!signedIn) return;
     const ch = supabase
@@ -78,6 +83,53 @@ function FriendsPage() {
   }, [signedIn, refresh]);
 
   if (!p) return null;
+
+  // Apu-funktio oman profiilidatan rakentamiseen
+  const getMyProfileData = (): ProfileData => ({
+    username: p.profile.username || "Pelaaja",
+    friendCode: me?.friend_code || p.profile.friendCode || "TILE-0000",
+    levelsCompleted: p.completed?.length || 0,
+    starsCollected: p.stats?.stars || 0,
+    isSelf: true,
+    equipped: {
+      color: p.equipped?.color || "cyan",
+      shape: p.equipped?.shape || "circle",
+      pattern: p.equipped?.pattern || "none",
+      accessory: p.equipped?.accessory || "none",
+      theme: p.equipped?.theme || "default",
+      emojis: p.equipped?.emojis || ["😭", "😃", "😅", "👍"]
+    }
+  });
+
+  // Apu-funktio kaverin profiilidatan rakentamiseen tietokantarivistä
+  const getFriendProfileData = (f: CloudProfile): ProfileData => {
+    // Haetaan pilvestä tai arvaillaan tallennustyyli. Supabasessa tallennetaan JSON-objektina tai puretaan tässä
+    const customEquipped = f.equipped ? (typeof f.equipped === 'string' ? JSON.parse(f.equipped) : f.equipped) : null;
+    
+    return {
+      username: f.username || "Pelaaja",
+      friendCode: f.friend_code || "",
+      levelsCompleted: f.levels_completed || 0,
+      starsCollected: f.stars_collected || 0,
+      isSelf: false,
+      equipped: {
+        color: customEquipped?.color || "purple",
+        shape: customEquipped?.shape || "square",
+        pattern: customEquipped?.pattern || "none",
+        accessory: customEquipped?.accessory || "none",
+        theme: customEquipped?.theme || "default",
+        emojis: customEquipped?.emojis || ["🤮", "😃", "😭", "👍"] // Käytetään vain olemassa olevia emojeita
+      }
+    };
+  };
+
+  const copyMyCode = async () => {
+    const activeCode = me?.friend_code || p.profile.friendCode;
+    if (!activeCode) return;
+    await navigator.clipboard.writeText(activeCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
   const send = async () => {
     const c = code.trim().toLowerCase();
@@ -94,7 +146,17 @@ function FriendsPage() {
       <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" /> Lobby
       </Link>
-      <h1 className="mt-4 text-3xl font-black">Kaverit</h1>
+      
+      {/* Oma nimi klikattavissa heti yläotsikon vieressä */}
+      <div className="mt-4 flex items-center justify-between">
+        <h1 className="text-3xl font-black">Kaverit</h1>
+        <button 
+          onClick={() => { setSelectedProfile(getMyProfileData()); setIsProfileOpen(true); }}
+          className="text-xs font-bold px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
+        >
+          Oma profiili 👤
+        </button>
+      </div>
 
       {signedIn === false && (
         <div className="mt-4 neon-panel p-4 text-sm">
@@ -102,14 +164,14 @@ function FriendsPage() {
         </div>
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {([
           ["list", `Ystävät ${friends.length}/50`],
           ["requests", "Pyynnöt"],
           ["add", "Lisää"],
           ["leaderboard", "Tulostaulu"],
         ] as [Tab, string][]).map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k)} className={`neon-panel px-3 py-2 text-sm ${tab === k ? "border-primary" : ""}`}>
+          <button key={k} onClick={() => setTab(k)} className={`neon-panel px-3 py-2 text-sm whitespace-nowrap ${tab === k ? "border-primary" : ""}`}>
             {label}
           </button>
         ))}
@@ -119,14 +181,18 @@ function FriendsPage() {
         <div className="mt-4 space-y-2">
           {friends.length === 0 && <div className="text-sm text-muted-foreground">Ei vielä kavereita. Lisää heitä koodilla.</div>}
           {friends.map((f) => (
-            <div key={f.user_id} className="neon-panel p-3 flex items-center justify-between">
-              <div>
-                <div className="font-bold flex items-center gap-2">
+            <div key={f.user_id} className="neon-panel p-3 flex items-center justify-between hover:border-zinc-700 transition-colors">
+              {/* Nimi ja koodi tehty kokonaan klikattavaksi profiilia varten */}
+              <div 
+                className="cursor-pointer flex-1" 
+                onClick={() => { setSelectedProfile(getFriendProfileData(f)); setIsProfileOpen(true); }}
+              >
+                <div className="font-bold flex items-center gap-2 text-white hover:text-primary transition-colors">
                   {f.avatar_team && <span>{teamFlag(f.avatar_team)}</span>}{f.username}
                 </div>
                 <div className="text-xs text-muted-foreground font-mono">{f.friend_code}</div>
               </div>
-              <button onClick={async () => { await removeFriend(f.user_id); refresh(); }} className="text-xs text-destructive">Poista</button>
+              <button onClick={async () => { await removeFriend(f.user_id); refresh(); }} className="text-xs text-destructive pl-2">Poista</button>
             </div>
           ))}
         </div>
@@ -168,9 +234,17 @@ function FriendsPage() {
 
       {tab === "add" && (
         <div className="mt-4 space-y-4">
-          <div className="neon-panel p-4">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Oma kaverikoodisi</div>
-            <div className="mt-1 text-2xl font-mono tracking-widest">{me?.friend_code ?? p.profile.friendCode}</div>
+          <div className="neon-panel p-4 flex items-center justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Oma kaverikoodisi</div>
+              <div className="mt-1 text-2xl font-mono tracking-widest">{me?.friend_code ?? p.profile.friendCode}</div>
+            </div>
+            <button 
+              onClick={copyMyCode}
+              className="p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-all text-zinc-400 hover:text-white"
+            >
+              {copiedCode ? <Check className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
+            </button>
           </div>
           <div className="neon-panel p-4 space-y-3">
             <div className="text-sm font-bold">Lisää kaveri koodilla</div>
@@ -190,7 +264,12 @@ function FriendsPage() {
       {tab === "leaderboard" && (
         <div className="mt-4 space-y-2">
           <div className="text-xs text-muted-foreground">Kaverien tulostaulu — omat tulokset ensin.</div>
-          <div className="neon-panel p-3 flex items-center justify-between">
+          
+          {/* Oma rivi tulostaululla - avaa oman profiilin */}
+          <div 
+            className="neon-panel p-3 flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => { setSelectedProfile(getMyProfileData()); setIsProfileOpen(true); }}
+          >
             <div className="flex items-center gap-3">
               <span className="text-primary text-lg font-black w-6 text-center">1</span>
               <div>
@@ -200,12 +279,18 @@ function FriendsPage() {
             </div>
             <span className="text-sm font-mono">🪙 {p.coins}</span>
           </div>
+
+          {/* Kaverien rivit tulostaululla - avaa kaverin profiilin */}
           {friends.map((f, i) => (
-            <div key={f.user_id} className="neon-panel p-3 flex items-center justify-between opacity-80">
+            <div 
+              key={f.user_id} 
+              className="neon-panel p-3 flex items-center justify-between opacity-80 hover:opacity-100 cursor-pointer transition-all"
+              onClick={() => { setSelectedProfile(getFriendProfileData(f)); setIsProfileOpen(true); }}
+            >
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground text-lg font-black w-6 text-center">{i + 2}</span>
                 <div>
-                  <div className="font-bold">{f.username}</div>
+                  <div className="font-bold hover:text-primary transition-colors">{f.username}</div>
                   <div className="text-xs text-muted-foreground font-mono">{f.friend_code}</div>
                 </div>
               </div>
@@ -219,6 +304,13 @@ function FriendsPage() {
           )}
         </div>
       )}
+
+      {/* Yhteinen Profiili-Modal molemmille */}
+      <ProfileModal 
+        isOpen={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
+        profile={selectedProfile} 
+      />
     </div>
   );
 }
