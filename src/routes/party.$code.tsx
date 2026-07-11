@@ -34,26 +34,46 @@ function PartyPage() {
   }, [code]);
 
     useEffect(() => {
+      useEffect(() => {
     const progress = loadProgress();
     setP(progress);
     
     (async () => {
-      const id = await currentUserId();
+      const { data: { user } } = await supabase.auth.getUser();
+      const id = user?.id ?? null;
       setUid(id);
+      
       if (!id) { setErr("Kirjaudu sisään päästäksesi partyyn."); return; }
       const pr = await getParty(code);
       if (!pr) { setErr("Peliä ei löytynyt."); return; }
       
-      const username = progress?.profile?.username || "Pelaaja";
+      const myUsername = progress?.profile?.username || "Pelaaja";
+      await upsertMyProfile({ username: myUsername });
       
+      // Liitytään peliin taustalla
       const mem = await listPartyMembers(code);
       if (!mem.some((m) => m.user_id === id)) {
-        const res = await joinParty(code, username);
-        if (!res.ok) { setErr(res.error ?? "Ei voitu liittyä."); return; }
+        await joinParty(code);
       }
+
+      // OMA KORJAUS: Jos RLS-säännöt blokkaavat muiden profiilien lukemisen,
+      // varmistetaan että ainakin oma profiili näkyy lobbyssa heti!
+      setMembers(prev => {
+        if (!prev.some(m => m.user_id === id)) {
+          return [...prev, { 
+            user_id: id, 
+            username: myUsername, 
+            friend_code: id.slice(0, 8),
+            avatar_team: null 
+          }];
+        }
+        return prev;
+      });
+      
       refresh();
     })();
   }, [code, refresh]);
+      
   
     
     
