@@ -19,13 +19,25 @@ const CATS: { key: CosmeticCategory; label: string; equipKey: keyof Equipped | n
   { key: "emojis", label: "Emojit", equipKey: null },
 ];
 
+const DEFAULT_EMOJIS = ["😭", "😃", "😅", "👍"];
+
 function CustomizePage() {
   const [p, setP] = useState<Progress | null>(null);
   const [cat, setCat] = useState<CosmeticCategory>("colors");
   const [selected, setSelected] = useState<string | null>(null);
   const [emojiSlot, setEmojiSlot] = useState<number>(0);
   
-  useEffect(() => setP(loadProgress()), []);
+  useEffect(() => {
+    const loaded = loadProgress();
+    
+    // Puhdistetaan vanhat oletusemojit tallennuksesta, jos siellä kummittelee peliohjain tai salama
+    if (!loaded.equipped.emojis || loaded.equipped.emojis.includes("🎮") || loaded.equipped.emojis.includes("🏆")) {
+      loaded.equipped.emojis = [...DEFAULT_EMOJIS];
+      saveProgress(loaded);
+    }
+    
+    setP(loaded);
+  }, []);
 
   const sorted = useMemo(() => {
     if (!p) return [];
@@ -49,7 +61,7 @@ function CustomizePage() {
 
   const setEmojiForActiveSlot = (emojiPreview: string) => {
     const cur = loadProgress();
-    const arr = (cur.equipped.emojis ?? ["😭", "😃", "😅", "👍"]).slice();
+    const arr = (cur.equipped.emojis ?? [...DEFAULT_EMOJIS]).slice();
     arr[emojiSlot] = emojiPreview;
     cur.equipped.emojis = arr;
     saveProgress(cur);
@@ -64,7 +76,8 @@ function CustomizePage() {
   const selItem: CosmeticItem | null =
     selected ? CATALOGS[cat].find((i) => i.id === selected) ?? null : null;
 
-  const activeSlotEmoji = (eq.emojis ?? ["😭", "😃", "😅", "👍"])[emojiSlot];
+  const currentEmojis = eq.emojis ?? DEFAULT_EMOJIS;
+  const activeSlotEmoji = currentEmojis[emojiSlot];
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[720px] mx-auto">
@@ -80,7 +93,7 @@ function CustomizePage() {
             <button
               key={c.key}
               onClick={() => { setCat(c.key); setSelected(null); }}
-              className={`neon-panel px-3 py-2 text-left text-sm transition-colors ${cat === c.key ? "border-primary/70 bg-primary/5" : ""}`}
+              className={`neon-panel px-3 py-2 text-left text-sm transition-colors ${cat === c.key ? "border-primary/70 bg-primary/5 font-bold" : ""}`}
             >
               {c.label}
             </button>
@@ -120,10 +133,10 @@ function CustomizePage() {
             <div className="mb-4 space-y-2 bg-background/40 p-2 rounded border border-border/40">
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Valitse täytettävä paikka:</div>
               <div className="grid grid-cols-4 gap-1.5">
-                {(eq.emojis ?? ["😭", "😃", "😅", "👍"]).map((e, i) => (
+                {currentEmojis.map((e, i) => (
                   <button
                     key={i}
-                    onClick={() => setEmojiSlot(i)}
+                    onClick={() => { setEmojiSlot(i); setSelected(null); }}
                     className={`h-10 rounded text-xl flex items-center justify-center transition-all ${
                       emojiSlot === i ? "border-2 border-primary bg-primary/20 scale-105 font-bold" : "border border-border/40 bg-background/60"
                     }`}
@@ -135,13 +148,13 @@ function CustomizePage() {
             </div>
           )}
 
-          {/* Tuotteiden listaus */}
+          {/* Listataan valitun kategorian esineet */}
           {sorted.map((item) => {
             const owned = p.owned[cat]?.includes(item.id);
             
             let isCurrentEquipped = false;
             if (cat === "emojis") {
-              isCurrentEquipped = (eq.emojis ?? ["😭", "😃", "😅", "👍"])[emojiSlot] === item.preview;
+              isCurrentEquipped = currentEmojis[emojiSlot] === item.preview;
             } else if (equipKey) {
               isCurrentEquipped = (eq as unknown as Record<string, string>)[equipKey] === item.id;
             }
@@ -187,7 +200,7 @@ function CustomizePage() {
           
           <div>
             {cat === "emojis" ? (
-              (eq.emojis ?? ["😭", "😃", "😅", "👍"])[emojiSlot] === selItem.preview ? (
+              currentEmojis[emojiSlot] === selItem.preview ? (
                 <button disabled className="px-4 py-2 rounded bg-muted text-muted-foreground text-xs font-bold cursor-not-allowed">
                   Jo paikassa {emojiSlot + 1}
                 </button>
@@ -217,5 +230,6 @@ function CustomizePage() {
     </div>
   );
 }
+
 
               
