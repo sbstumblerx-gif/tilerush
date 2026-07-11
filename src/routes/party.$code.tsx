@@ -33,7 +33,6 @@ function PartyPage() {
     setMembers(mem);
   }, [code]);
 
-  useEffect(() => {
     useEffect(() => {
     const progress = loadProgress();
     setP(progress);
@@ -55,6 +54,7 @@ function PartyPage() {
       refresh();
     })();
   }, [code, refresh]);
+  
     
     
 
