@@ -1,53 +1,61 @@
-// Esimerkkidataa kavereista päivitetyn oletusnelikon kanssa
-const MOCK_FRIENDS: ProfileData[] = [
-  {
-    username: "KoodariKettu",
-    friendCode: "TILE-4412-FOX",
-    levelsCompleted: 45,
-    starsCollected: 120,
-    equipped: {
-      color: "purple",
-      shape: "square",
-      pattern: "dots",
-      accessory: "headphones",
-      theme: "default",
-      emojis: ["😭", "😃", "😅", "👍"] // Korjattu oikeaksi oletusnelikoksi
-    }
-  },
-  {
-    username: "MopoMestari",
-    friendCode: "TILE-9981-RIDE",
-    levelsCompleted: 12,
-    starsCollected: 31,
-    equipped: {
-      color: "red",
-      shape: "circle",
-      pattern: "none",
-      accessory: "none",
-      theme: "default",
-      emojis: ["😭", "😅", "😃", "👍"]
-    }
-  }
-];
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, X, Check, Copy } from "lucide-react";
+import { loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  acceptRequest, deleteRequest, fetchMyProfile, listFriends, listRequests,
+  removeFriend, sendFriendRequest, upsertMyProfile,
+  type CloudProfile, type FriendRequestRow,
+} from "@/lib/cloud/social";
+import { ProfileModal, type ProfileData } from "@/components/game/ProfileModal";
 
-// ... ja alempana kaverin profiilidatan parsinnassa:
+export const Route = createFileRoute("/friends")({
+  head: () => ({ meta: [{ title: "Kaverit · Tile Rush" }] }),
+  component: FriendsPage,
+});
 
-const getFriendProfileData = (f: CloudProfile): ProfileData => {
-  const customEquipped = f.equipped ? (typeof f.equipped === 'string' ? JSON.parse(f.equipped) : f.equipped) : null;
+type Tab = "list" | "requests" | "add" | "leaderboard";
+
+function FriendsPage() {
+  const [p, setP] = useState<Progress | null>(null);
+  const [tab, setTab] = useState<Tab>("list");
+  const [code, setCode] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [me, setMe] = useState<CloudProfile | null>(null);
+  const [friends, setFriends] = useState<CloudProfile[]>([]);
+  const [incoming, setIncoming] = useState<FriendRequestRow[]>([]);
+  const [outgoing, setOutgoing] = useState<FriendRequestRow[]>([]);
   
-  return {
-    username: f.username || "Pelaaja",
-    friendCode: f.friend_code || "",
-    levelsCompleted: f.levels_completed || 0,
-    starsCollected: f.stars_collected || 0,
-    isSelf: false,
-    equipped: {
-      color: customEquipped?.color || "purple",
-      shape: customEquipped?.shape || "square",
-      pattern: customEquipped?.pattern || "none",
-      accessory: customEquipped?.accessory || "none",
-      theme: customEquipped?.theme || "default",
-      emojis: customEquipped?.emojis || ["😭", "😃", "😅", "👍"] // Korjattu viralliset oletusemojit tähänkin
+  // Profiilinäkymän tilanhallinta
+  const [selectedProfile, setSelectedProfile] = useState<ProfileData | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const [prof, fs, reqs] = await Promise.all([fetchMyProfile(), listFriends(), listRequests()]);
+    setMe(prof);
+    setFriends(fs);
+    setIncoming(reqs.incoming);
+    setOutgoing(reqs.outgoing);
+    
+    const cur = loadProgress();
+    if (prof) {
+      let changed = false;
+      if (prof.friend_code && cur.profile.friendCode !== prof.friend_code) {
+        cur.profile.friendCode = prof.friend_code; changed = true;
+      }
+      if (cur.profile.username && cur.profile.username !== "Pelaaja" && cur.profile.username !== prof.username) {
+        await upsertMyProfile({ username: cur.profile.username });
+      } else if (cur.profile.username === "Pelaaja" && prof.username && prof.username !== cur.profile.username) {
+        cur.profile.username = prof.username; changed = true;
+      }
+      if (changed) saveProgress(cur);
     }
-  };
-};
+    setP(loadProgress());
+  }, []);
+
+  useEffect(()
+    
