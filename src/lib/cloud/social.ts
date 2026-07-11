@@ -131,13 +131,8 @@ export async function joinParty(code: string): Promise<{ ok: boolean; error?: st
   if (!party) return { ok: false, error: "Peliä ei löytynyt." };
   const { count } = await supabase
     .from("party_members")
-    .select("*", { count: "exact", head: true })
-    .eq("party_code", code);
-  if ((count ?? 0) >= 4) return { ok: false, error: "Peli on täynnä." };
-  const { error } = await supabase.from("party_members").insert({ party_code: code, user_id: uid });
-  if (error && !String(error.message).includes("duplicate")) return { ok: false, error: error.message };
-  return { ok: true };
-}
+    const { data: profs } = await supabase.from("profiles").select("*").in("user_id", ids);
+  
 
 export async function leaveParty(code: string): Promise<void> {
   const uid = await currentUserId();
