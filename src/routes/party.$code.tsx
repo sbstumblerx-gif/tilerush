@@ -34,22 +34,30 @@ function PartyPage() {
   }, [code]);
 
   useEffect(() => {
-    setP(loadProgress());
+    useEffect(() => {
+    const progress = loadProgress();
+    setP(progress);
+    
     (async () => {
       const id = await currentUserId();
       setUid(id);
       if (!id) { setErr("Kirjaudu sisään päästäksesi partyyn."); return; }
       const pr = await getParty(code);
       if (!pr) { setErr("Peliä ei löytynyt."); return; }
-      // ensure I'm a member
+      
+      // Haetaan pelaajan asettama username ja varmistetaan, että se menee tietokantaan
+      const username = progress?.profile?.username || "Pelaaja";
+      
       const mem = await listPartyMembers(code);
       if (!mem.some((m) => m.user_id === id)) {
-        const res = await joinParty(code);
+        // Välitetään username eteenpäin liittyessä!
+        const res = await joinParty(code, username);
         if (!res.ok) { setErr(res.error ?? "Ei voitu liittyä."); return; }
       }
       refresh();
     })();
   }, [code, refresh]);
+    
 
   useEffect(() => {
     const ch = supabase
