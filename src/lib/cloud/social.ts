@@ -22,10 +22,22 @@ export async function fetchMyProfile(): Promise<CloudProfile | null> {
 export async function upsertMyProfile(
   patch: Partial<Pick<CloudProfile, "username" | "avatar_team">>,
 ): Promise<void> {
-  const uid = await currentUserId();
-  if (!uid) return;
-  await supabase.from("profiles").update(patch).eq("user_id", uid);
+  try {
+    const uid = await currentUserId();
+    if (!uid) return;
+    
+    // Suoritetaan upsert turvallisesti try-catch -blogin sisällä
+    await supabase.from("profiles").upsert({
+      user_id: uid,
+      username: patch.username || "Pelaaja",
+      friend_code: uid.slice(0, 8),
+      ...patch
+    }, { onConflict: 'user_id' });
+  } catch (e) {
+    console.error("Profiilin päivitys epäonnistui:", e);
+  }
 }
+
 
 
 /* -------- Friends -------- */
