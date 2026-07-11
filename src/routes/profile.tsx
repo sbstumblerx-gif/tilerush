@@ -38,12 +38,26 @@ function ProfilePage() {
     setP(cur);
   };
 
-  const linkGoogle = async () => {
-    await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const linkGoogle = async () => {
+    // Käytetään suoraan supabasea ja pakotetaan paluu tälle profiilisivulle
+    const currentUrl = window.location.href; 
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: currentUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
   };
+
   const signOut = async () => {
     await supabase.auth.signOut();
+    setEmail(null); // Varmistetaan, että tila nollautuu heti käyttöliittymässä
   };
+  
   const copyCode = () => navigator.clipboard?.writeText(p.profile.friendCode);
 
   return (
