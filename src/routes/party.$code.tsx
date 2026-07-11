@@ -33,7 +33,7 @@ function PartyPage() {
     setMembers(mem);
   }, [code]);
 
-        useEffect(() => {
+          useEffect(() => {
     const progress = loadProgress();
     setP(progress);
     
@@ -48,7 +48,6 @@ function PartyPage() {
         const pr = await getParty(code);
         if (!pr) { setErr("Peliä ei löytynyt."); return; }
         
-        // Päivitetään nimi, mutta ei anneta mahdollisen virheen jähmettää peliä
         const myUsername = progress?.profile?.username || "Pelaaja";
         try {
           await upsertMyProfile({ username: myUsername });
@@ -73,6 +72,18 @@ function PartyPage() {
           }
           return currentMembers;
         });
+
+      } catch (globalError) {
+        console.error("Party latausvirhe:", globalError);
+        setErr("Partyn latauksessa tapahtui virhe.");
+      } finally {
+        // TÄMÄ PUUTTUI: Pakotetaan latausruutu sulkeutumaan, 
+        // oli lopputulos mikä tahansa!
+        refresh();
+      }
+    })();
+  }, [code, refresh]);
+  
       } catch (globalError) {
         console.error("Party latausvirhe:", globalError);
         setErr("Partyn latauksessa tapahtui virhe. Yritä ladata sivu uudelleen.");
