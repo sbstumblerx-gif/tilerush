@@ -26,19 +26,17 @@ export async function upsertMyProfile(
     const uid = await currentUserId();
     if (!uid) return;
     
-    // Suoritetaan upsert turvallisesti try-catch -blogin sisällä
+    // FIKSI: Otetaan vain 6 merkkiä user_id:n alusta, jotta se täsmää Friends.js:n maxLength={6} kanssa
     await supabase.from("profiles").upsert({
       user_id: uid,
       username: patch.username || "Pelaaja",
-      friend_code: uid.slice(0, 8),
+      friend_code: uid.slice(0, 6).toLowerCase(),
       ...patch
     }, { onConflict: 'user_id' });
   } catch (e) {
     console.error("Profiilin päivitys epäonnistui:", e);
   }
 }
-
-
 
 /* -------- Friends -------- */
 
@@ -85,7 +83,11 @@ export async function listRequests(): Promise<{ incoming: FriendRequestRow[]; ou
 export async function sendFriendRequest(code: string): Promise<{ ok: boolean; error?: string; accepted?: boolean }> {
   const uid = await currentUserId();
   if (!uid) return { ok: false, error: "Kirjaudu sisään käyttääksesi kavereita." };
-  const { data, error } = await supabase.rpc("send_friend_request_by_code", { _code: code.trim().toLowerCase() });
+  
+  // Varmistetaan hakuun menevän koodin siisteytys ja pituus
+  const cleanedCode = code.trim().toLowerCase().slice(0, 6);
+  
+  const { data, error } = await supabase.rpc("send_friend_request_by_code", { _code: cleanedCode });
   if (error) return { ok: false, error: error.message };
   return { ok: true, accepted: data === null };
 }
@@ -102,7 +104,6 @@ export async function removeFriend(friendId: string): Promise<void> {
   const uid = await currentUserId();
   if (!uid) return;
   await supabase.from("friendships").delete().eq("user_id", uid).eq("friend_id", friendId);
-  // best-effort: delete reverse too (RLS lets other side clean up; ignore failure)
   await supabase.from("friendships").delete().eq("user_id", friendId).eq("friend_id", uid);
 }
 
@@ -119,7 +120,6 @@ export interface PartyRow {
 export async function createParty(rounds: number, packs: number[]): Promise<PartyRow | null> {
   const uid = await currentUserId();
   if (!uid) return null;
-  // 5-char lowercase code
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   const code = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   const { data, error } = await supabase
@@ -166,7 +166,7 @@ export async function listPartyMembers(code: string): Promise<CloudProfile[]> {
   return (profs as CloudProfile[]) ?? [];
 }
 
-
 export async function updatePartySettings(code: string, patch: Partial<Pick<PartyRow, "rounds" | "packs" | "status">>): Promise<void> {
   await supabase.from("parties").update(patch).eq("code", code);
-}
+                                          }
+
