@@ -43,7 +43,6 @@ export async function upsertMyProfile(
     const uid = await currentUserId();
     if (!uid) return;
     
-    // Varmistetaan, että koodi on aina tasan 6 merkkiä pitkä user_id:n alusta
     const targetCode = uid.slice(0, 6).toLowerCase();
     
     await supabase.from("profiles").upsert({
