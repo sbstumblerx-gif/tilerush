@@ -10,9 +10,6 @@ interface Props {
   onDone: () => void;
 }
 
-/** Interactive upgrade + open flow for a single box/heart container.
- *  User has 4 taps to try to upgrade. After 4 taps the container is "ready"
- *  and tapping again opens it (queues rewards into RewardScreen). */
 export function OpenContainer({ id, kind, startRarity, onDone }: Props) {
   const [rarity, setRarity] = useState<Rarity>(startRarity);
   const [tapsLeft, setTapsLeft] = useState(4);
@@ -22,7 +19,6 @@ export function OpenContainer({ id, kind, startRarity, onDone }: Props) {
 
   const handleTap = () => {
     if (tapsLeft > 0) {
-      // roll ONE step (same table used by rollUpgrade internally, but we do a single roll per tap)
       const roll = Math.random();
       let step = 0;
       if (roll < 0.63) step = 0;
@@ -37,12 +33,11 @@ export function OpenContainer({ id, kind, startRarity, onDone }: Props) {
       setLastMsg(step === 0 ? "Ei muutosta" : `Päivitys +${step}!`);
       return;
     }
-    // ready → open
-    openInventoryContainer(id);
+    // KORJAUS: Välitetään käyttöliittymän arpomotaso (rarity) taustafunktiolle asti!
+    openInventoryContainer(id, rarity);
     onDone();
   };
 
-  // Silence unused rollUpgrade warning if TS decides
   useMemo(() => rollUpgrade, []);
 
   return (
