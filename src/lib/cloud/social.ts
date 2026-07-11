@@ -27,6 +27,7 @@ export async function upsertMyProfile(
   await supabase.from("profiles").update(patch).eq("user_id", uid);
 }
 
+
 /* -------- Friends -------- */
 
 export async function listFriends(): Promise<CloudProfile[]> {
