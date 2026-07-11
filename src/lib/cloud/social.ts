@@ -132,9 +132,7 @@ export async function joinParty(code: string): Promise<{ ok: boolean; error?: st
   const { count } = await supabase
     .from("party_members")
     const { data: profs } = await supabase.from("profiles").select("*").in("user_id", ids);
-  
-
-export async function leaveParty(code: string): Promise<void> {
+  export async function leaveParty(code: string): Promise<void> {
   const uid = await currentUserId();
   if (!uid) return;
   await supabase.from("party_members").delete().eq("party_code", code).eq("user_id", uid);
