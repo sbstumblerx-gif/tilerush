@@ -8,7 +8,7 @@ import { PlayerToken } from "@/components/game/PlayerToken";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getParty, joinParty, leaveParty, listPartyMembers, updatePartySettings,
-  currentUserId, type PartyRow, type CloudProfile,
+  currentUserId, upsertMyProfile, type PartyRow, type CloudProfile,
 } from "@/lib/cloud/social";
 
 export const Route = createFileRoute("/party/$code")({
@@ -33,7 +33,7 @@ function PartyPage() {
     setMembers(mem);
   }, [code]);
 
-          useEffect(() => {
+  useEffect(() => {
     const progress = loadProgress();
     setP(progress);
     
@@ -52,7 +52,7 @@ function PartyPage() {
         try {
           await upsertMyProfile({ username: myUsername });
         } catch (e) {
-          console.error(e);
+          console.error("Profiilin tallennusvirhe:", e);
         }
         
         const mem = await listPartyMembers(code).catch(() => []);
@@ -77,24 +77,10 @@ function PartyPage() {
         console.error("Party latausvirhe:", globalError);
         setErr("Partyn latauksessa tapahtui virhe.");
       } finally {
-        // TÄMÄ PUUTTUI: Pakotetaan latausruutu sulkeutumaan, 
-        // oli lopputulos mikä tahansa!
         refresh();
       }
     })();
   }, [code, refresh]);
-  
-      } catch (globalError) {
-        console.error("Party latausvirhe:", globalError);
-        setErr("Partyn latauksessa tapahtui virhe. Yritä ladata sivu uudelleen.");
-      }
-    })();
-  }, [code, refresh]);
-            
-      
-  
-    
-    
 
   useEffect(() => {
     const ch = supabase
@@ -235,4 +221,5 @@ function PartyPage() {
       </div>
     </div>
   );
-}
+                }
+          
