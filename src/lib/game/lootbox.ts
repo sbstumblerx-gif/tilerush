@@ -25,6 +25,9 @@ const COIN_BY_TIER: Record<Rarity, number> = {
   ultra: 500,
 };
 
+// Neljä ilmaista oletusemojia, joita ei haluta pudottaa laatikoista
+const DEFAULT_EMOJI_IDS = ["cry", "smile", "sweat", "thumbsup"];
+
 /** Which rarities are eligible cosmetic drops per tier for standard items. */
 function eligibleRarities(tier: Rarity): Rarity[] {
   switch (tier) {
@@ -39,19 +42,19 @@ function eligibleRarities(tier: Rarity): Rarity[] {
     case "mythic":
       return ["epic", "legendary", "mythic"];
     case "ultra":
-      return ["mythic"];
+      return ["mythic", "ultra"]; // KORJATTU: Sallitaan ultra laatikosta myös ultra-taso
   }
 }
 
 /** * Emojien omat tasovaatimukset. 
  * Laatikosta voi tippua sen oman tason tai sitä alemman tason emojeja.
- * Ultra-emojit (exclusive) tippuvat VAIN ultra-laatikoista/sydämistä.
+ * Ultra-emojit tippuvat VAIN ultra-laatikoista/sydämistä.
  */
 function isEmojiEligible(emojiRarity: Rarity, boxTier: Rarity): boolean {
   const boxRank = rarityRank(boxTier);
   const emojiRank = rarityRank(emojiRarity);
 
-  // Ultra-emojit vaativat aina vähintään Ultra-tason kontin
+  // Ultra-emojit vaativat aina Ultra-tason kontin
   if (emojiRarity === "ultra") {
     return boxTier === "ultra";
   }
@@ -67,11 +70,12 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
 
   for (const cat of cats) {
     for (const it of CATALOGS[cat]) {
-      // Oletusesineitä (hinta 0) ei tiputeta laatikoista, ellei kyseessä ole Ultra-emoji
-      if (it.price === 0 && cat === "emojis" && it.rarity !== "ultra") continue;
       
-      // Emojeille käytetään joustavaa hierarkiatarkistusta
       if (cat === "emojis") {
+        // KORJAUS: Skipataan ilmaiset aloitusemojit ID:n mukaan (hinnan sijaan), jotta muut nollan hintaiset eivät bugita
+        if (DEFAULT_EMOJI_IDS.includes(it.id)) continue;
+        
+        // Tarkistetaan emojin tasovaatimus konttiin nähden
         if (!isEmojiEligible(it.rarity, tier)) continue;
       } else {
         // Muille kosmetiikoille käytetään pelin alkuperäistä sääntöä
@@ -79,10 +83,13 @@ function pickCosmetic(tier: Rarity, eligible: Rarity[], ownedFilter: (cat: Cosme
         if (!eligible.includes(it.rarity)) continue;
       }
 
+      // Jos pelaaja jo omistaa kyseisen esineen, skipataan se
       if (ownedFilter(cat, it.id)) continue;
+      
       pool.push({ type: "cosmetic", category: cat, itemId: it.id, rarity: it.rarity });
     }
   }
+  
   if (pool.length === 0) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -100,7 +107,7 @@ export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id
   const cos = pickCosmetic(rarity, eligibleRarities(rarity), ownedFilter);
   if (cos) return cos;
   
-  // fallback to coins jos kaikki jo avattu
+  // fallback to coins jos kaikki poolista on jo avattu
   return { type: "coins", amount: COIN_BY_TIER[rarity] };
 }
 
