@@ -39,7 +39,7 @@ function ProfilePage() {
   };
 
     const linkGoogle = async () => {
-    // Käytetään suoraan supabasea ja pakotetaan paluu tälle profiilisivulle
+// Käytetään suoraan supabasea ja pakotetaan paluu tälle profiilisivulle
     const currentUrl = window.location.href; 
     await supabase.auth.signInWithOAuth({
       provider: 'google',
