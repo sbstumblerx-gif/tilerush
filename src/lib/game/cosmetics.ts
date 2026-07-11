@@ -11,7 +11,8 @@ export interface CosmeticItem {
   preview?: string;
 }
 
-export type CosmeticCategory = "colors" | "shapes" | "patterns" | "accessories" | "themes";
+// LISÄTTY: "emojis" mukaan sallittuihin kategorioihin
+export type CosmeticCategory = "colors" | "shapes" | "patterns" | "accessories" | "themes" | "emojis";
 
 export const COLORS: CosmeticItem[] = [
   { id: "cyan", label: "Syaani", price: 200, rarity: "common", preview: "#22d3ee" },
@@ -57,7 +58,6 @@ export const ACCESSORIES: CosmeticItem[] = [
   { id: "avaruus", label: "Avaruuskypärä", price: 350, rarity: "legendary", preview: "🪐" },
   { id: "yellowcard", label: "Keltainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟨" },
   { id: "redcard", label: "Punainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟥" },
-  // v4.7: FIFA quarter-final team badges — sold as offers, exclusive mythic.
   { id: "team-fr", label: "Ranska", price: 750, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
   { id: "team-ma", label: "Marokko", price: 750, rarity: "mythic", exclusive: true, preview: "🇲🇦" },
   { id: "team-en", label: "Englanti", price: 750, rarity: "mythic", exclusive: true, preview: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
@@ -70,7 +70,6 @@ export const ACCESSORIES: CosmeticItem[] = [
 
 export const THEMES: CosmeticItem[] = [
   { id: "default", label: "Neon (oletus)", price: 0, rarity: "common" },
-  // pack rewards — exclusive
   { id: "ranta", label: "Trooppinen ranta", price: 0, rarity: "common", exclusive: true },
   { id: "jaatikko", label: "Jäätikkö", price: 0, rarity: "common", exclusive: true },
   { id: "tulivuori", label: "Tulivuori", price: 0, rarity: "common", exclusive: true },
@@ -79,12 +78,10 @@ export const THEMES: CosmeticItem[] = [
   { id: "lentaja", label: "Lentäjä", price: 0, rarity: "common", exclusive: true },
   { id: "mysteeri", label: "Mysteerin värit", price: 0, rarity: "common", exclusive: true },
   { id: "tumma", label: "Tumma", price: 0, rarity: "common", exclusive: true },
-  // shop themes
   { id: "puisto", label: "Rauhallinen puisto", price: 200, rarity: "rare" },
   { id: "cyber", label: "Cyberpunk", price: 250, rarity: "epic" },
   { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
   { id: "jalkapallo", label: "Jalkapallokenttä", price: 0, rarity: "legendary", exclusive: true },
-  // v4.7: flag themes granted with team offers.
   { id: "team-fr", label: "Ranskan lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-ma", label: "Marokon lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-en", label: "Englannin lippu", price: 0, rarity: "mythic", exclusive: true },
@@ -95,12 +92,47 @@ export const THEMES: CosmeticItem[] = [
   { id: "team-ch", label: "Sveitsin lippu", price: 0, rarity: "mythic", exclusive: true },
 ];
 
+export const EMOJIS: CosmeticItem[] = [
+  { id: "cry", label: "Nauruitku/Itku", price: 0, rarity: "common", preview: "😭" },
+  { id: "smile", label: "Hymy", price: 0, rarity: "common", preview: "😃" },
+  { id: "sweat", label: "Hiki", price: 0, rarity: "common", preview: "😅" },
+  { id: "thumbsup", label: "Pukki", price: 0, rarity: "common", preview: "👍" },
+  { id: "heart_red", label: "Sydän", price: 200, rarity: "common", preview: "♥️" },
+  { id: "thumbsdown", label: "Pukki alas", price: 200, rarity: "common", preview: "👎" },
+  { id: "grimace", label: "Irvistys", price: 200, rarity: "common", preview: "😬" },
+  { id: "cool", label: "Cool", price: 300, rarity: "rare", preview: "😎" },
+  { id: "speechless", label: "Sanaton", price: 300, rarity: "rare", preview: "😶" },
+  { id: "angry", label: "Vihainen", price: 300, rarity: "rare", preview: "😡" },
+  { id: "heart_eyes", label: "Sydänsilmät", price: 300, rarity: "rare", preview: "😍" },
+  { id: "mending_heart", label: "Paraneva sydän", price: 400, rarity: "epic", preview: "❤️‍🩹" },
+  { id: "money_mouth", label: "Rahat suussa", price: 400, rarity: "epic", preview: "🤑" },
+  { id: "cowboy", label: "Cowboy", price: 400, rarity: "epic", preview: "🤠" },
+  { id: "alien", label: "Alien", price: 400, rarity: "epic", preview: "👽" },
+  { id: "skull", label: "Kallo", price: 500, rarity: "legendary", preview: "💀" },
+  { id: "rofl", label: "Nauru", price: 500, rarity: "legendary", preview: "🤣" },
+  { id: "crown", label: "Kruunu", price: 500, rarity: "legendary", preview: "👑" },
+  { id: "yawn", label: "Haukotus", price: 500, rarity: "legendary", preview: "🥱" },
+  { id: "yum", label: "Nami", price: 500, rarity: "legendary", preview: "😋" },
+  { id: "vomit", label: "Oksennus", price: 650, rarity: "mythic", preview: "🤮" },
+  { id: "smirk", label: "Virnistys", price: 650, rarity: "mythic", preview: "😏" },
+  { id: "cold", label: "Jäässä", price: 650, rarity: "mythic", preview: "🥶" },
+  { id: "nerd", label: "Nörtti", price: 650, rarity: "mythic", preview: "🤓" },
+  { id: "poop", label: "Kakka", price: 650, rarity: "mythic", preview: "💩" },
+  { id: "wilted_rose", label: "Kastunut ruusu", price: 0, rarity: "ultra", exclusive: true, preview: "🥀" },
+  { id: "goat", label: "GOAT", price: 0, rarity: "ultra", exclusive: true, preview: "🐐" },
+  { id: "devil", label: "Demoni", price: 0, rarity: "ultra", exclusive: true, preview: "😈" },
+  { id: "clown", label: "Pelle", price: 0, rarity: "ultra", exclusive: true, preview: "🤡" },
+  { id: "facepalm", label: "Facepalm", price: 0, rarity: "ultra", exclusive: true, preview: "🤦" },
+];
+
+// KORJATTU: EMOJIS kytketty mukaan CATALOGS-objektiin
 export const CATALOGS: Record<CosmeticCategory, CosmeticItem[]> = {
   colors: COLORS,
   shapes: SHAPES,
   patterns: PATTERNS,
   accessories: ACCESSORIES,
   themes: THEMES,
+  emojis: EMOJIS, 
 };
 
 export function findItem(cat: CosmeticCategory, id: string): CosmeticItem | undefined {
@@ -141,49 +173,5 @@ export function themeBg(themeId: string): string {
     "team-ch": "from-[#DA291C] to-[#DA291C]",
   };
   return map[themeId] ?? map.default;
-}
-export const EMOJIS: CosmeticItem[] = [
-  // Oletusemojit (Ilmaiset, Yleiset 🟩)
-  { id: "cry", label: "Nauruitku/Itku", price: 0, rarity: "common", preview: "😭" },
-  { id: "smile", label: "Hymy", price: 0, rarity: "common", preview: "😃" },
-  { id: "sweat", label: "Hiki", price: 0, rarity: "common", preview: "😅" },
-  { id: "thumbsup", label: "Pukki", price: 0, rarity: "common", preview: "👍" },
+  }
   
-  // Muut yleiset emojit (200 kolikkoa 🟩 / Laatikko: Harvinainen tai parempi)
-  { id: "heart_red", label: "Sydän", price: 200, rarity: "common", preview: "♥️" },
-  { id: "thumbsdown", label: "Pukki alas", price: 200, rarity: "common", preview: "👎" },
-  { id: "grimace", label: "Irvistys", price: 200, rarity: "common", preview: "😬" },
-
-  // Harvinaiset emojit (300 kolikkoa 🟦 / Laatikko: Eeppinen tai parempi)
-  { id: "cool", label: "Cool", price: 300, rarity: "rare", preview: "😎" },
-  { id: "speechless", label: "Sanaton", price: 300, rarity: "rare", preview: "😶" },
-  { id: "angry", label: "Vihainen", price: 300, rarity: "rare", preview: "😡" },
-  { id: "heart_eyes", label: "Sydänsilmät", price: 300, rarity: "rare", preview: "😍" },
-
-  // Eeppiset emojit (400 kolikkoa 🟪 / Laatikko: Legendaarinen tai parempi)
-  { id: "mending_heart", label: "Paraneva sydän", price: 400, rarity: "epic", preview: "❤️‍🩹" },
-  { id: "money_mouth", label: "Rahat suussa", price: 400, rarity: "epic", preview: "🤑" },
-  { id: "cowboy", label: "Cowboy", price: 400, rarity: "epic", preview: "🤠" },
-  { id: "alien", label: "Alien", price: 400, rarity: "epic", preview: "👽" },
-
-  // Legendaariset emojit (500 kolikkoa 🟨 / Laatikko: Myyttinen tai parempi)
-  { id: "skull", label: "Kallo", price: 500, rarity: "legendary", preview: "💀" },
-  { id: "rofl", label: "Nauru", price: 500, rarity: "legendary", preview: "🤣" },
-  { id: "crown", label: "Kruunu", price: 500, rarity: "legendary", preview: "👑" },
-  { id: "yawn", label: "Haukotus", price: 500, rarity: "legendary", preview: "🥱" },
-  { id: "yum", label: "Nami", price: 500, rarity: "legendary", preview: "😋" },
-
-  // Myyttiset emojit (650 kolikkoa 🟥 / Laatikko: Vain Ultralaatikko)
-  { id: "vomit", label: "Oksennus", price: 650, rarity: "mythic", preview: "🤮" },
-  { id: "smirk", label: "Virnistys", price: 650, rarity: "mythic", preview: "😏" },
-  { id: "cold", label: "Jäässä", price: 650, rarity: "mythic", preview: "🥶" },
-  { id: "nerd", label: "Nörtti", price: 650, rarity: "mythic", preview: "🤓" },
-  { id: "poop", label: "Kakka", price: 650, rarity: "mythic", preview: "💩" },
-
-  // Ultra emojit (Ei ostettavissa 🎨 / Laatikko: Vain Ultralaatikko)
-  { id: "wilted_rose", label: "Kastunut ruusu", price: 0, rarity: "ultra", exclusive: true, preview: "🥀" },
-  { id: "goat", label: "GOAT", price: 0, rarity: "ultra", exclusive: true, preview: "🐐" },
-  { id: "devil", label: "Demoni", price: 0, rarity: "ultra", exclusive: true, preview: "😈" },
-  { id: "clown", label: "Pelle", price: 0, rarity: "ultra", exclusive: true, preview: "🤡" },
-  { id: "facepalm", label: "Facepalm", price: 0, rarity: "ultra", exclusive: true, preview: "🤦" },
-];
