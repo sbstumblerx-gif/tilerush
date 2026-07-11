@@ -38,11 +38,20 @@ function ProfilePage() {
     setP(cur);
   };
 
-    const linkGoogle = async () => {
-// Käytetään suoraan supabasea ja pakotetaan paluu tälle profiilisivulle
-    const currentUrl = window.location.href; 
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      const linkGoogle = async () => {
+    // Haetaan Lovablen virallinen tunnistautumisosoite suoraan ympäristömuuttujista
+    // Tämä varmistaa, että käytetään Lovablen valmiita Google-avaimia missä tahansa ympäristössä
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const currentUrl = window.location.href;
+    
+    if (supabaseUrl) {
+      window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(currentUrl)}`;
+    } else {
+      // Varajärjestelmä, jos osoitetta ei löydy
+      await lovable.auth.signInWithOAuth("google", { redirect_uri: currentUrl });
+    }
+  };
+  
       options: {
         redirectTo: currentUrl,
         queryParams: {
