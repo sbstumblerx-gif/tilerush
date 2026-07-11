@@ -38,8 +38,10 @@ function ProfilePage() {
     setP(cur);
   };
 
-          const linkGoogle = async () => {
-    await lovable.auth.signInWithOAuth("google");
+            const linkGoogle = async () => {
+    await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.href
+    });
   };
   
 
