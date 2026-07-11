@@ -38,29 +38,10 @@ function ProfilePage() {
     setP(cur);
   };
 
-        const linkGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.href
-      }
-    });
+          const linkGoogle = async () => {
+    await lovable.auth.signInWithOAuth("google");
   };
   
-      // Varajärjestelmä, jos osoitetta ei löydy
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: currentUrl });
-    }
-  };
-  
-      options: {
-        redirectTo: currentUrl,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
-    });
-  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
