@@ -91,13 +91,14 @@ function ShopPage() {
   const buy = (cat: CosmeticCategory, item: CosmeticItem) => {
     const cur = loadProgress();
     
-    // Tarkistetaan ettei ole jo ostettu, ettei ole exclusive (kuten ultra) ja että rahat riittää
-    if (cur.owned[cat].includes(item.id)) return;
+    // Suojataan owned-tarkistus kaatumiselta jos kategoria puuttuu tallennuksesta
+    const ownedItems = cur.owned[cat] ?? [];
+    if (ownedItems.includes(item.id)) return;
     if (item.exclusive) return;
     if (cur.coins < item.price) return;
     
     cur.coins -= item.price;
-    cur.owned[cat] = [...cur.owned[cat], item.id];
+    cur.owned[cat] = [...ownedItems, item.id];
     saveProgress(cur);
     setP(cur);
   };
@@ -178,128 +179,5 @@ function ShopPage() {
 
           {/* Tarjoukset */}
           <div className="mt-4 neon-panel p-4">
-            <button onClick={() => setShowOffers((v) => !v)} className="w-full flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold"><Tag className="h-4 w-4 text-primary" /> Tarjoukset · Puolivälierä</span>
-              <span className="text-xs text-muted-foreground">{showOffers ? "Piilota" : "Näytä"}</span>
-            </button>
-            {showOffers && (
-              <>
-              <div className="mt-3 text-[11px] text-muted-foreground">Jokainen paketti sisältää lipun profiilikuvan, emojin ja asusteen.</div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {TEAM_OFFER_IDS.map((id) => {
-                  const item = ACCESSORIES.find((a) => a.id === id)!;
-                  const owned = p.teamOffersPurchased.includes(id);
-                  const canBuy = !owned && p.coins >= item.price;
-                  return (
-                    <div key={id} className="rounded border border-border/60 bg-background/40 p-2 flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl">{item.preview}</span>
-                        <span className="text-[10px] uppercase text-primary">Myyttinen</span>
-                      </div>
-                      <div className="text-sm font-bold">{item.label}</div>
-                      <div className="text-[10px] text-muted-foreground">Profiilikuva · emoji · asuste</div>
-                      <button
-                        disabled={owned || !canBuy}
-                        onClick={() => buyTeam(id)}
-                        className="rounded bg-primary text-primary-foreground text-xs font-bold py-1.5 disabled:opacity-50"
-                      >
-                        {owned ? "Omistettu" : `🪙 ${item.price}`}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              </>
-            )}
-          </div>
-
-          {/* Promo codes */}
-          <div className="mt-4 neon-panel p-4">
-            <button onClick={() => setShowPromo((v) => !v)} className="w-full flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold"><Ticket className="h-4 w-4 text-primary" /> Lunasta koodi</span>
-              <span className="text-xs text-muted-foreground">{showPromo ? "Piilota" : "Näytä"}</span>
-            </button>
-            {showPromo && (
-              <div className="mt-3 space-y-2">
-                <input
-                  value={promo}
-                  onChange={(e) => setPromo(e.target.value)}
-                  placeholder="Syötä koodi"
-                  className="w-full rounded bg-background/60 border border-border/50 px-3 py-2 font-mono tracking-widest text-sm"
-                />
-                <button onClick={redeemPromo} className="w-full rounded bg-primary text-primary-foreground text-sm font-bold py-2">
-                  Lunasta
-                </button>
-                {promoMsg && <div className="text-xs text-muted-foreground">{promoMsg}</div>}
-              </div>
-            )}
-          </div>
-
-          {/* Katalogiruudukko */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {CATS.map((c) => (
-              <button key={c.key} onClick={() => setOpen(c.key)} className="neon-panel p-5 text-left hover:border-primary/70">
-                <div className="text-3xl">{c.emoji}</div>
-                <div className="mt-2 font-bold">{c.label}</div>
-                <div className="text-xs text-muted-foreground">{CATALOGS[c.key].length} tuotetta</div>
-              </button>
-            ))}
-          </div>
-          <div className="mt-6">
-            <Link to="/" className="text-sm text-muted-foreground">← Lobby</Link>
-          </div>
-        </>
-      )}
-
-      {open && (
-        <>
-          <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {CATALOGS[open].map((item) => {
-              // Tarkistetaan onko pelaajalla tämä jo auki
-              const owned = p.owned[open]?.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
-              const canBuy = !owned && p.coins >= item.price && !item.exclusive;
-              const rarityStyle = getRarityClass(item.rarity);
-
-              return (
-                <div key={item.id} className={`neon-panel p-3 flex flex-col gap-2 border border-solid ${rarityStyle}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">{item.label}</span>
-                    {owned && <Check className="h-4 w-4 text-primary" />}
-                  </div>
-                  <div
-                    className="h-14 rounded flex items-center justify-center text-3xl bg-slate-950/40"
-                    style={
-                      open === "colors" && item.preview
-                        ? { background: item.preview }
-                        : undefined
-                    }
-                  >
-                    {open !== "colors" && (item.preview ?? "")}
-                  </div>
-                  
-                  {/* Jos tuote on exclusive (kuten Ultra-emojit), sitä ei voi ostaa */}
-                  {item.exclusive ? (
-                    <div className="text-center text-[11px] font-bold text-pink-400 py-1.5 bg-pink-500/10 rounded border border-pink-500/20">
-                      Vain laatikoista
-                    </div>
-                  ) : (
-                    <button
-                      disabled={owned || !canBuy}
-                      onClick={() => buy(open, item)}
-                      className="rounded bg-primary text-primary-foreground text-sm font-bold py-1.5 disabled:opacity-50"
-                    >
-                      {owned ? "Omistettu" : `🪙 ${item.price}`}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-      <span className="hidden">{tick}</span>
-    </div>
-  );
-                      }
-                                                           
+            <button onClick={() => setShowOffers((v) => !v)} className
+              
