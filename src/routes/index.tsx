@@ -114,7 +114,6 @@ function Lobby() {
         <span className="text-primary">→</span>
       </Link>
 
-      {/* Päivitetty versio 4.8 */}
       <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.8</div>
 
       {showPlay && (
