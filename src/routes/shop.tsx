@@ -59,7 +59,7 @@ const TEAM_EMOJI: Record<string, string> = {
   "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
 };
 
-const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }> = {
+const PROMO_CODES: Record<string, { desc: string; apply: (p: any) => void }> = {
   fifa26: {
     desc: "🪙 500 kolikkoa + FIFA-pallo -kuvio",
     apply: (p) => {
@@ -151,7 +151,8 @@ function ShopPage() {
   const buyTeam = (id: string) => {
     const item = ACCESSORIES.find((a) => a.id === id);
     if (!item) return;
-    const cur = loadProgress();
+    const cur = loadProgress() as any;
+    if (!cur.teamOffersPurchased) cur.teamOffersPurchased = [];
     if (cur.teamOffersPurchased.includes(id)) return;
     if (cur.coins < item.price) return;
     cur.coins -= item.price;
@@ -176,7 +177,8 @@ function ShopPage() {
     if (!key) return;
     const entry = PROMO_CODES[key];
     if (!entry) { setPromoMsg("❌ Tuntematon koodi."); return; }
-    const cur = loadProgress();
+    const cur = loadProgress() as any;
+    if (!cur.promoRedeemed) cur.promoRedeemed = [];
     if (cur.promoRedeemed.includes(key)) { setPromoMsg("Koodi on jo lunastettu."); return; }
     entry.apply(cur);
     cur.promoRedeemed.push(key);
@@ -192,6 +194,7 @@ function ShopPage() {
   };
 
   const ownedAvatars = (p.owned as any).avatars ?? ["default"];
+  const teamOffersPurchased = (p as any).teamOffersPurchased ?? [];
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[560px] mx-auto">
@@ -240,7 +243,7 @@ function ShopPage() {
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {TEAM_OFFER_IDS.map((id) => {
                     const item = ACCESSORIES.find((a) => a.id === id)!;
-                    const owned = p.teamOffersPurchased.includes(id);
+                    const owned = teamOffersPurchased.includes(id);
                     const canBuy = !owned && p.coins >= item.price;
                     return (
                       <div key={id} className="rounded border border-border/60 bg-background/40 p-2 flex flex-col gap-2">
@@ -350,5 +353,5 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-   }
-                                          
+    }
+                  
