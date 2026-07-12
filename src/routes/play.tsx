@@ -107,12 +107,14 @@ function PlayPage() {
     if (prevState === state) return;
     const p = loadProgress();
     
-    // Suojataan taulukosta luku valinnaisella ketjutuksella
     const cur = state.tiles?.[state.player.r]?.[state.player.c];
     if (!cur) return;
 
     if (prevState.player.r !== state.player.r || prevState.player.c !== state.player.c) {
-      p.stats.tileUses[cur.kind] = (p.stats.tileUses[cur.kind] ?? 0) + 1;
+      // Korjattu tyyppimuunnos indeksille, jotta kääntäjä ei herjaa
+      const tileUses = p.stats.tileUses as Record<string, number>;
+      tileUses[cur.kind] = (tileUses[cur.kind] ?? 0) + 1;
+      
       const origin = prevState.tiles?.[state.player.r]?.[state.player.c];
       
       if (origin?.kind === "enemy") {
@@ -253,4 +255,5 @@ function TileLegend() {
       ))}
     </div>
   );
-}
+        }
+      
