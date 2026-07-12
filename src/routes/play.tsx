@@ -248,4 +248,4 @@ function TileLegend() {
       ))}
     </div>
   );
-    }
+}
