@@ -1,15 +1,16 @@
-import { CATALOGS, findItem, type CosmeticCategory } from "./cosmetics";
-import { RARITY_ORDER, rollUpgrade, type Rarity, rarityRank } from "./rarity"; // Tuodaan rollUpgrade takaisin exporttia varten
+import { CATALOGS, findItem, type CosmeticCategory, type CosmeticItem } from "./cosmetics";
+import { RARITY_ORDER, rollUpgrade, type Rarity, rarityRank } from "./rarity";
 
 export type ContainerKind = "box" | "heart";
 
+// Laajennetaan palkintoluokka tukemaan myös uutta "avatars"-kategoriaa
 export interface RewardCoins {
   type: "coins";
   amount: number;
 }
 export interface RewardCosmetic {
   type: "cosmetic";
-  category: CosmeticCategory;
+  category: CosmeticCategory | "avatars";
   itemId: string;
   rarity: Rarity;
 }
@@ -28,15 +29,29 @@ export const COIN_BY_TIER: Record<Rarity, number> = {
 // Tunnistetaan ilmaiset oletusemojit kuvakkeista
 const FREE_EMOJI_PREVIEWS = ["😭", "😃", "😅", "👍"];
 
-/** * Tarkistetaan sopiiko kosmetiikan taso konttiin.
- * Sääntö kaikille kosmetiikoille (+):
- * Common kontti -> Vain Rare ja siitä ylöspäin
- * Rare kontti -> Epic ja ylöspäin
- * Epic kontti -> Legendary ja ylöspäin
- * Legendary kontti -> Mythic ja ylöspäin
- * Mythic kontti -> Ultra
- * Ultra kontti -> Ultra
- */
+// Sisäinen katalogi avatareille, jotta ne saadaan drop-logiikkaan mukaan
+const AVATAR_CATALOG: CosmeticItem[] = [
+  { id: "av-banana", label: "Banaani", rarity: "common", preview: "🍌" },
+  { id: "av-pizza", label: "Pizza", rarity: "common", preview: "🍕" },
+  { id: "av-car", label: "Auto", rarity: "common", preview: "🚙" },
+  { id: "av-dizzy", label: "Pyörryksissä", rarity: "rare", preview: "😵‍💫" },
+  { id: "av-popcorn", label: "Popkorni", rarity: "rare", preview: "🍿" },
+  { id: "av-headphones", label: "Kuulokkeet", rarity: "rare", preview: "🎧" },
+  { id: "av-alien", label: "Avaruusolio", rarity: "epic", preview: "👾" },
+  { id: "av-oni", label: "Oni-maski", rarity: "epic", preview: "👹" },
+  { id: "av-robot", label: "Robotti", rarity: "epic", preview: "🤖" },
+  { id: "av-skull", label: "Pääkallo", rarity: "epic", preview: "💀" },
+  { id: "av-nerd", label: "Nörtti", rarity: "legendary", preview: "🤓" },
+  { id: "av-goat", label: "GOAT", rarity: "legendary", preview: "🐐" },
+  { id: "av-clown", label: "Pelle", rarity: "legendary", preview: "🤡" },
+  // Myyttiset QF-liput ovat exclusive-kohteita, joten niille asetetaan lipun myötä esto (tai ne rajautuvat drop-säännöillä)
+  { id: "qf-finla", label: "QF - Suomi", rarity: "mythic", preview: "🇫🇮", exclusive: true },
+  { id: "qf-swede", label: "QF - Ruotsi", rarity: "mythic", preview: "🇸🇪", exclusive: true },
+  { id: "qf-canad", label: "QF - Kanada", rarity: "mythic", preview: "🇨🇦", exclusive: true },
+  { id: "qf-usa", label: "QF - USA", rarity: "mythic", preview: "🇺🇸", exclusive: true },
+];
+
+/** Tarkistetaan sopiiko kosmetiikan taso konttiin. */
 function isCosmeticEligible(itemRarity: Rarity, boxTier: Rarity): boolean {
   if (itemRarity === "ultra") {
     return boxTier === "ultra";
@@ -51,31 +66,35 @@ function isCosmeticEligible(itemRarity: Rarity, boxTier: Rarity): boolean {
   const boxRank = rarityRank(boxTier);
   const itemRank = rarityRank(itemRarity);
 
-  // Esineen tason pitää olla KORKEAMPI (+) kuin kontin taso
   return itemRank > boxRank;
 }
 
 /** Pick a random non-exclusive cosmetic of one of the eligible rarities. */
-function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): RewardCosmetic | null {
-  const cats: CosmeticCategory[] = ["colors", "shapes", "patterns", "accessories", "themes", "emojis"];
+function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory | "avatars", id: string) => boolean): RewardCosmetic | null {
+  // Lisätään "avatars" mukaan sallittujen kategorioiden listaan
+  const cats: (CosmeticCategory | "avatars")[] = ["colors", "shapes", "patterns", "accessories", "themes", "emojis", "avatars"];
   const safeFilter = typeof ownedFilter === "function" ? ownedFilter : () => false;
 
-  const categoryPools: Record<CosmeticCategory, RewardCosmetic[]> = {
+  const categoryPools: Record<CosmeticCategory | "avatars", RewardCosmetic[]> = {
     colors: [],
     shapes: [],
     patterns: [],
     accessories: [],
     themes: [],
     emojis: [],
+    avatars: [], // Alustetaan uusi allas avatareille
   };
 
   for (const cat of cats) {
-    if (!CATALOGS[cat]) continue;
+    // Haetaan lista joko globaalista katalogista tai meidän avatar-luettelosta
+    const items = cat === "avatars" ? AVATAR_CATALOG : CATALOGS[cat];
+    if (!items) continue;
 
-    for (const it of CATALOGS[cat]) {
+    for (const it of items) {
       if (safeFilter(cat, it.id)) continue;
 
       if (cat === "emojis" && it.preview && FREE_EMOJI_PREVIEWS.includes(it.preview)) continue;
+      // Estetään Limited Time / Exclusive tarjousten dropit
       if (it.exclusive && cat !== "emojis") continue;
 
       if (!isCosmeticEligible(it.rarity, tier)) continue;
@@ -94,12 +113,10 @@ function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory, id: str
 }
 
 /** Roll one reward from a container of given base rarity. */
-export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward {
-  // Käytetään suoraan kontin todellista tasoa ilman salaa arpomista
+export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory | "avatars", id: string) => boolean): Reward {
   const rarity = base;
   const cos = pickCosmetic(rarity, ownedFilter);
   
-  // 50% mahdollisuus antaa kosmetiikka, jos säännöt täyttäviä esineitä on altaassa
   if (cos && Math.random() < 0.5) {
     return cos;
   }
@@ -108,7 +125,7 @@ export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory, id
 }
 
 /** Open a container. Box=3-5 rewards, Heart=1. */
-export function openContainer(kind: ContainerKind, base: Rarity, ownedFilter: (cat: CosmeticCategory, id: string) => boolean): Reward[] {
+export function openContainer(kind: ContainerKind, base: Rarity, ownedFilter: (cat: CosmeticCategory | "avatars", id: string) => boolean): Reward[] {
   const count = kind === "box" ? 3 + Math.floor(Math.random() * 3) : 1;
   const out: Reward[] = [];
   const seenIds = new Set<string>();
@@ -133,9 +150,13 @@ export function topRarity(rewards: Reward[]): Rarity {
 
 export function itemLabel(r: Reward): string {
   if (r.type === "coins") return `🪙 ${r.amount}`;
+  // Jos kyseessä on avatar, haetaan sen nimi paikallisesta listasta
+  if (r.category === "avatars") {
+    const av = AVATAR_CATALOG.find((a) => a.id === r.itemId);
+    return av?.label ?? r.itemId;
+  }
   const it = findItem(r.category, r.itemId);
   return it?.label ?? r.itemId;
 }
 
-// Pidetään exportit täysin samana, jotta muut tiedostot eivät hajoa
 export { RARITY_ORDER, rollUpgrade };
