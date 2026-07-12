@@ -8,7 +8,7 @@ import {
   msUntilSeasonEnd, formatDaysCountdown,
 } from "@/lib/game/dailyReward";
 
-// @ts-expect-error - Ohitetaan puuttuvan automaattisen reittipuun tyyppivirhe lennosta
+// @ts-expect-error - Ohitetaan mahdollinen reittipuun puuttuminen kääntäjässä
 export const Route = createFileRoute("/shop" as any)({
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
   component: ShopPage,
@@ -57,7 +57,7 @@ const TEAM_OFFER_IDS = [
 
 const TEAM_EMOJI: Record<string, string> = {
   "team-fr": "🇫🇷", "team-ma": "🇲🇦", "team-en": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "team-no": "🇳🇴",
-  "team-es": "🇪🇸", "team-be": "🇧ēi", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
+  "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
 };
 
 const PROMO_CODES: Record<string, { desc: string; apply: (p: any) => void }> = {
@@ -96,7 +96,7 @@ const getRarityClass = (rarity: string) => {
   }
 };
 
-function ShopPage() {
+export function ShopPage() {
   const [p, setP] = useState<Progress | null>(null);
   const [open, setOpen] = useState<ShopCategory | null>(null);
   const [tick, setTick] = useState(0);
@@ -254,7 +254,8 @@ function ShopPage() {
                 <div className="mt-3 text-[11px] text-muted-foreground">Jokainen paketti sisältää lipun profiilikuvan, emojin ja asusteen.</div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {TEAM_OFFER_IDS.map((id) => {
-                    const item = ACCESSORIES.find((a) => a.id === id)!;
+                    const item = ACCESSORIES.find((a) => a.id === id);
+                    if (!item) return null;
                     const owned = teamOffersPurchased.includes(id);
                     const canBuy = !owned && p.coins >= item.price;
                     return (
@@ -365,5 +366,4 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-                                                                       }
-                      
+            }
