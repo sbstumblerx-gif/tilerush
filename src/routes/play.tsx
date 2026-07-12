@@ -106,11 +106,15 @@ function PlayPage() {
     }
     if (prevState === state) return;
     const p = loadProgress();
-    const cur = state.tiles[state.player.r][state.player.c];
     
+    // Suojataan taulukosta luku valinnaisella ketjutuksella
+    const cur = state.tiles?.[state.player.r]?.[state.player.c];
+    if (!cur) return;
+
     if (prevState.player.r !== state.player.r || prevState.player.c !== state.player.c) {
       p.stats.tileUses[cur.kind] = (p.stats.tileUses[cur.kind] ?? 0) + 1;
-      const origin = prevState.tiles[state.player.r]?.[state.player.c];
+      const origin = prevState.tiles?.[state.player.r]?.[state.player.c];
+      
       if (origin?.kind === "enemy") {
         p.stats.enemySteps += 1;
         if (p.daily) {
@@ -119,6 +123,7 @@ function PlayPage() {
           });
         }
       }
+      
       const dailyMap: Record<string, string> = {
         energy: "use-energy-20",
         heavy: "use-heavy-20",
