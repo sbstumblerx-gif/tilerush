@@ -6,7 +6,11 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   plugins: [
     mode === 'development' && TanStackRouterVite({
+      // Estetään reittien lennosta luonti, jotta se ei yritä etsiä vanhoja tiedostoja
+      autoGeneration: false,
       autoCodeSplitting: true,
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/appRouteTree.ts",
     }),
     react(),
   ].filter(Boolean),
@@ -17,8 +21,7 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     hmr: {
-      // Tämä sammuttaa Viten punaiset/ruskeat runtime error -ruudut,
-      // jolloin Lovable ei jää jumiin vanhoihin välimuistivirheisiin.
+      // Estetään virheikkunan hyppääminen silmille vanhoista välimuisteista
       overlay: false,
     },
   },
