@@ -132,7 +132,7 @@ function ShopPage() {
     
     if (cat === "avatars" && !cur.owned.avatars) cur.owned.avatars = ["default"];
     
-    const ownedItems = cat === "avatars" ? cur.owned.avatars : (cur.owned[cat as CosmeticCategory] ?? []);
+    const ownedItems = cat === "avatars" ? (cur.owned.avatars ?? ["default"]) : (cur.owned[cat as CosmeticCategory] ?? []);
     if (ownedItems.includes(item.id)) return;
     if (item.exclusive) return;
     if (cur.coins < item.price) return;
@@ -304,7 +304,7 @@ function ShopPage() {
           <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {(open === "avatars" ? AVATAR_ITEMS : (CATALOGS[open as CosmeticCategory] ?? [])).map((item) => {
-              const ownedItems = open === "avatars" ? (p.owned.avatars ?? ["default"]) : (p.owned[open] ?? []);
+              const ownedItems = open === "avatars" ? (p.owned.avatars ?? ["default"]) : (p.owned[open as CosmeticCategory] ?? []);
               const owned = ownedItems.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
               const canBuy = !owned && p.coins >= item.price && !item.exclusive;
               const rarityStyle = getRarityClass(item.rarity);
@@ -348,5 +348,4 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-    }
-      
+}
