@@ -350,3 +350,5 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
+   }
+                                          
