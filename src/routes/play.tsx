@@ -32,12 +32,10 @@ export const Route = createFileRoute("/play")({
       { name: "description", content: "Ratkaise ruudukkopulmia rajallisilla siirroilla." },
     ],
   }),
-  // Kiertää TypeScriptin kehäviittauksen renderöimällä komponentin nuolifunktiona
   component: () => <PlayPage />,
 });
 
 function PlayPage() {
-  // Haetaan hakuilmentymä suoraan routesta, joka on nyt turvallista inline-määrittelyn ansiosta
   const { level: levelId } = Route.useSearch();
   const navigate = useNavigate();
   const level = getLevel(levelId) ?? LEVELS[0];
@@ -81,10 +79,22 @@ function PlayPage() {
         const pack = PACKS.find((pk) => pk.levelIds.includes(state.levelId));
         if (pack && packProgress(pack, p.completed) === pack.levelIds.length) {
           const rarity = (["common","rare","epic","legendary","mythic","ultra"] as const)[Math.min(5, Math.floor((pack.id - 1) / 2))];
-          const rewards = openContainer("box", rarity, (cat, id) => p.owned[cat].includes(id));
+          
+          const rewards = openContainer("box", rarity, (cat, id) => {
+            const ownedCategory = p.owned[cat as keyof typeof p.owned] as string[];
+            return ownedCategory ? ownedCategory.includes(id) : false;
+          });
+
           for (const r of rewards) {
-            if (r.type === "coins") p.coins += r.amount;
-            else if (!p.owned[r.category].includes(r.itemId)) p.owned[r.category] = [...p.owned[r.category], r.itemId];
+            if (r.type === "coins") {
+              p.coins += r.amount;
+            } else if (r.type === "item" && 'category' in r && 'itemId' in r) {
+              const catKey = r.category as keyof typeof p.owned;
+              const ownedCategory = p.owned[catKey] as string[];
+              if (ownedCategory && !ownedCategory.includes(r.itemId)) {
+                p.owned[catKey] = [...ownedCategory, r.itemId] as any;
+              }
+            }
           }
           p.pendingRewards = [...p.pendingRewards, ...rewards];
           if (p.weekly) p.weekly.tasks.forEach((t) => { if (t.id === "w-pack-2") t.progress = Math.min(t.target, t.progress + 1); });
@@ -257,4 +267,4 @@ function TileLegend() {
       ))}
     </div>
   );
-}
+        }
