@@ -49,7 +49,7 @@ export async function upsertMyProfile(
       ...patch
     }, { onConflict: 'user_id' });
   } catch (e) {
-    console.error("Profiilin päivitys epäonnistui:", e);
+    console.error("Profiilin paivitys epaonnistui:", e);
   }
 }
 
@@ -91,13 +91,12 @@ export async function listRequests(): Promise<{ incoming: FriendRequestRow[]; ou
   });
   return {
     incoming: rows.filter((r: any) => r.to_user === uid).map(attach),
-    outgoing: rows.filter((r: any) => r.from_user === uid).map(attach),
   };
 }
 
 export async function sendFriendRequest(code: string): Promise<{ ok: boolean; error?: string; accepted?: boolean }> {
   const uid = await currentUserId();
-  if (!uid) return { ok: false, error: "Kirjaudu sisään käyttääksesi kavereita." };
+  if (!uid) return { ok: false, error: "Kirjaudu sisaan kayttaaksesi kavereita." };
   
   const cleanedCode = code.trim().toLowerCase().slice(0, 6);
   const { data, error } = await supabase.rpc("send_friend_request_by_code", { _code: cleanedCode });
@@ -152,14 +151,14 @@ export async function getParty(code: string): Promise<PartyRow | null> {
 
 export async function joinParty(code: string): Promise<{ ok: boolean; error?: string }> {
   const uid = await currentUserId();
-  if (!uid) return { ok: false, error: "Kirjaudu sisään liittyäksesi." };
+  if (!uid) return { ok: false, error: "Kirjaudu sisaan liittyaksesi." };
   const party = await getParty(code);
-  if (!party) return { ok: false, error: "Peliä ei löytynyt." };
+  if (!party) return { ok: false, error: "Pelia ei loytynyt." };
   const { count } = await supabase
     .from("party_members")
     .select("*", { count: "exact", head: true })
     .eq("party_code", code);
-  if ((count ?? 0) >= 4) return { ok: false, error: "Peli on täynnä." };
+  if ((count ?? 0) >= 4) return { ok: false, error: "Peli on taynna." };
   const { error } = await supabase.from("party_members").insert({ party_code: code, user_id: uid });
   if (error && !String(error.message).includes("duplicate")) return { ok: false, error: error.message };
   return { ok: true };
@@ -181,5 +180,4 @@ export async function listPartyMembers(code: string): Promise<CloudProfile[]> {
 
 export async function updatePartySettings(code: string, patch: Partial<Pick<PartyRow, "rounds" | "packs" | "status">>): Promise<void> {
   await supabase.from("parties").update(patch).eq("code", code);
-       }
-
+                                             }
