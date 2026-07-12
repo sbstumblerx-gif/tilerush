@@ -33,7 +33,6 @@ export const Route = createFileRoute("/play")({
     ],
   }),
   component: function PlayPage() {
-    // Haetaan hakuilmentymä suoraan reitin omasta kontekstista ilman getRouteApi-kutsua
     const { level: levelId } = Route.useSearch();
     const navigate = useNavigate();
     const level = getLevel(levelId) ?? LEVELS[0];
@@ -266,4 +265,4 @@ function TileLegend() {
       ))}
     </div>
   );
-        }
+}
