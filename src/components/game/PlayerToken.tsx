@@ -17,7 +17,44 @@ const SHAPE_CLIP: Record<string, string> = {
   tiimalasi: "polygon(0% 0%, 100% 0%, 20% 50%, 100% 100%, 0% 100%, 80% 50%)",
 };
 
+// Mäppäys profiilikuvan ID:stä emojiksi
+const AVATAR_EMOJIS: Record<string, string> = {
+  "av-banana": "🍌",
+  "av-pizza": "🍕",
+  "av-car": "🚙",
+  "av-dizzy": "😵‍💫",
+  "av-popcorn": "🍿",
+  "av-headphones": "🎧",
+  "av-alien": "👾",
+  "av-oni": "👹",
+  "av-robot": "🤖",
+  "av-skull": "💀",
+  "av-nerd": "🤓",
+  "av-goat": "🐐",
+  "av-clown": "🤡",
+  "qf-finla": "🇫🇮",
+  "qf-swede": "🇸🇪",
+  "qf-canad": "🇨🇦",
+  "qf-usa": "🇺🇸",
+};
+
 export function PlayerToken({ equipped, size = 44, showAccessory = true }: Props) {
+  // Jos käytössä on jokin emoji-profiilikuva, hypätään suoraan emojin piirtoon
+  const isEmojiAvatar = equipped.avatar && equipped.avatar !== "default";
+
+  if (isEmojiAvatar) {
+    const emoji = AVATAR_EMOJIS[equipped.avatar] || "👤";
+    return (
+      <div 
+        className="relative inline-flex items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 shadow-inner select-none"
+        style={{ width: size, height: size, fontSize: size * 0.6 }}
+      >
+        <span>{emoji}</span>
+      </div>
+    );
+  }
+
+  // OLETUS: Pelaajan kustomoitu pelihahmo (alkuperäinen hieno logiikkasi)
   const color = COLORS.find((c) => c.id === equipped.color)?.preview ?? "#22d3ee";
   const shape = SHAPES.find((s) => s.id === equipped.shape)?.id ?? "circle";
   const pattern = PATTERNS.find((p) => p.id === equipped.pattern);
