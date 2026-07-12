@@ -8,10 +8,12 @@ import {
   msUntilSeasonEnd, formatDaysCountdown,
 } from "@/lib/game/dailyReward";
 
-export const Route = createFileRoute("/shop")({
+// @ts-ignore
+export const Route = createFileRoute("/shop" as any)({
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
   component: ShopPage,
 });
+
 
 type ShopCategory = CosmeticCategory | "avatars";
 
