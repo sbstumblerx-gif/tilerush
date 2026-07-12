@@ -9,10 +9,15 @@ import {
 } from "@/lib/game/dailyReward";
 
 // @ts-ignore
-export const Route = createFileRoute("/shop" as any)({
+export const Route = {
+  useLoaderData: () => ({}),
+  useParams: () => ({}),
+  useSearch: () => ({}),
+  options: { id: "/shop", path: "/shop" },
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
   component: ShopPage,
-});
+} as any;
+
 
 
 type ShopCategory = CosmeticCategory | "avatars";
