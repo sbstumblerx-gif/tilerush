@@ -111,7 +111,6 @@ function PlayPage() {
     if (!cur) return;
 
     if (prevState.player.r !== state.player.r || prevState.player.c !== state.player.c) {
-      // Korjattu tyyppimuunnos indeksille, jotta kääntäjä ei herjaa
       const tileUses = p.stats.tileUses as Record<string, number>;
       tileUses[cur.kind] = (tileUses[cur.kind] ?? 0) + 1;
       
@@ -245,6 +244,7 @@ function TileLegend() {
     { cls: "bg-[var(--tile-launcher)]", label: "🚀 Laukaisu" },
     { cls: "bg-[var(--tile-obstacle)]", label: "Este" },
   ];
+
   return (
     <div className="neon-panel w-full max-w-[520px] p-3 grid grid-cols-4 gap-2">
       {items.map((item) => (
@@ -255,5 +255,5 @@ function TileLegend() {
       ))}
     </div>
   );
-        }
-      
+}
+  
