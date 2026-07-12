@@ -11,7 +11,8 @@ export interface CosmeticItem {
   preview?: string;
 }
 
-export type CosmeticCategory = "colors" | "shapes" | "patterns" | "accessories" | "themes" | "emojis";
+// Laajennettu tukemaan "avatars"-kategoriaa
+export type CosmeticCategory = "colors" | "shapes" | "patterns" | "accessories" | "themes" | "emojis" | "avatars";
 
 export const COLORS: CosmeticItem[] = [
   { id: "cyan", label: "Syaani", price: 200, rarity: "common", preview: "#22d3ee" },
@@ -79,8 +80,8 @@ export const THEMES: CosmeticItem[] = [
   { id: "tumma", label: "Tumma", price: 0, rarity: "common", exclusive: true },
   { id: "puisto", label: "Rauhallinen puisto", price: 200, rarity: "rare" },
   { id: "cyber", label: "Cyberpunk", price: 250, rarity: "epic" },
-  { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
   { id: "jalkapallo", label: "Jalkapallokentta", price: 0, rarity: "legendary", exclusive: true },
+  { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
   { id: "team-fr", label: "Ranskan lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-ma", label: "Marokon lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-en", label: "Englannin lippu", price: 0, rarity: "mythic", exclusive: true },
@@ -103,7 +104,7 @@ export const EMOJIS: CosmeticItem[] = [
   { id: "speechless", label: "Sanaton", price: 300, rarity: "rare", preview: "😶" },
   { id: "angry", label: "Vihainen", price: 300, rarity: "rare", preview: "😡" },
   { id: "heart_eyes", label: "Sydansilmat", price: 300, rarity: "rare", preview: "😍" },
-  { id: "mending_heart", label: "Paraneva sydan", price: 400, rarity: "epic", preview: "❤️" },
+  { id: "mending_heart", label: "Paraneva sydan", price: 400, rarity: "epic", preview: "❤️" }, // Puhdistettu perusemoji
   { id: "money_mouth", label: "Rahat suussa", price: 400, rarity: "epic", preview: "🤑" },
   { id: "cowboy", label: "Cowboy", price: 400, rarity: "epic", preview: "🤠" },
   { id: "alien", label: "Alien", price: 400, rarity: "epic", preview: "👽" },
@@ -124,6 +125,23 @@ export const EMOJIS: CosmeticItem[] = [
   { id: "facepalm", label: "Facepalm", price: 0, rarity: "ultra", exclusive: true, preview: "🤦" },
 ];
 
+// TUODAAN AVATARIT VIRALLISESTI MUKANA KATALOGIIN JA KAUPPAAN
+export const AVATARS: CosmeticItem[] = [
+  { id: "av-banana", label: "Banaani", price: 200, rarity: "common", preview: "🍌" },
+  { id: "av-pizza", label: "Pizza", price: 200, rarity: "common", preview: "🍕" },
+  { id: "av-car", label: "Auto", price: 200, rarity: "common", preview: "🚙" },
+  { id: "av-dizzy", label: "Pyorryksissa", price: 300, rarity: "rare", preview: "😵" },
+  { id: "av-popcorn", label: "Popkorni", price: 300, rarity: "rare", preview: "🍿" },
+  { id: "av-headphones", label: "Kuulokkeet", price: 300, rarity: "rare", preview: "🎧" },
+  { id: "av-alien", label: "Avaruusolio", price: 400, rarity: "epic", preview: "👽" },
+  { id: "av-oni", label: "Oni-maski", price: 400, rarity: "epic", preview: "👹" },
+  { id: "av-robot", label: "Robotti", price: 400, rarity: "epic", preview: "🤖" },
+  { id: "av-skull", label: "Paakallo", price: 400, rarity: "epic", preview: "💀" },
+  { id: "av-nerd", label: "Nortti", price: 500, rarity: "legendary", preview: "🤓" },
+  { id: "av-goat", label: "GOAT", price: 500, rarity: "legendary", preview: "🐐" },
+  { id: "av-clown", label: "Pelle", price: 500, rarity: "legendary", preview: "🤡" }
+];
+
 export const CATALOGS: Record<CosmeticCategory, CosmeticItem[]> = {
   colors: COLORS,
   shapes: SHAPES,
@@ -131,10 +149,11 @@ export const CATALOGS: Record<CosmeticCategory, CosmeticItem[]> = {
   accessories: ACCESSORIES,
   themes: THEMES,
   emojis: EMOJIS, 
+  avatars: AVATARS, // Rekisteröity tänne!
 };
 
 export function findItem(cat: CosmeticCategory, id: string): CosmeticItem | undefined {
-  return CATALOGS[cat].find((i) => i.id === id);
+  return CATALOGS[cat]?.find((i) => i.id === id);
 }
 
 export const CATEGORY_LABEL: Record<CosmeticCategory, string> = {
@@ -144,6 +163,7 @@ export const CATEGORY_LABEL: Record<CosmeticCategory, string> = {
   accessories: "Uusi asuste!",
   themes: "Uusi taustakuva!",
   emojis: "Uusi emoji!",
+  avatars: "Uusi profiilikuva!", // Lisätty puuttuva label
 };
 
 export function themeBg(themeId: string): string {
