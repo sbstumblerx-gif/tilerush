@@ -64,12 +64,13 @@ const PROMO_CODES: Record<string, { desc: string; apply: (p: any) => void }> = {
     desc: "🪙 500 kolikkoa + FIFA-pallo -kuvio",
     apply: (p) => {
       p.coins += 500;
-      if (!p.owned.patterns.includes("fifa")) p.owned.patterns.push("fifa");
+      if (!p.owned?.patterns?.includes("fifa")) p.owned?.patterns?.push("fifa");
     },
   },
   betatest: {
     desc: "🎁 Beta testing: 10 yleistä laatikkoa & 10 yleistä loot-sydäntä!",
     apply: (p) => {
+      if (!p.inventory) p.inventory = { boxes: [], hearts: [] };
       if (!p.inventory.boxes) p.inventory.boxes = [];
       if (!p.inventory.hearts) p.inventory.hearts = [];
       for (let i = 0; i < 10; i++) {
@@ -113,15 +114,23 @@ function ShopPage() {
 
   const today = todayUtc();
   const dailyAvailable = p.lastDailyClaim !== today;
-  const reward = pickDailyReward(`${p.profile.friendCode}:${today}`);
+  const reward = pickDailyReward(`${p.profile?.friendCode ?? "000"}:${today}`);
 
   const claimDaily = () => {
-    const cur = loadProgress();
+    const cur = loadProgress() as any;
     if (cur.lastDailyClaim === today) return;
     if (reward.type === "coins") cur.coins += reward.amount;
     else if (reward.type === "xp") addPassXp(cur, reward.amount);
-    else if (reward.type === "heart") cur.inventory.hearts.push({ id: `heart-${Date.now()}`, rarity: reward.rarity });
-    else if (reward.type === "box") cur.inventory.boxes.push({ id: `box-${Date.now()}`, rarity: reward.rarity });
+    else if (reward.type === "heart") {
+      if (!cur.inventory) cur.inventory = { boxes: [], hearts: [] };
+      if (!cur.inventory.hearts) cur.inventory.hearts = [];
+      cur.inventory.hearts.push({ id: `heart-${Date.now()}`, rarity: reward.rarity });
+    }
+    else if (reward.type === "box") {
+      if (!cur.inventory) cur.inventory = { boxes: [], hearts: [] };
+      if (!cur.inventory.boxes) cur.inventory.boxes = [];
+      cur.inventory.boxes.push({ id: `box-${Date.now()}`, rarity: reward.rarity });
+    }
     cur.lastDailyClaim = today;
     saveProgress(cur);
     setP(cur);
@@ -161,11 +170,13 @@ function ShopPage() {
     if (!cur.owned.themes.includes(id)) cur.owned.themes.push(id);
     const emoji = TEAM_EMOJI[id];
     if (emoji) {
+      if (!cur.profile) cur.profile = { username: "Pelaaja", friendCode: "0000" };
       cur.profile.profilePic = emoji;
-      const slots = cur.equipped.emojis ? [...cur.equipped.emojis] : ["🎮", "⚡", "🌟", "🏆"];
+      const slots = cur.equipped?.emojis ? [...cur.equipped.emojis] : ["🎮", "⚡", "🌟", "🏆"];
       if (!slots.includes(emoji)) {
         slots[3] = emoji;
       }
+      if (!cur.equipped) cur.equipped = {};
       cur.equipped.emojis = slots;
     }
     saveProgress(cur);
@@ -193,8 +204,8 @@ function ShopPage() {
     return CATALOGS[key as CosmeticCategory]?.length ?? 0;
   };
 
-  const ownedAvatars = (p.owned as any).avatars ?? ["default"];
-  const teamOffersPurchased = (p as any).teamOffersPurchased ?? [];
+  const ownedAvatars = (p.owned as any)?.avatars ?? ["default"];
+  const teamOffersPurchased = (p as any)?.teamOffersPurchased ?? [];
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[560px] mx-auto">
@@ -353,5 +364,4 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-    }
-                  
+        }
