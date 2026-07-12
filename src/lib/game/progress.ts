@@ -101,3 +101,65 @@ export interface Progress {
   /** XP accumulated toward current pass tier (rolls over between tiers). */
   passXp: number;
   /** XP accumulated toward post-60 prestige boxes (every 500 XP → box). */
+  prestigeXp: number;
+  equipped: Equipped;
+  owned: Owned;
+  inventory: Inventory;
+  settings: Settings;
+  profile: Profile;
+  friends: Friends;
+  lastDailyClaim?: string;
+  
+  // Kaupan vaatimat uudet tilatyyppimerkinnät:
+  teamOffersPurchased: string[];
+  promoRedeemed: string[];
+}
+
+// Apufunktiot progressin hallintaan (toteutukset riippuvat projektistasi, mutta tyypit ovat tässä)
+export function loadProgress(): Progress {
+  const data = localStorage.getItem(KEY);
+  if (!data) return createDefaultProgress();
+  try {
+    const parsed = JSON.parse(data);
+    // Varmistetaan että uudet taulukot ovat olemassa
+    if (!parsed.teamOffersPurchased) parsed.teamOffersPurchased = [];
+    if (!parsed.promoRedeemed) parsed.promoRedeemed = [];
+    if (!parsed.owned.avatars) parsed.owned.avatars = ["default"];
+    return parsed;
+  } catch {
+    return createDefaultProgress();
+  }
+}
+
+export function saveProgress(p: Progress): void {
+  localStorage.setItem(KEY, JSON.stringify(p));
+}
+
+export function addPassXp(p: Progress, amount: number): void {
+  p.passXp += amount;
+  // Mahdollinen tasonnousulogiikka tähän...
+}
+
+function createDefaultProgress(): Progress {
+  return {
+    completed: [],
+    coins: 0,
+    stars: {},
+    stats: {
+      starts: 0, totalMoves: 0, wins: 0, losses: 0, stars: 0,
+      tileUses: {}, itemUses: 0, volleyGoals: 0, enemySteps: 0, randomGains: 0
+    },
+    passLevel: 0,
+    claimedPass: [],
+    passXp: 0,
+    prestigeXp: 0,
+    equipped: { color: "default", shape: "default", pattern: "none", accessory: "none", theme: "default", avatar: "default" },
+    owned: { colors: ["default"], shapes: ["default"], patterns: ["none"], accessories: [], themes: ["default"], avatars: ["default"] },
+    inventory: { boxes: [], hearts: [] },
+    settings: { music: 5, sfx: 5 },
+    profile: { username: "Pelaaja", friendCode: "0000" },
+    friends: { list: [], incoming: [], outgoing: [] },
+    teamOffersPurchased: [],
+    promoRedeemed: []
+  };
+}
