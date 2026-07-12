@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, getRouteApi } from "@tanstack/react-router";
 import { z } from "zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Board } from "@/components/game/Board";
@@ -35,8 +35,12 @@ export const Route = createFileRoute("/play")({
   component: PlayPage,
 });
 
+// Luodaan API-viite reitille. Tämä katkaisee TypeScriptin kehäviittauksen!
+const routeApi = getRouteApi("/play");
+
 function PlayPage() {
-  const { level: levelId } = Route.useSearch();
+  // Käytetään erillistä routeApi:a suoran Route-objektin sijaan
+  const { level: levelId } = routeApi.useSearch();
   const navigate = useNavigate();
   const level = getLevel(levelId) ?? LEVELS[0];
   const [state, setState] = useState<GameState>(() => createState(level));
@@ -267,4 +271,4 @@ function TileLegend() {
       ))}
     </div>
   );
-                                                           }
+        }
