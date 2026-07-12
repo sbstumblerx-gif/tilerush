@@ -32,7 +32,7 @@ export const Route = createFileRoute("/play")({
       { name: "description", content: "Ratkaise ruudukkopulmia rajallisilla siirroilla." },
     ],
   }),
-  component: () => <PlayPage />,
+  component: PlayPage,
 });
 
 function PlayPage() {
@@ -267,4 +267,4 @@ function TileLegend() {
       ))}
     </div>
   );
-        }
+                }
