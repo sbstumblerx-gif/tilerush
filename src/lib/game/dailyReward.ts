@@ -61,9 +61,9 @@ export function formatDaysCountdown(ms: number): string {
 
 export function labelReward(r: DailyReward): string {
   switch (r.type) {
-    case "coins": return `🪙 ${r.amount} kolikkoa`;
-    case "xp": return `⭐ ${r.amount} Tile Pass XP`;
-    case "heart": return `💗 Loot-sydän`;
-    case "box": return `📦 Laatikko`;
+    case "coins": return `C ${r.amount} kolikkoa`;
+    case "xp": return `XP ${r.amount} Tile Pass XP`;
+    case "heart": return `Sydan-Loot`;
+    case "box": return `Laatikko`;
   }
-}
+                              }
