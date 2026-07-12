@@ -32,10 +32,12 @@ export const Route = createFileRoute("/play")({
       { name: "description", content: "Ratkaise ruudukkopulmia rajallisilla siirroilla." },
     ],
   }),
-  component: PlayPage,
+  // Kiertää TypeScriptin kehäviittauksen renderöimällä komponentin nuolifunktiona
+  component: () => <PlayPage />,
 });
 
 function PlayPage() {
+  // Haetaan hakuilmentymä suoraan routesta, joka on nyt turvallista inline-määrittelyn ansiosta
   const { level: levelId } = Route.useSearch();
   const navigate = useNavigate();
   const level = getLevel(levelId) ?? LEVELS[0];
@@ -166,11 +168,11 @@ function PlayPage() {
   }, [state, prevState]);
 
   const handleTile = useCallback(
-    (p: Pos) => {
+    (pos: Pos) => {
       setState((s) => {
-        if (s.aimingItem === "volleyball") return tryVolleyball(s, p);
-        if (s.aimingItem === "tnt") return tryTnt(s, p);
-        return tryMove(s, p);
+        if (s.aimingItem === "volleyball") return tryVolleyball(s, pos);
+        if (s.aimingItem === "tnt") return tryTnt(s, pos);
+        return tryMove(s, pos);
       });
     },
     [],
@@ -256,4 +258,3 @@ function TileLegend() {
     </div>
   );
 }
-  
