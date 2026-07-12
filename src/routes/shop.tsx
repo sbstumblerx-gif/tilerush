@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CATALOGS, ACCESSORIES, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
 import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
@@ -8,13 +8,11 @@ import {
   msUntilSeasonEnd, formatDaysCountdown,
 } from "@/lib/game/dailyReward";
 
-// Korvataan koko TanStackin reittilogiikka tavallisella objektilla, jotta kääntäjä ei tarkista mitään
-export const Route: any = {
-  options: { id: "/shop", path: "/shop" },
+// @ts-expect-error - Ohitetaan puuttuvan automaattisen reittipuun tyyppivirhe lennosta
+export const Route = createFileRoute("/shop" as any)({
+  head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
   component: ShopPage,
-};
-
-
+});
 
 type ShopCategory = CosmeticCategory | "avatars";
 
@@ -59,7 +57,7 @@ const TEAM_OFFER_IDS = [
 
 const TEAM_EMOJI: Record<string, string> = {
   "team-fr": "🇫🇷", "team-ma": "🇲🇦", "team-en": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "team-no": "🇳🇴",
-  "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
+  "team-es": "🇪🇸", "team-be": "🇧ēi", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
 };
 
 const PROMO_CODES: Record<string, { desc: string; apply: (p: any) => void }> = {
@@ -367,4 +365,5 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-        }
+                                                                       }
+                      
