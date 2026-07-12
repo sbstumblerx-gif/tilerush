@@ -8,13 +8,12 @@ export default defineConfig({
     build: {
       sourcemap: false,
     },
-    // Pakotetaan esbuild ohittamaan TypeScript-tyyppivirheet koodin generoinnissa
-    esbuild: {
-      tsconfigRaw: {
+    typescript: {
+      // Tämä estää TanStack Startin kääntäjää kaatamasta buildia tyyppivirheisiin
+      tsconfig: {
         compilerOptions: {
-          ignoreDeprecations: ["5.0"],
+          skipLibCheck: true,
           noEmit: false,
-          skipLibCheck: true
         }
       }
     }
