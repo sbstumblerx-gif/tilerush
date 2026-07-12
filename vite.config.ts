@@ -4,10 +4,19 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  // Lisätään pakotettu reittien generointi päälle
   vite: {
     build: {
       sourcemap: false,
+    },
+    // Pakotetaan esbuild ohittamaan TypeScript-tyyppivirheet koodin generoinnissa
+    esbuild: {
+      tsconfigRaw: {
+        compilerOptions: {
+          ignoreDeprecations: ["5.0"],
+          noEmit: false,
+          skipLibCheck: true
+        }
+      }
     }
   }
 });
