@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { z } from "zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Board } from "@/components/game/Board";
 import { HUD } from "@/components/game/HUD";
@@ -20,22 +19,22 @@ import { playSfx } from "@/lib/game/sound";
 import { PACKS, packProgress } from "@/lib/game/packs";
 import { openContainer } from "@/lib/game/lootbox";
 
-// Määritellään skeema löysästi, jotta Lovable ei kompastu tyyppigenerointiin
+// Määritellään reitti tyhjänä, jotta se mätsää täydellisesti routeTree.gen.ts-tiedoston kanssa
 export const Route = createFileRoute("/play")({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      level: Number(search.level) || 1
-    };
-  },
   component: PlayPage,
 });
 
 function PlayPage() {
-  // Haetaan hakuilmentymä täysin geneerisesti ilman TanStackin tiukkaa reittisidonnaisuutta
-  const search = Route.useSearch() as any;
-  const levelId = search?.level ?? 1;
-  
   const navigate = useNavigate();
+
+  // Luetaan tason ID suoraan selaimen URL-osoitteesta. Tämä ohittaa kaikki TanStack Routerin build-ongelmat.
+  const levelId = useMemo(() => {
+    if (typeof window === "undefined") return 1;
+    const params = new URLSearchParams(window.location.search);
+    const lvl = parseInt(params.get("level") || "1", 10);
+    return isNaN(lvl) ? 1 : lvl;
+  }, []);
+  
   const level = getLevel(levelId) ?? LEVELS[0];
   const [state, setState] = useState<GameState>(() => createState(level));
   const [prevState, setPrevState] = useState<GameState | null>(null);
@@ -222,9 +221,10 @@ function PlayPage() {
             </Button>
             {state.status === "won" && nextLevelId && (
               <Button
-                onClick={() =>
-                  navigate({ to: "/play", search: { level: nextLevelId } })
-                }
+                onClick={() => {
+                  // Päivitetään URL ja ladataan sivu uudelleen, jotta uusi taso aktivoituu puhtaasti Lovablessa
+                  window.location.search = `?level=${nextLevelId}`;
+                }}
               >
                 Seuraava taso
               </Button>
@@ -265,4 +265,4 @@ function TileLegend() {
       ))}
     </div>
   );
-          }
+}
