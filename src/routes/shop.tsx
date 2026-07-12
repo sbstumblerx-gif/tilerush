@@ -13,7 +13,6 @@ export const Route = createFileRoute("/shop")({
   component: ShopPage,
 });
 
-// Laajennetaan tyyppiä kaupan sisäisesti tukemaan avatareja
 type ShopCategory = CosmeticCategory | "avatars";
 
 const CATS: { key: ShopCategory; label: string; emoji: string }[] = [
@@ -23,33 +22,27 @@ const CATS: { key: ShopCategory; label: string; emoji: string }[] = [
   { key: "accessories", label: "Asusteet", emoji: "👑" },
   { key: "themes", label: "Taustat", emoji: "🖼️" },
   { key: "emojis" as CosmeticCategory, label: "Emojit", emoji: "😎" }, 
-  { key: "avatars", label: "Profiilikuvat", emoji: "👤" }, // Uusi hylly kauppaan!
+  { key: "avatars", label: "Profiilikuvat", emoji: "👤" },
 ];
 
-// Kiinteillä hinnoilla varustettu avatar-katalogi kaupalle
 const AVATAR_ITEMS: CosmeticItem[] = [
-  // Yleiset (Common) - 300 kolikkoa
   { id: "av-banana", label: "Banaani", rarity: "common", preview: "🍌", price: 300 },
   { id: "av-pizza", label: "Pizza", rarity: "common", preview: "🍕", price: 300 },
   { id: "av-car", label: "Auto", rarity: "common", preview: "🚙", price: 300 },
   
-  // Harvinaiset (Rare) - 400 kolikkoa
   { id: "av-dizzy", label: "Pyörryksissä", rarity: "rare", preview: "😵‍💫", price: 400 },
   { id: "av-popcorn", label: "Popkorni", rarity: "rare", preview: "🍿", price: 400 },
   { id: "av-headphones", label: "Kuulokkeet", rarity: "rare", preview: "🎧", price: 400 },
   
-  // Eeppiset (Epic) - 500 kolikkoa
   { id: "av-alien", label: "Avaruusolio", rarity: "epic", preview: "👾", price: 500 },
   { id: "av-oni", label: "Oni-maski", rarity: "epic", preview: "👹", price: 500 },
   { id: "av-robot", label: "Robotti", rarity: "epic", preview: "🤖", price: 500 },
   { id: "av-skull", label: "Pääkallo", rarity: "epic", preview: "💀", price: 500 },
   
-  // Legendaariset (Legendary) - 750 kolikkoa
   { id: "av-nerd", label: "Nörtti", rarity: "legendary", preview: "🤓", price: 750 },
   { id: "av-goat", label: "GOAT", rarity: "legendary", preview: "🐐", price: 750 },
   { id: "av-clown", label: "Pelle", rarity: "legendary", preview: "🤡", price: 750 },
 
-  // Myyttiset Limited Time QF-liput (Ei suoraan ostettavissa tästä hyllystä)
   { id: "qf-finla", label: "QF - Suomi", rarity: "mythic", preview: "🇫🇮", price: 999, exclusive: true },
   { id: "qf-swede", label: "QF - Ruotsi", rarity: "mythic", preview: "🇸🇪", price: 999, exclusive: true },
   { id: "qf-canad", label: "QF - Kanada", rarity: "mythic", preview: "🇨🇦", price: 999, exclusive: true },
@@ -139,7 +132,7 @@ function ShopPage() {
     
     if (cat === "avatars" && !cur.owned.avatars) cur.owned.avatars = ["default"];
     
-    const ownedItems = cat === "avatars" ? cur.owned.avatars : (cur.owned[cat] ?? []);
+    const ownedItems = cat === "avatars" ? cur.owned.avatars : (cur.owned[cat as CosmeticCategory] ?? []);
     if (ownedItems.includes(item.id)) return;
     if (item.exclusive) return;
     if (cur.coins < item.price) return;
@@ -148,7 +141,7 @@ function ShopPage() {
     if (cat === "avatars") {
       cur.owned.avatars = [...ownedItems, item.id];
     } else {
-      cur.owned[cat] = [...ownedItems, item.id];
+      cur.owned[cat as CosmeticCategory] = [...ownedItems, item.id];
     }
     
     saveProgress(cur);
@@ -195,7 +188,7 @@ function ShopPage() {
 
   const getItemCount = (key: ShopCategory) => {
     if (key === "avatars") return AVATAR_ITEMS.length;
-    return CATALOGS[key]?.length ?? 0;
+    return CATALOGS[key as CosmeticCategory]?.length ?? 0;
   };
 
   return (
@@ -234,7 +227,6 @@ function ShopPage() {
             </button>
           </div>
 
-          {/* Tarjoukset */}
           <div className="mt-4 neon-panel p-4">
             <button onClick={() => setShowOffers((v) => !v)} className="w-full flex items-center justify-between">
               <span className="flex items-center gap-2 font-bold"><Tag className="h-4 w-4 text-primary" /> Tarjoukset · Puolivälierä</span>
@@ -271,7 +263,6 @@ function ShopPage() {
             )}
           </div>
 
-          {/* Promo codes */}
           <div className="mt-4 neon-panel p-4">
             <button onClick={() => setShowPromo((v) => !v)} className="w-full flex items-center justify-between">
               <span className="flex items-center gap-2 font-bold"><Ticket className="h-4 w-4 text-primary" /> Lunasta koodi</span>
@@ -293,7 +284,6 @@ function ShopPage() {
             )}
           </div>
 
-          {/* Katalogiruudukko */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             {CATS.map((c) => (
               <button key={c.key} onClick={() => setOpen(c.key)} className="neon-panel p-5 text-left hover:border-primary/70">
@@ -313,7 +303,7 @@ function ShopPage() {
         <>
           <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {(open === "avatars" ? AVATAR_ITEMS : (CATALOGS[open] ?? [])).map((item) => {
+            {(open === "avatars" ? AVATAR_ITEMS : (CATALOGS[open as CosmeticCategory] ?? [])).map((item) => {
               const ownedItems = open === "avatars" ? (p.owned.avatars ?? ["default"]) : (p.owned[open] ?? []);
               const owned = ownedItems.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
               const canBuy = !owned && p.coins >= item.price && !item.exclusive;
@@ -358,4 +348,5 @@ function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-                              }
+    }
+      
