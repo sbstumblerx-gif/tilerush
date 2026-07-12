@@ -11,7 +11,8 @@
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
-    "noEmit": true,
+    "noEmit": false,
+    "noEmitOnError": false,
 
     /* Linting */
     "skipLibCheck": true,
