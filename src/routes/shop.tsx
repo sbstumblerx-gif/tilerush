@@ -212,7 +212,7 @@ export function ShopPage() {
     <div className="min-h-screen px-4 py-8 max-w-[560px] mx-auto">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => (open ? setOpen(null) : history.back())}
+          onClick={() => (open ? setOpen(null) : window.history.back())}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> {open ? "Katalogit" : "Takaisin"}
@@ -322,7 +322,8 @@ export function ShopPage() {
           <h1 className="mt-4 text-2xl font-black">{CATS.find((c) => c.key === open)?.label}</h1>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {(open === "avatars" ? AVATAR_ITEMS : (CATALOGS[open as CosmeticCategory] ?? [])).map((item) => {
-              const ownedItems = open === "avatars" ? ownedAvatars : (p.owned[open as CosmeticCategory] ?? []);
+              // Tyyppisuojattu ja indeksointivirheet korjaava haku p.owned-objektista:
+              const ownedItems = open === "avatars" ? ownedAvatars : ((p.owned as any)[open] ?? []);
               const owned = ownedItems.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
               const canBuy = !owned && p.coins >= item.price && !item.exclusive;
               const rarityStyle = getRarityClass(item.rarity);
@@ -366,4 +367,4 @@ export function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-            }
+  }
