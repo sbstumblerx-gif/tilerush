@@ -19,10 +19,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: {
-    // Estetään TypeScript-virheitä kaatamasta Vercelin buildia
-    typescript: {
-      ignoreBuildErrors: true,
-    },
-  },
 });
