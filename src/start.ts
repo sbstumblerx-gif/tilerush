@@ -1,10 +1,7 @@
-import { createStartHandler, defaultRenderHandler } from '@tanstack/react-start/server'
+import { hydrateRoot } from 'react-dom/client'
+import { StartClient } from '@tanstack/react-start'
 import { createRouter } from './router'
 
-// Luodaan standardi Start-käsittelijä, jota Vinxi osaa lukea
-export default createStartHandler({
-  createRouter,
-  getRouterManifest: () => ({
-    routes: {},
-  }),
-})(defaultRenderHandler)
+const router = createRouter()
+
+hydrateRoot(document, <StartClient router={router} />)
