@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
+  // Varmistaa, että reitit rakennetaan suhteellisina nettilinkkiä varten
+  base: "/",
   plugins: [
     tailwindcss(),
     react(),
@@ -18,5 +20,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  server: {
+    // Pakotetaan reititys toimimaan SPA-moodissa kehityksessä ja julkaisussa
+    historyApiFallback: true,
   },
 });
