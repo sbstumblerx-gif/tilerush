@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addPassXp, loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
+import { loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
 import { ArrowLeft, Coins } from "lucide-react";
 import { OpenContainer } from "@/components/game/OpenContainer";
 import { RewardScreen } from "@/components/game/RewardScreen";
@@ -170,6 +170,3 @@ function PassPage() {
     </div>
   );
 }
-
-// silence unused import if bundler complains
-void addPassXp;
