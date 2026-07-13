@@ -109,7 +109,11 @@ export interface Progress {
   profile: Profile;
   friends: Friends;
   lastDailyClaim?: string;
-  
+  daily?: DailyTasks;
+  weekly?: WeeklyTasks;
+  /** Queue of reward reveals (e.g. from lootbox opens) waiting to be shown/claimed by RewardScreen. */
+  pendingRewards: Reward[];
+
   // Kaupan vaatimat uudet tilatyyppimerkinnät:
   teamOffersPurchased: string[];
   promoRedeemed: string[];
@@ -125,6 +129,7 @@ export function loadProgress(): Progress {
     if (!parsed.teamOffersPurchased) parsed.teamOffersPurchased = [];
     if (!parsed.promoRedeemed) parsed.promoRedeemed = [];
     if (!parsed.owned.avatars) parsed.owned.avatars = ["default"];
+    if (!parsed.pendingRewards) parsed.pendingRewards = [];
     return parsed;
   } catch {
     return createDefaultProgress();
@@ -135,9 +140,64 @@ export function saveProgress(p: Progress): void {
   localStorage.setItem(KEY, JSON.stringify(p));
 }
 
+/** XP required to advance from tier `tier` to `tier + 1` (0-indexed by current tier). */
+export function xpForTier(tier: number): number {
+  return 100 + tier * 15;
+}
+
 export function addPassXp(p: Progress, amount: number): void {
+  if (p.passLevel >= 60) {
+    // Prestige: XP rolls into boxes every 500 XP instead of tiers.
+    p.prestigeXp += amount;
+    while (p.prestigeXp >= 500) {
+      p.prestigeXp -= 500;
+      p.inventory.boxes.push({
+        id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        rarity: "common",
+      });
+    }
+    return;
+  }
   p.passXp += amount;
-  // Mahdollinen tasonnousulogiikka tähän...
+  while (p.passLevel < 60 && p.passXp >= xpForTier(p.passLevel)) {
+    p.passXp -= xpForTier(p.passLevel);
+    p.passLevel += 1;
+  }
+  if (p.passLevel >= 60) {
+    // Any overflow XP once maxed out becomes prestige XP.
+    p.prestigeXp += p.passXp;
+    p.passXp = 0;
+    while (p.prestigeXp >= 500) {
+      p.prestigeXp -= 500;
+      p.inventory.boxes.push({
+        id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        rarity: "common",
+      });
+    }
+  }
+}
+
+/** A level is unlocked if it's the first level, or the previous level id has been completed. */
+export function isUnlocked(id: number, completed: number[]): boolean {
+  if (id <= 1) return true;
+  return completed.includes(id - 1);
+}
+
+/** Returns the id of the first level in `allIds` that hasn't been completed yet (or the last id if all are done). */
+export function firstUnfinished(completed: number[], allIds: number[]): number {
+  for (const id of allIds) {
+    if (!completed.includes(id)) return id;
+  }
+  return allIds[allIds.length - 1] ?? 1;
+}
+
+/** Wipes all local progress and returns a fresh default state. */
+export function resetAllProgress(): Progress {
+  localStorage.removeItem(KEY);
+  for (const k of OLD_KEYS) localStorage.removeItem(k);
+  const fresh = createDefaultProgress();
+  saveProgress(fresh);
+  return fresh;
 }
 
 function createDefaultProgress(): Progress {
@@ -160,6 +220,7 @@ function createDefaultProgress(): Progress {
     profile: { username: "Pelaaja", friendCode: "0000" },
     friends: { list: [], incoming: [], outgoing: [] },
     teamOffersPurchased: [],
-    promoRedeemed: []
+    promoRedeemed: [],
+    pendingRewards: []
   };
 }
