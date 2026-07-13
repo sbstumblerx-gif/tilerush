@@ -1,17 +1,16 @@
-import { QueryClient } from "@tanstack/react-query";
-import { createRouter } from "@tanstack/react-router";
-import { routeTree } from './appRouteTree'
+import { createRouter as createTanStackRouter } from '@tanstack/react-router'
+// Varmista että tämä import osoittaa tiedostoon, jossa reitit oikeasti ovat (esim. ./routeTree.gen)
+import { routeTree } from './routeTree.gen'
 
-
-export const getRouter = () => {
-  const queryClient = new QueryClient();
-
-  const router = createRouter({
+export function createRouter() {
+  const router = createTanStackRouter({
     routeTree,
-    context: { queryClient },
-    scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-  });
+  })
+  return router
+}
 
-  return router;
-};
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: ReturnType<typeof createRouter>
+  }
+}
