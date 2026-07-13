@@ -11,15 +11,13 @@ export default defineConfig({
     react(),
     TanStackRouterVite({
       autoCodeSplitting: true,
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/routeTree.gen.ts",
     }),
   ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
   },
 });
