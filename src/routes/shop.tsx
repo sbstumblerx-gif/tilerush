@@ -137,25 +137,28 @@ export function ShopPage() {
     setP(cur);
   };
 
-  const claimMaintenanceCompensation = () => {
+  const claimCompensation = () => {
     const cur = loadProgress() as any;
-    if (cur.maintenanceClaimed) return;
+    if (cur.compensationClaimed) return;
 
     // Lisätään 500 kolikkoa
     cur.coins += 500;
 
-    // Lisätään 5 sydäntä pelaajan inventaarioon
+    // Alustetaan inventaariorakenteet jos niitä ei vielä ole
     if (!cur.inventory) cur.inventory = { boxes: [], hearts: [] };
     if (!cur.inventory.hearts) cur.inventory.hearts = [];
-    
+
+    // Lisätään 5 loot sydäntä (rarity: common)
     for (let i = 0; i < 5; i++) {
       cur.inventory.hearts.push({
-        id: `heart-maintenance-${Date.now()}-${i}`,
-        rarity: "common"
+        id: `heart-comp-${Date.now()}-${i}`,
+        rarity: "common",
       });
     }
 
-    cur.maintenanceClaimed = true;
+    // Merkitään lahja lunastetuksi edistymistietoihin
+    cur.compensationClaimed = true;
+    
     saveProgress(cur);
     setP(cur);
   };
@@ -230,7 +233,7 @@ export function ShopPage() {
 
   const ownedAvatars = (p.owned as any)?.avatars ?? ["default"];
   const teamOffersPurchased = (p as any)?.teamOffersPurchased ?? [];
-  const isMaintenanceClaimed = (p as any)?.maintenanceClaimed ?? false;
+  const compensationClaimed = (p as any)?.compensationClaimed ?? false;
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[560px] mx-auto">
@@ -251,25 +254,19 @@ export function ShopPage() {
             Kausi paattyy 30.7.2026 · {formatDaysCountdown(msUntilSeasonEnd())}
           </div>
 
-          {/* Ilmainen Huoltokatko-hyvitys */}
-          {!isMaintenanceClaimed && (
-            <div className="mt-4 border-2 border-amber-500/50 bg-amber-950/20 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-amber-950/20">
-              <div className="pr-2">
-                <div className="text-[10px] uppercase font-black tracking-widest text-amber-400 flex items-center gap-1.5">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                  Erikoislahja
-                </div>
-                <div className="font-black text-lg mt-0.5 text-foreground">Huoltokatko-hyvitys</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Sisältää: <span className="text-amber-300 font-bold">5❤️ sydäntä</span> & <span className="text-yellow-400 font-bold">🪙 500 kolikkoa</span>
+          {/* Huoltokatko-hyvitys (Näkyy vain jos sitä ei ole vielä lunastettu) */}
+          {!compensationClaimed && (
+            <div className="mt-4 border-2 border-emerald-500 bg-emerald-950/20 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-emerald-950/20">
+              <div>
+                <div className="text-[10px] uppercase font-black tracking-widest text-emerald-400">Ilmainen lahja</div>
+                <div className="font-black text-lg text-foreground">Huoltokatko-hyvitys</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Sisältää: <span className="text-emerald-300 font-bold">5❤️ sydäntä</span> & <span className="text-yellow-400 font-bold">500 kolikkoa</span>
                 </div>
               </div>
               <button
-                onClick={claimMaintenanceCompensation}
-                className="px-5 py-2.5 rounded bg-amber-500 hover:bg-amber-600 text-black text-sm font-black flex items-center gap-2 flex-shrink-0 transition-colors"
+                onClick={claimCompensation}
+                className="px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-black text-sm font-black flex items-center gap-2 transition-colors flex-shrink-0"
               >
                 <Gift className="h-4 w-4" /> Lunasta
               </button>
@@ -402,5 +399,5 @@ export function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-  }
-                
+              }
+                        
