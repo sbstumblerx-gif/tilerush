@@ -137,6 +137,29 @@ export function ShopPage() {
     setP(cur);
   };
 
+  const claimMaintenanceCompensation = () => {
+    const cur = loadProgress() as any;
+    if (cur.maintenanceClaimed) return;
+
+    // Lisätään 500 kolikkoa
+    cur.coins += 500;
+
+    // Lisätään 5 sydäntä pelaajan inventaarioon
+    if (!cur.inventory) cur.inventory = { boxes: [], hearts: [] };
+    if (!cur.inventory.hearts) cur.inventory.hearts = [];
+    
+    for (let i = 0; i < 5; i++) {
+      cur.inventory.hearts.push({
+        id: `heart-maintenance-${Date.now()}-${i}`,
+        rarity: "common"
+      });
+    }
+
+    cur.maintenanceClaimed = true;
+    saveProgress(cur);
+    setP(cur);
+  };
+
   const buy = (cat: ShopCategory, item: CosmeticItem) => {
     const cur = loadProgress() as any;
     
@@ -207,6 +230,7 @@ export function ShopPage() {
 
   const ownedAvatars = (p.owned as any)?.avatars ?? ["default"];
   const teamOffersPurchased = (p as any)?.teamOffersPurchased ?? [];
+  const isMaintenanceClaimed = (p as any)?.maintenanceClaimed ?? false;
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[560px] mx-auto">
@@ -226,6 +250,31 @@ export function ShopPage() {
           <div className="mt-1 text-xs text-muted-foreground">
             Kausi paattyy 30.7.2026 · {formatDaysCountdown(msUntilSeasonEnd())}
           </div>
+
+          {/* Ilmainen Huoltokatko-hyvitys */}
+          {!isMaintenanceClaimed && (
+            <div className="mt-4 border-2 border-amber-500/50 bg-amber-950/20 rounded-xl p-4 flex items-center justify-between shadow-lg shadow-amber-950/20">
+              <div className="pr-2">
+                <div className="text-[10px] uppercase font-black tracking-widest text-amber-400 flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                  Erikoislahja
+                </div>
+                <div className="font-black text-lg mt-0.5 text-foreground">Huoltokatko-hyvitys</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Sisältää: <span className="text-amber-300 font-bold">5❤️ sydäntä</span> & <span className="text-yellow-400 font-bold">🪙 500 kolikkoa</span>
+                </div>
+              </div>
+              <button
+                onClick={claimMaintenanceCompensation}
+                className="px-5 py-2.5 rounded bg-amber-500 hover:bg-amber-600 text-black text-sm font-black flex items-center gap-2 flex-shrink-0 transition-colors"
+              >
+                <Gift className="h-4 w-4" /> Lunasta
+              </button>
+            </div>
+          )}
 
           <div className="mt-4 neon-panel p-4 flex items-center justify-between">
             <div>
@@ -353,4 +402,5 @@ export function ShopPage() {
       <span className="hidden">{tick}</span>
     </div>
   );
-                                                }
+  }
+                
