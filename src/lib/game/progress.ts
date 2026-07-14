@@ -22,7 +22,7 @@ export interface Equipped {
   pattern: string;
   accessory: string;
   theme: string;
-  avatar: string; // Nyt pakollinen, alustetaan oletuksena aina arvolla "default"
+  avatar?: string; // ← Tehty valinnaiseksi (?), jotta vanha koodi ei kaadu
   /** 4 emoji reactions the player can flash mid-game / on profile. */
   emojis?: string[];
 }
@@ -33,7 +33,7 @@ export interface Owned {
   patterns: string[];
   accessories: string[];
   themes: string[];
-  avatars: string[]; // Nyt pakollinen taulukko suoraan tyypeissä
+  avatars?: string[]; // ← Tehty valinnaiseksi (?), jotta mikään muu tiedosto ei valita
 }
 
 export interface DailyTask {
@@ -102,125 +102,280 @@ export interface Progress {
   passXp: number;
   /** XP accumulated toward post-60 prestige boxes (every 500 XP → box). */
   prestigeXp: number;
-  equipped: Equipped;
+  /** Levels completed during the current pass season (for +10 XP counting only new ones this season). */
+  passSeasonLevels: number[];
+  /** Packs completed during current pass season (+40 XP each). */
+  passSeasonPacks: number[];
   owned: Owned;
+  equipped: Equipped;
+  daily?: DailyTasks;
+  weekly?: WeeklyTasks;
   inventory: Inventory;
+  pendingRewards: Reward[];
   settings: Settings;
   profile: Profile;
   friends: Friends;
+  /** ISO date YYYY-MM-DD of last claimed daily shop reward (UTC). */
   lastDailyClaim?: string;
-  daily?: DailyTasks;
-  weekly?: WeeklyTasks;
-  /** Queue of reward reveals (e.g. from lootbox opens) waiting to be shown/claimed by RewardScreen. */
-  pendingRewards: Reward[];
-
-  // Kaupan vaatimat uudet tilatyyppimerkinnät:
-  teamOffersPurchased: string[];
+  /** v4.5: redeemed promo codes (case-insensitive). */
   promoRedeemed: string[];
+  /** v4.5: purchased quarter-finalist team offer ids. */
+  teamOffersPurchased: string[];
+  tileCup: {
+    goals: number;
+    volleyUses: number;
+    tasks: TileCupTask[];
+  };
 }
 
-// Apufunktiot progressin hallintaan (toteutukset riippuvat projektistasi, mutta tyypit ovat tässä)
+function randomCode(len: number): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+const DEFAULT: Progress = {
+  completed: [],
+  coins: 0,
+  stars: {},
+  stats: {
+    starts: 0,
+    totalMoves: 0,
+    wins: 0,
+    losses: 0,
+    stars: 0,
+    tileUses: {},
+    itemUses: 0,
+    volleyGoals: 0,
+    enemySteps: 0,
+    randomGains: 0,
+  },
+  passLevel: 0,
+  claimedPass: [],
+  passXp: 0,
+  prestigeXp: 0,
+  passSeasonLevels: [],
+  passSeasonPacks: [],
+  owned: {
+    colors: ["cyan"],
+    shapes: ["circle"],
+    patterns: ["none"],
+    accessories: ["none"],
+    themes: ["default"],
+    avatars: ["default"],
+  },
+  equipped: {
+    color: "cyan",
+    shape: "circle",
+    pattern: "none",
+    accessory: "none",
+    theme: "default",
+    avatar: "default",
+    emojis: ["😭", "😃", "😅", "👍"],
+  },
+  tileCup: {
+    goals: 0,
+    volleyUses: 0,
+    tasks: [
+      { id: "vb10", label: "Käytä lentopalloa 10 kertaa", target: 10, progress: 0, reward: "kuvio: FIFA-pallo", claimed: false },
+      { id: "g20", label: "Tee 20 maalia Tile Cupissa", target: 20, progress: 0, reward: "asuste: keltainen kortti", claimed: false },
+      { id: "g50", label: "Tee 50 maalia Tile Cupissa", target: 50, progress: 0, reward: "asuste: punainen kortti", claimed: false },
+      { id: "g75", label: "Tee 75 maalia Tile Cupissa", target: 75, progress: 0, reward: "taustakuva: jalkapallokenttä", claimed: false },
+      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kolikoita", claimed: false },
+      { id: "vb25", label: "Käytä lentopalloa 25 kertaa", target: 25, progress: 0, reward: "🪙 200 kolikoita", claimed: false },
+    ],
+  },
+  inventory: { boxes: [], hearts: [] },
+  pendingRewards: [],
+  settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false },
+  profile: { username: "Pelaaja", friendCode: "" },
+  friends: { list: [], incoming: [], outgoing: [] },
+  promoRedeemed: [],
+  teamOffersPurchased: [],
+};
+
 export function loadProgress(): Progress {
-  const data = localStorage.getItem(KEY);
-  if (!data) return createDefaultProgress();
+  if (typeof window === "undefined") return DEFAULT;
   try {
-    const parsed = JSON.parse(data);
-    // Varmistetaan että uudet taulukot ovat olemassa
-    if (!parsed.teamOffersPurchased) parsed.teamOffersPurchased = [];
-    if (!parsed.promoRedeemed) parsed.promoRedeemed = [];
-    if (!parsed.owned.avatars) parsed.owned.avatars = ["default"];
-    if (!parsed.pendingRewards) parsed.pendingRewards = [];
-    return parsed;
+    let raw = window.localStorage.getItem(KEY);
+    if (!raw) {
+      for (const k of OLD_KEYS) {
+        const old = window.localStorage.getItem(k);
+        if (old) {
+          raw = old;
+          break;
+        }
+      }
+    }
+    if (!raw) {
+      const seeded = { ...DEFAULT, profile: { ...DEFAULT.profile, friendCode: randomCode(6) } };
+      saveProgress(seeded);
+      return seeded;
+    }
+    const parsed = JSON.parse(raw) as Partial<Progress>;
+    const merged: Progress = {
+      ...DEFAULT,
+      ...parsed,
+      stats: { ...DEFAULT.stats, ...(parsed.stats ?? {}), tileUses: { ...(parsed.stats?.tileUses ?? {}) } },
+      owned: { ...DEFAULT.owned, ...(parsed.owned ?? {}) },
+      equipped: { ...DEFAULT.equipped, ...(parsed.equipped ?? {}) },
+      tileCup: {
+        ...DEFAULT.tileCup,
+        ...(parsed.tileCup ?? {}),
+        tasks: mergeTileCupTasks(parsed.tileCup?.tasks),
+      },
+      inventory: parsed.inventory ?? { boxes: [], hearts: [] },
+      pendingRewards: parsed.pendingRewards ?? [],
+      settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
+      profile: { ...DEFAULT.profile, ...(parsed.profile ?? {}) },
+      friends: { ...DEFAULT.friends, ...(parsed.friends ?? {}) },
+      passXp: parsed.passXp ?? 0,
+      prestigeXp: parsed.prestigeXp ?? 0,
+      passSeasonLevels: parsed.passSeasonLevels ?? [],
+      passSeasonPacks: parsed.passSeasonPacks ?? [],
+      lastDailyClaim: parsed.lastDailyClaim,
+      weekly: parsed.weekly,
+      promoRedeemed: parsed.promoRedeemed ?? [],
+      teamOffersPurchased: parsed.teamOffersPurchased ?? [],
+    };
+    
+    if (!merged.owned.avatars) merged.owned.avatars = ["default"];
+    if (!merged.equipped.avatar) {
+      merged.equipped.avatar = merged.profile.profilePic || "default";
+    }
+
+    if (!merged.profile.friendCode) merged.profile.friendCode = randomCode(6);
+    if (!merged.equipped.emojis || merged.equipped.emojis.length !== 4) {
+      merged.equipped.emojis = (DEFAULT.equipped.emojis ?? ["😭", "😃", "😅", "👍"]).slice();
+    }
+    return merged;
   } catch {
-    return createDefaultProgress();
+    return { ...DEFAULT };
   }
+}
+
+function mergeTileCupTasks(stored: TileCupTask[] | undefined): TileCupTask[] {
+  const base = DEFAULT.tileCup.tasks;
+  if (!stored) return base.map((t) => ({ ...t }));
+  const byId = new Map(stored.map((t) => [t.id, t]));
+  return base.map((t) => byId.get(t.id) ?? { ...t });
 }
 
 export function saveProgress(p: Progress): void {
-  localStorage.setItem(KEY, JSON.stringify(p));
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(KEY, JSON.stringify(p));
+  window.dispatchEvent(new Event("tilerush:progress"));
 }
 
-/** XP required to advance from tier `tier` to `tier + 1` (0-indexed by current tier). */
-export function xpForTier(tier: number): number {
-  return 100 + tier * 15;
+export function updateProgress(mut: (p: Progress) => void): Progress {
+  const p = loadProgress();
+  mut(p);
+  saveProgress(p);
+  return p;
+}
+
+export function markComplete(levelId: number, opts: { movesLeft: number; totalMoves: number; stars: number }): void {
+  updateProgress((p) => {
+    const wasCompleted = p.completed.includes(levelId);
+    if (!p.completed.includes(levelId)) p.completed.push(levelId);
+    if ((p.stars[levelId] ?? 0) < opts.stars) {
+      p.stats.stars += opts.stars - (p.stars[levelId] ?? 0);
+      p.stars[levelId] = opts.stars;
+    }
+    p.stats.wins += 1;
+    p.stats.totalMoves += opts.totalMoves;
+    if (!wasCompleted && !p.passSeasonLevels.includes(levelId)) {
+      p.passSeasonLevels.push(levelId);
+      addPassXp(p, 10);
+    }
+    if (!wasCompleted) {
+      const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
+      p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
+    }
+  });
+}
+
+export function xpForTier(currentLevel: number): number {
+  const t = currentLevel + 1;
+  if (t <= 10) return 50;
+  if (t <= 20) return 75;
+  if (t <= 30) return 125;
+  if (t <= 40) return 150;
+  if (t <= 50) return 175;
+  if (t <= 60) return 200;
+  return 500;
 }
 
 export function addPassXp(p: Progress, amount: number): void {
-  if (p.passLevel >= 60) {
-    // Prestige: XP rolls into boxes every 500 XP instead of tiers.
-    p.prestigeXp += amount;
-    while (p.prestigeXp >= 500) {
-      p.prestigeXp -= 500;
-      p.inventory.boxes.push({
-        id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        rarity: "common",
-      });
-    }
-    return;
-  }
-  p.passXp += amount;
-  while (p.passLevel < 60 && p.passXp >= xpForTier(p.passLevel)) {
-    p.passXp -= xpForTier(p.passLevel);
-    p.passLevel += 1;
-  }
-  if (p.passLevel >= 60) {
-    // Any overflow XP once maxed out becomes prestige XP.
-    p.prestigeXp += p.passXp;
-    p.passXp = 0;
-    while (p.prestigeXp >= 500) {
-      p.prestigeXp -= 500;
-      p.inventory.boxes.push({
-        id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        rarity: "common",
-      });
+  if (amount <= 0) return;
+  let remaining = amount;
+  while (remaining > 0) {
+    if (p.passLevel < 60) {
+      const need = xpForTier(p.passLevel) - p.passXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.passLevel += 1;
+        p.passXp = 0;
+      } else {
+        p.passXp += remaining;
+        remaining = 0;
+      }
+    } else {
+      const need = 500 - p.prestigeXp;
+      if (remaining >= need) {
+        remaining -= need;
+        p.prestigeXp = 0;
+        p.inventory.boxes.push({ id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: "common" });
+      } else {
+        p.prestigeXp += remaining;
+        remaining = 0;
+      }
     }
   }
 }
 
-/** A level is unlocked if it's the first level, or the previous level id has been completed. */
-export function isUnlocked(id: number, completed: number[]): boolean {
-  if (id <= 1) return true;
-  return completed.includes(id - 1);
+export function awardPackCompletion(p: Progress, packId: number): boolean {
+  if (p.passSeasonPacks.includes(packId)) return false;
+  p.passSeasonPacks.push(packId);
+  addPassXp(p, 40);
+  return true;
 }
 
-/** Returns the id of the first level in `allIds` that hasn't been completed yet (or the last id if all are done). */
+export function resetAllProgress(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(KEY);
+  for (const k of OLD_KEYS) window.localStorage.removeItem(k);
+  window.localStorage.removeItem("tilerush.sound.v1");
+  window.dispatchEvent(new Event("tilerush:progress"));
+}
+
+export function markLoss(totalMoves: number): void {
+  updateProgress((p) => {
+    p.stats.losses += 1;
+    p.stats.totalMoves += totalMoves;
+  });
+}
+
+export function markStart(): void {
+  updateProgress((p) => {
+    p.stats.starts += 1;
+  });
+}
+
+export function isUnlocked(levelId: number, completed: number[]): boolean {
+  if (levelId === 1) return true;
+  return completed.includes(levelId - 1);
+}
+
 export function firstUnfinished(completed: number[], allIds: number[]): number {
-  for (const id of allIds) {
-    if (!completed.includes(id)) return id;
-  }
-  return allIds[allIds.length - 1] ?? 1;
+  for (const id of allIds) if (!completed.includes(id)) return id;
+  return allIds[allIds.length - 1];
 }
 
-/** Wipes all local progress and returns a fresh default state. */
-export function resetAllProgress(): Progress {
-  localStorage.removeItem(KEY);
-  for (const k of OLD_KEYS) localStorage.removeItem(k);
-  const fresh = createDefaultProgress();
-  saveProgress(fresh);
-  return fresh;
-}
-
-function createDefaultProgress(): Progress {
-  return {
-    completed: [],
-    coins: 0,
-    stars: {},
-    stats: {
-      starts: 0, totalMoves: 0, wins: 0, losses: 0, stars: 0,
-      tileUses: {}, itemUses: 0, volleyGoals: 0, enemySteps: 0, randomGains: 0
-    },
-    passLevel: 0,
-    claimedPass: [],
-    passXp: 0,
-    prestigeXp: 0,
-    equipped: { color: "default", shape: "default", pattern: "none", accessory: "none", theme: "default", avatar: "default" },
-    owned: { colors: ["default"], shapes: ["default"], patterns: ["none"], accessories: [], themes: ["default"], avatars: ["default"] },
-    inventory: { boxes: [], hearts: [] },
-    settings: { music: 5, sfx: 5 },
-    profile: { username: "Pelaaja", friendCode: "0000" },
-    friends: { list: [], incoming: [], outgoing: [] },
-    teamOffersPurchased: [],
-    promoRedeemed: [],
-    pendingRewards: []
-  };
-}
+export function calcStars(movesLeft: number, totalMoves: number): number {
+  const ratio = movesLeft / totalMoves;
+  if (ratio >= 0.5) return 3;
+  if (ratio >= 0.25) return 2;
+  return 1;
+    }
