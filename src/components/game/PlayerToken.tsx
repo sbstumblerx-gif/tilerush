@@ -43,7 +43,7 @@ export function PlayerToken({ equipped, size = 44, showAccessory = true }: Props
   const isEmojiAvatar = equipped.avatar && equipped.avatar !== "default";
 
   if (isEmojiAvatar) {
-    const emoji = AVATAR_EMOJIS[equipped.avatar] || "👤";
+    const emoji = AVATAR_EMOJIS[equipped.avatar ?? ""] || "👤";
     return (
       <div 
         className="relative inline-flex items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 shadow-inner select-none"
