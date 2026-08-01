@@ -132,7 +132,7 @@ function CustomizePage() {
             </div>
           ) : hasImageAvatar ? (
             <div className="relative w-28 h-28 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-              <img src={activeAvatarItem.preview} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={activeAvatarItem?.preview} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="relative w-28 h-28 flex items-center justify-center" style={{ color: colorHex, fontSize: 96, lineHeight: 1 }}>
