@@ -20,6 +20,7 @@ function SettingsPage() {
   const [sfx, setSfx] = useState(0.7);
   const [blockFR, setBlockFR] = useState(false);
   const [mute, setMute] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -30,6 +31,7 @@ function SettingsPage() {
     setSfx(p.settings.sfx);
     setBlockFR(!!p.settings.blockFriendRequests);
     setMute(!!p.settings.muteChat);
+    setShowEmojis(p.settings.showEmojis !== false);
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
     return () => sub.subscription.unsubscribe();
@@ -50,6 +52,10 @@ function SettingsPage() {
   const saveMute = (v: boolean) => {
     setMute(v);
     const p = loadProgress(); p.settings.muteChat = v; saveProgress(p);
+  };
+  const saveShowEmojis = (v: boolean) => {
+    setShowEmojis(v);
+    const p = loadProgress(); p.settings.showEmojis = v; saveProgress(p);
   };
 
   const signIn = async () => {
@@ -93,6 +99,10 @@ function SettingsPage() {
         <div className="flex items-center justify-between text-sm">
           <span>Mykistä chat moninpelissä</span>
           <Switch checked={mute} onCheckedChange={saveMute} />
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span>Näytä muiden pelaajien emojit</span>
+          <Switch checked={showEmojis} onCheckedChange={saveShowEmojis} />
         </div>
       </section>
 
