@@ -63,7 +63,7 @@ function MultiplayerPage() {
           <Button size="lg" variant="secondary" className="w-full h-16 text-lg gap-3" onClick={() => setMode("join")} disabled={!signedIn}>
             <LogIn className="h-5 w-5" /> Liity peliin
           </Button>
-          <p className="mt-4 text-xs text-muted-foreground text-center">Moninpeli tukee 4 pelaajaa. Luo peli tai liity kaverisi koodilla.</p>
+          <p className="mt-4 text-xs text-muted-foreground text-center">Moninpeli tukee 8 pelaajaa. Luo peli tai liity kaverisi koodilla.</p>
           {err && <div className="text-xs text-destructive text-center">{err}</div>}
         </div>
       )}
