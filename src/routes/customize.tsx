@@ -97,7 +97,7 @@ function CustomizePage() {
 
   // Tarkistetaan onko käytössä oleva avatar jokin puolivälieräkuva (alkaa / tai sisältää polun)
   const activeAvatarItem = AVATAR_ITEMS.find((a) => a.id === eq.avatar);
-  const hasImageAvatar = activeAvatarItem && activeAvatarItem.preview.startsWith("/");
+  const hasImageAvatar = !!activeAvatarItem?.preview?.startsWith("/");
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[720px] mx-auto">
@@ -183,7 +183,7 @@ function CustomizePage() {
               isCurrentEquipped = (eq as unknown as Record<string, string>)[equipKey] === item.id;
             }
 
-            const isImage = item.preview.startsWith("/");
+            const isImage = !!item.preview?.startsWith("/");
 
             return (
               <button
