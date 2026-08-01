@@ -5,6 +5,10 @@ export interface CloudProfile {
   username: string;
   friend_code: string;
   avatar_team: string | null;
+  /** Valinnaiset lisäkentät (eivät välttämättä ole tietokannassa). */
+  equipped?: unknown;
+  levels_completed?: number;
+  stars_collected?: number;
 }
 
 export async function currentUserId(): Promise<string | null> {
