@@ -53,20 +53,9 @@ const AVATAR_CATALOG: CosmeticItem[] = [
 
 /** Tarkistetaan sopiiko kosmetiikan taso konttiin. */
 function isCosmeticEligible(itemRarity: Rarity, boxTier: Rarity): boolean {
-  if (itemRarity === "ultra") {
-    return boxTier === "ultra";
-  }
-  if (boxTier === "mythic") {
-    return itemRarity === "ultra";
-  }
-  if (boxTier === "ultra") {
-    return false;
-  }
-
-  const boxRank = rarityRank(boxTier);
-  const itemRank = rarityRank(itemRarity);
-
-  return itemRank > boxRank;
+  if (itemRarity === "ultra") return boxTier === "ultra" || boxTier === "mythic";
+  if (boxTier === "mythic" || boxTier === "ultra") return false;
+  return rarityRank(itemRarity) > rarityRank(boxTier);
 }
 
 /** Pick a random non-exclusive cosmetic of one of the eligible rarities. */
