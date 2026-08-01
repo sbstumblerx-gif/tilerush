@@ -136,10 +136,6 @@ function PlayPage() {
     // item used = fewer items than before
     if (prevState.items.length > state.items.length) {
       p.stats.itemUses += 1;
-      p.tileCup.volleyUses += 1;
-      p.tileCup.tasks.forEach((t) => {
-        if (t.id === "vb10") t.progress = Math.min(t.target, t.progress + 1);
-      });
       if (p.daily) {
         p.daily.tasks.forEach((t) => {
           if (t.id === "item-5") t.progress = Math.min(t.target, t.progress + 1);
