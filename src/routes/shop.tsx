@@ -206,8 +206,9 @@ function ShopPage() {
           <div className="mt-4 grid grid-cols-2 gap-3">
             {(CATALOGS[open] ?? []).map((item) => {
               const ownedItems = p.owned[open] ?? [];
-              const owned = ownedItems.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
-              const canBuy = !owned && p.coins >= item.price && !item.exclusive;
+              const price = item.price ?? 0;
+              const owned = ownedItems.includes(item.id) || (open === "emojis" && price === 0 && !item.exclusive);
+              const canBuy = !owned && p.coins >= price && !item.exclusive;
               const rarityStyle = getRarityClass(item.rarity);
 
               return (
@@ -237,7 +238,7 @@ function ShopPage() {
                       onClick={() => buy(open, item)}
                       className="rounded bg-primary text-primary-foreground text-sm font-bold py-1.5 disabled:opacity-50"
                     >
-                      {owned ? "Omistettu" : `🪙 ${item.price}`}
+                      {owned ? "Omistettu" : `🪙 ${price}`}
                     </button>
                   )}
                 </div>
