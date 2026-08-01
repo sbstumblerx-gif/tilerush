@@ -9,7 +9,6 @@ import {
   Ticket,
   Settings,
   BarChart3,
-  Trophy,
   Users,
   User,
 } from "lucide-react";
