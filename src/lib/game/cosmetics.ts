@@ -11,8 +11,15 @@ export interface CosmeticItem {
   preview?: string;
 }
 
-// LISÄTTY: "emojis" mukaan sallittuihin kategorioihin
-export type CosmeticCategory = "colors" | "shapes" | "patterns" | "accessories" | "themes" | "emojis";
+// LISÄTTY: "emojis" + "avatars" mukaan sallittuihin kategorioihin
+export type CosmeticCategory =
+  | "colors"
+  | "shapes"
+  | "patterns"
+  | "accessories"
+  | "themes"
+  | "emojis"
+  | "avatars";
 
 export const COLORS: CosmeticItem[] = [
   { id: "cyan", label: "Syaani", price: 200, rarity: "common", preview: "#22d3ee" },
@@ -125,18 +132,41 @@ export const EMOJIS: CosmeticItem[] = [
   { id: "facepalm", label: "Facepalm", price: 0, rarity: "ultra", exclusive: true, preview: "🤦" },
 ];
 
-// KORJATTU: EMOJIS kytketty mukaan CATALOGS-objektiin
+export const AVATARS: CosmeticItem[] = [
+  { id: "av-banana", label: "Banaani", price: 0, rarity: "common", preview: "🍌" },
+  { id: "av-pizza", label: "Pizza", price: 0, rarity: "common", preview: "🍕" },
+  { id: "av-car", label: "Auto", price: 0, rarity: "common", preview: "🚙" },
+  { id: "av-dizzy", label: "Pyörryksissä", price: 0, rarity: "rare", preview: "😵‍💫" },
+  { id: "av-popcorn", label: "Popkorni", price: 0, rarity: "rare", preview: "🍿" },
+  { id: "av-headphones", label: "Kuulokkeet", price: 0, rarity: "rare", preview: "🎧" },
+  { id: "av-alien", label: "Avaruusolio", price: 0, rarity: "epic", preview: "👾" },
+  { id: "av-oni", label: "Oni-maski", price: 0, rarity: "epic", preview: "👹" },
+  { id: "av-robot", label: "Robotti", price: 0, rarity: "epic", preview: "🤖" },
+  { id: "av-skull", label: "Pääkallo", price: 0, rarity: "epic", preview: "💀" },
+  { id: "av-nerd", label: "Nörtti", price: 0, rarity: "legendary", preview: "🤓" },
+  { id: "av-goat", label: "GOAT", price: 0, rarity: "legendary", preview: "🐐" },
+  { id: "av-clown", label: "Pelle", price: 0, rarity: "legendary", preview: "🤡" },
+  { id: "qf-finla", label: "QF - Suomi", price: 0, rarity: "mythic", exclusive: true, preview: "🇫🇮" },
+  { id: "qf-swede", label: "QF - Ruotsi", price: 0, rarity: "mythic", exclusive: true, preview: "🇸🇪" },
+  { id: "qf-canad", label: "QF - Kanada", price: 0, rarity: "mythic", exclusive: true, preview: "🇨🇦" },
+  { id: "qf-usa", label: "QF - USA", price: 0, rarity: "mythic", exclusive: true, preview: "🇺🇸" },
+];
+
+// KORJATTU: EMOJIS + AVATARS kytketty mukaan CATALOGS-objektiin
 export const CATALOGS: Record<CosmeticCategory, CosmeticItem[]> = {
   colors: COLORS,
   shapes: SHAPES,
   patterns: PATTERNS,
   accessories: ACCESSORIES,
   themes: THEMES,
-  emojis: EMOJIS, 
+  emojis: EMOJIS,
+  avatars: AVATARS,
 };
 
 export function findItem(cat: CosmeticCategory, id: string): CosmeticItem | undefined {
-  return CATALOGS[cat].find((i) => i.id === id);
+  const list = CATALOGS[cat];
+  if (!Array.isArray(list)) return undefined;
+  return list.find((i) => i.id === id);
 }
 
 export const CATEGORY_LABEL: Record<CosmeticCategory, string> = {
@@ -146,6 +176,7 @@ export const CATEGORY_LABEL: Record<CosmeticCategory, string> = {
   accessories: "Uusi asuste!",
   themes: "Uusi taustakuva!",
   emojis: "Uusi emoji!",
+  avatars: "Uusi profiilikuva!",
 };
 
 export function themeBg(themeId: string): string {
