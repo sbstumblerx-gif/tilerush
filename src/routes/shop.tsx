@@ -161,42 +161,6 @@ function ShopPage() {
             </button>
           </div>
 
-          {/* Tarjoukset */}
-          <div className="mt-4 neon-panel p-4">
-            <button onClick={() => setShowOffers((v) => !v)} className="w-full flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold"><Tag className="h-4 w-4 text-primary" /> Tarjoukset · Puolivälierä</span>
-              <span className="text-xs text-muted-foreground">{showOffers ? "Piilota" : "Näytä"}</span>
-            </button>
-            {showOffers && (
-              <>
-                <div className="mt-3 text-[11px] text-muted-foreground">Jokainen paketti sisältää lipun profiilikuvan, emojin ja asusteen.</div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {TEAM_OFFER_IDS.map((id) => {
-                    const item = ACCESSORIES.find((a) => a.id === id)!;
-                    const owned = p.teamOffersPurchased.includes(id);
-                    const canBuy = !owned && p.coins >= item.price;
-                    return (
-                      <div key={id} className="rounded border border-border/60 bg-background/40 p-2 flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl">{item.preview}</span>
-                          <span className="text-[10px] uppercase text-primary">Myyttinen</span>
-                        </div>
-                        <div className="text-sm font-bold">{item.label}</div>
-                        <div className="text-[10px] text-muted-foreground">Profiilikuva · emoji · asuste</div>
-                        <button
-                          disabled={owned || !canBuy}
-                          onClick={() => buyTeam(id)}
-                          className="rounded bg-primary text-primary-foreground text-xs font-bold py-1.5 disabled:opacity-50"
-                        >
-                          {owned ? "Omistettu" : `🪙 ${item.price}`}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
 
           {/* Promo codes */}
           <div className="mt-4 neon-panel p-4">
