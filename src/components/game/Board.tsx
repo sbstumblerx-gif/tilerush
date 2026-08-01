@@ -8,6 +8,8 @@ import { loadProgress, type Equipped } from "@/lib/game/progress";
 interface Props {
   state: GameState;
   onTileClick: (pos: Pos) => void;
+  /** Moninpeli: muiden pelaajien sijainnit reaaliaikaisesti. */
+  ghosts?: { r: number; c: number; label: string; emoji?: string }[];
 }
 
 const TILE_BG: Record<TileKind, string> = {
@@ -37,7 +39,7 @@ const TILE_LABEL: Partial<Record<TileKind, string>> = {
   goal: "★",
 };
 
-export function Board({ state, onTileClick }: Props) {
+export function Board({ state, onTileClick, ghosts = [] }: Props) {
   const { rows, cols, player, tiles, aimingItem } = state;
   const [equipped, setEquipped] = useState<Equipped | null>(null);
   useEffect(() => {
@@ -155,6 +157,18 @@ export function Board({ state, onTileClick }: Props) {
                     )}
                   </span>
                 )}
+                {ghosts
+                  .filter((g) => g.r === r && g.c === c)
+                  .map((g, i) => (
+                    <span
+                      key={`${g.label}-${i}`}
+                      className="absolute z-10 h-5 w-5 rounded-full bg-secondary/90 border border-primary/60 text-[9px] font-black flex items-center justify-center"
+                      style={{ left: 2 + i * 8, top: 2 }}
+                      title={g.label}
+                    >
+                      {g.emoji ?? g.label.slice(0, 1).toUpperCase()}
+                    </span>
+                  ))}
               </button>
             );
           }),

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CATALOGS, ACCESSORIES, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
+import { CATALOGS, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
 import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
-import { ArrowLeft, Check, Gift, Tag, Ticket } from "lucide-react";
+import { ArrowLeft, Check, Gift, Ticket } from "lucide-react";
 import {
   pickDailyReward, todayUtc, msUntilUtcMidnight, formatCountdown, labelReward,
   msUntilSeasonEnd, formatDaysCountdown,
@@ -23,25 +23,8 @@ const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
   { key: "emojis" as CosmeticCategory, label: "Emojit", emoji: "😎" }, 
 ];
 
-const TEAM_OFFER_IDS = [
-  "team-fr", "team-ma", "team-en", "team-no",
-  "team-es", "team-be", "team-ar", "team-ch",
-];
-
-const TEAM_EMOJI: Record<string, string> = {
-  "team-fr": "🇫🇷", "team-ma": "🇲🇦", "team-en": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "team-no": "🇳🇴",
-  "team-es": "🇪🇸", "team-be": "🇧🇪", "team-ar": "🇦🇷", "team-ch": "🇨🇭",
-};
-
 /** Promo codes → grant callback. */
 const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }> = {
-  fifa26: {
-    desc: "🪙 500 kolikkoa + FIFA-pallo -kuvio",
-    apply: (p) => {
-      p.coins += 500;
-      if (!p.owned.patterns.includes("fifa")) p.owned.patterns.push("fifa");
-    },
-  },
   betatest: {
     desc: "🎁 Beta testing: 10 yleistä laatikkoa & 10 yleistä loot-sydäntä!",
     apply: (p) => {
@@ -84,7 +67,6 @@ function ShopPage() {
   const [p, setP] = useState<Progress | null>(null);
   const [open, setOpen] = useState<CosmeticCategory | null>(null);
   const [tick, setTick] = useState(0);
-  const [showOffers, setShowOffers] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [promo, setPromo] = useState("");
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
@@ -119,33 +101,11 @@ function ShopPage() {
     const ownedItems = cur.owned[cat] ?? [];
     if (ownedItems.includes(item.id)) return;
     if (item.exclusive) return;
-    if (cur.coins < item.price) return;
-    
-    cur.coins -= item.price;
-    cur.owned[cat] = [...ownedItems, item.id];
-    saveProgress(cur);
-    setP(cur);
-  };
+    const price = item.price ?? 0;
+    if (cur.coins < price) return;
 
-  const buyTeam = (id: string) => {
-    const item = ACCESSORIES.find((a) => a.id === id);
-    if (!item) return;
-    const cur = loadProgress();
-    if (cur.teamOffersPurchased.includes(id)) return;
-    if (cur.coins < item.price) return;
-    cur.coins -= item.price;
-    cur.teamOffersPurchased.push(id);
-    if (!cur.owned.accessories.includes(id)) cur.owned.accessories.push(id);
-    if (!cur.owned.themes.includes(id)) cur.owned.themes.push(id);
-    const emoji = TEAM_EMOJI[id];
-    if (emoji) {
-      cur.profile.profilePic = emoji;
-      const slots = cur.equipped.emojis ? [...cur.equipped.emojis] : ["🎮", "⚡", "🌟", "🏆"];
-      if (!slots.includes(emoji)) {
-        slots[3] = emoji;
-      }
-      cur.equipped.emojis = slots;
-    }
+    cur.coins -= price;
+    cur.owned[cat] = [...ownedItems, item.id];
     saveProgress(cur);
     setP(cur);
   };
@@ -201,42 +161,6 @@ function ShopPage() {
             </button>
           </div>
 
-          {/* Tarjoukset */}
-          <div className="mt-4 neon-panel p-4">
-            <button onClick={() => setShowOffers((v) => !v)} className="w-full flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold"><Tag className="h-4 w-4 text-primary" /> Tarjoukset · Puolivälierä</span>
-              <span className="text-xs text-muted-foreground">{showOffers ? "Piilota" : "Näytä"}</span>
-            </button>
-            {showOffers && (
-              <>
-                <div className="mt-3 text-[11px] text-muted-foreground">Jokainen paketti sisältää lipun profiilikuvan, emojin ja asusteen.</div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {TEAM_OFFER_IDS.map((id) => {
-                    const item = ACCESSORIES.find((a) => a.id === id)!;
-                    const owned = p.teamOffersPurchased.includes(id);
-                    const canBuy = !owned && p.coins >= item.price;
-                    return (
-                      <div key={id} className="rounded border border-border/60 bg-background/40 p-2 flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl">{item.preview}</span>
-                          <span className="text-[10px] uppercase text-primary">Myyttinen</span>
-                        </div>
-                        <div className="text-sm font-bold">{item.label}</div>
-                        <div className="text-[10px] text-muted-foreground">Profiilikuva · emoji · asuste</div>
-                        <button
-                          disabled={owned || !canBuy}
-                          onClick={() => buyTeam(id)}
-                          className="rounded bg-primary text-primary-foreground text-xs font-bold py-1.5 disabled:opacity-50"
-                        >
-                          {owned ? "Omistettu" : `🪙 ${item.price}`}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
 
           {/* Promo codes */}
           <div className="mt-4 neon-panel p-4">
@@ -282,8 +206,9 @@ function ShopPage() {
           <div className="mt-4 grid grid-cols-2 gap-3">
             {(CATALOGS[open] ?? []).map((item) => {
               const ownedItems = p.owned[open] ?? [];
-              const owned = ownedItems.includes(item.id) || (open === "emojis" && item.price === 0 && !item.exclusive);
-              const canBuy = !owned && p.coins >= item.price && !item.exclusive;
+              const price = item.price ?? 0;
+              const owned = ownedItems.includes(item.id) || (open === "emojis" && price === 0 && !item.exclusive);
+              const canBuy = !owned && p.coins >= price && !item.exclusive;
               const rarityStyle = getRarityClass(item.rarity);
 
               return (
@@ -313,7 +238,7 @@ function ShopPage() {
                       onClick={() => buy(open, item)}
                       className="rounded bg-primary text-primary-foreground text-sm font-bold py-1.5 disabled:opacity-50"
                     >
-                      {owned ? "Omistettu" : `🪙 ${item.price}`}
+                      {owned ? "Omistettu" : `🪙 ${price}`}
                     </button>
                   )}
                 </div>

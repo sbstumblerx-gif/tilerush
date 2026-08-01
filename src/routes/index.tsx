@@ -9,7 +9,6 @@ import {
   Ticket,
   Settings,
   BarChart3,
-  Trophy,
   Users,
   User,
 } from "lucide-react";
@@ -100,22 +99,7 @@ function Lobby() {
         <MenuTile to="/settings" icon={<Settings className="h-5 w-5" />} label="Asetukset" full />
       </div>
 
-      <Link
-        to="/events"
-        className="mt-6 neon-panel w-full max-w-[420px] p-4 flex items-center justify-between hover:border-primary/70"
-      >
-        <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-primary" />
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Tapahtuma</div>
-            <div className="font-bold">Tile Cup</div>
-          </div>
-        </div>
-        <span className="text-primary">→</span>
-      </Link>
-
-      {/* Päivitetty versio 4.8 */}
-      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.8</div>
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 4.9</div>
 
       {showPlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowPlay(false)}>

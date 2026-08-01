@@ -37,14 +37,16 @@ export function RewardScreen() {
           p.equipped.emojis = arr;
         }
       } else {
-        const keyMap = { 
-          colors: "color", 
-          shapes: "shape", 
-          patterns: "pattern", 
-          accessories: "accessory", 
-          themes: "theme" 
-        } as const;
-        p.equipped[keyMap[current.category]] = current.itemId;
+        const keyMap: Record<string, keyof typeof p.equipped> = {
+          colors: "color",
+          shapes: "shape",
+          patterns: "pattern",
+          accessories: "accessory",
+          themes: "theme",
+          avatars: "avatar",
+        };
+        const key = keyMap[current.category];
+        if (key) (p.equipped as unknown as Record<string, string>)[key] = current.itemId;
       }
       saveProgress(p);
     }

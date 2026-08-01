@@ -97,7 +97,7 @@ function CustomizePage() {
 
   // Tarkistetaan onko käytössä oleva avatar jokin puolivälieräkuva (alkaa / tai sisältää polun)
   const activeAvatarItem = AVATAR_ITEMS.find((a) => a.id === eq.avatar);
-  const hasImageAvatar = activeAvatarItem && activeAvatarItem.preview.startsWith("/");
+  const hasImageAvatar = !!activeAvatarItem?.preview?.startsWith("/");
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[720px] mx-auto">
@@ -132,7 +132,7 @@ function CustomizePage() {
             </div>
           ) : hasImageAvatar ? (
             <div className="relative w-28 h-28 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-              <img src={activeAvatarItem.preview} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={activeAvatarItem?.preview} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="relative w-28 h-28 flex items-center justify-center" style={{ color: colorHex, fontSize: 96, lineHeight: 1 }}>
@@ -183,7 +183,7 @@ function CustomizePage() {
               isCurrentEquipped = (eq as unknown as Record<string, string>)[equipKey] === item.id;
             }
 
-            const isImage = item.preview.startsWith("/");
+            const isImage = !!item.preview?.startsWith("/");
 
             return (
               <button

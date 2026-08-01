@@ -5,6 +5,10 @@ export interface CloudProfile {
   username: string;
   friend_code: string;
   avatar_team: string | null;
+  /** Valinnaiset lisäkentät (eivät välttämättä ole tietokannassa). */
+  equipped?: unknown;
+  levels_completed?: number;
+  stars_collected?: number;
 }
 
 export async function currentUserId(): Promise<string | null> {
@@ -159,7 +163,7 @@ export async function joinParty(code: string): Promise<{ ok: boolean; error?: st
     .from("party_members")
     .select("*", { count: "exact", head: true })
     .eq("party_code", code);
-  if ((count ?? 0) >= 4) return { ok: false, error: "Peli on täynnä." };
+  if ((count ?? 0) >= 8) return { ok: false, error: "Peli on täynnä." };
   const { error } = await supabase.from("party_members").insert({ party_code: code, user_id: uid });
   if (error && !String(error.message).includes("duplicate")) return { ok: false, error: error.message };
   return { ok: true };
