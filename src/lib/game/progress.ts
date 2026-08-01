@@ -33,7 +33,8 @@ export interface Owned {
   patterns: string[];
   accessories: string[];
   themes: string[];
-  avatars?: string[]; // ← Tehty valinnaiseksi (?), jotta mikään muu tiedosto ei valita
+  emojis: string[];
+  avatars: string[];
 }
 
 export interface DailyTask {
@@ -67,6 +68,8 @@ export interface Settings {
   sfx: number;
   blockFriendRequests?: boolean;
   muteChat?: boolean;
+  /** v4.9: kun false, muiden pelaajien emojit piilotetaan moninpelissä. */
+  showEmojis?: boolean;
 }
 
 export interface Profile {
@@ -163,6 +166,7 @@ const DEFAULT: Progress = {
     patterns: ["none"],
     accessories: ["none"],
     themes: ["default"],
+    emojis: [],
     avatars: ["default"],
   },
   equipped: {
@@ -188,7 +192,7 @@ const DEFAULT: Progress = {
   },
   inventory: { boxes: [], hearts: [] },
   pendingRewards: [],
-  settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false },
+  settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false, showEmojis: true },
   profile: { username: "Pelaaja", friendCode: "" },
   friends: { list: [], incoming: [], outgoing: [] },
   promoRedeemed: [],
@@ -241,6 +245,7 @@ export function loadProgress(): Progress {
     };
     
     if (!merged.owned.avatars) merged.owned.avatars = ["default"];
+    if (!merged.owned.emojis) merged.owned.emojis = [];
     if (!merged.equipped.avatar) {
       merged.equipped.avatar = merged.profile.profilePic || "default";
     }
