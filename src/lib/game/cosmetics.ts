@@ -3,7 +3,7 @@ import type { Rarity } from "./rarity";
 export interface CosmeticItem {
   id: string;
   label: string;
-  price: number;
+  price?: number;
   rarity: Rarity;
   /** Not for sale in shop / dropped only from event/pack rewards */
   exclusive?: boolean;
