@@ -5,7 +5,7 @@ const KEY = "tilerush.progress.v3";
 const OLD_KEYS = ["tilerush.progress.v2"];
 
 // Versiointitunniste passi-nollaukselle (vaihtaminen laukaisee passin nollauksen kaikilla pelaajilla)
-const PASS_RESET_VERSION = "v2_full_reset";
+const PASS_RESET_VERSION = "v3_force_reset_all";
 
 export interface Stats {
   starts: number;
@@ -26,8 +26,7 @@ export interface Equipped {
   pattern: string;
   accessory: string;
   theme: string;
-  avatar?: string; // ← Tehty valinnaiseksi (?), jotta vanha koodi ei kaadu
-  /** 4 emoji reactions the player can flash mid-game / on profile. */
+  avatar?: string;
   emojis?: string[];
 }
 
@@ -51,13 +50,13 @@ export interface DailyTask {
 }
 
 export interface DailyTasks {
-  date: string; // YYYY-MM-DD
+  date: string;
   tasks: DailyTask[];
 }
 
 export interface WeeklyTask extends DailyTask {}
 export interface WeeklyTasks {
-  weekKey: string; // ISO week start (YYYY-MM-DD, Monday UTC)
+  weekKey: string;
   tasks: WeeklyTask[];
   packsCompletedThisWeek: number;
 }
@@ -65,11 +64,9 @@ export interface WeeklyTasks {
 export interface Inventory {
   boxes: { id: string; rarity: import("./rarity").Rarity }[];
   hearts: { id: string; rarity: import("./rarity").Rarity }[];
-  /** Kausi 2: Reppujahti-reput (avataan suoraan tai varastosta). */
   backpacks?: { id: string }[];
 }
 
-/** Reppujahti: koulun kaapin yksi lokero. */
 export interface LockerCell {
   reward: "key" | "backpack" | "coins" | "heart" | "box";
   opened: boolean;
@@ -80,14 +77,12 @@ export interface Settings {
   sfx: number;
   blockFriendRequests?: boolean;
   muteChat?: boolean;
-  /** v4.9: kun false, muiden pelaajien emojit piilotetaan moninpelissä. */
   showEmojis?: boolean;
 }
 
 export interface Profile {
   username: string;
   friendCode: string;
-  /** v4.7: emoji/lippu näytettävä profiilikuvana lobbyssa & profiilissa. */
   profilePic?: string;
 }
 
@@ -109,17 +104,13 @@ export interface TileCupTask {
 export interface Progress {
   completed: number[];
   coins: number;
-  stars: Record<number, number>; // per level best
+  stars: Record<number, number>;
   stats: Stats;
-  passLevel: number; // 0..60
+  passLevel: number;
   claimedPass: number[];
-  /** XP accumulated toward current pass tier (rolls over between tiers). */
   passXp: number;
-  /** XP accumulated toward post-60 prestige boxes (every 500 XP → box). */
   prestigeXp: number;
-  /** Levels completed during the current pass season (for +10 XP counting only new ones this season). */
   passSeasonLevels: number[];
-  /** Packs completed during current pass season (+40 XP each). */
   passSeasonPacks: number[];
   owned: Owned;
   equipped: Equipped;
@@ -130,21 +121,13 @@ export interface Progress {
   settings: Settings;
   profile: Profile;
   friends: Friends;
-  /** ISO date YYYY-MM-DD of last claimed daily shop reward (UTC). */
   lastDailyClaim?: string;
-  /** v4.5: redeemed promo codes (case-insensitive). */
   promoRedeemed: string[];
-  /** v4.5: purchased quarter-finalist team offer ids. */
   teamOffersPurchased: string[];
-  /** Kauden numero — käytetään Tile Passin nollaukseen. */
   season?: number;
-  /** Reppujahti: käytettävissä olevat avaimet. */
   keys?: number;
-  /** Reppujahti: pelaajan henkilökohtainen 50-lokeroinen kaappi. */
   locker?: LockerCell[];
-  /** ISO date (UTC) jolloin päivittäinen avaintarjous on viimeksi ostettu. */
   lastKeyOfferClaim?: string;
-  /** Passin reset-versio */
   passResetVersion?: string;
   tileCup: {
     goals: number;
@@ -208,13 +191,12 @@ const DEFAULT: Progress = {
       { id: "g20", label: "Tee 20 maalia Tile Cupissa", target: 20, progress: 0, reward: "asuste: keltainen kortti", claimed: false },
       { id: "g50", label: "Tee 50 maalia Tile Cupissa", target: 50, progress: 0, reward: "asuste: punainen kortti", claimed: false },
       { id: "g75", label: "Tee 75 maalia Tile Cupissa", target: 75, progress: 0, reward: "taustakuva: jalkapallokenttä", claimed: false },
-      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kokikot", claimed: false },
+      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kolikot", claimed: false },
       { id: "vb25", label: "Käytä lentopalloa 25 kertaa", target: 25, progress: 0, reward: "🪙 200 kolikot", claimed: false },
     ],
   },
   inventory: { boxes: [], hearts: [] },
   season: CURRENT_SEASON,
-  passResetVersion: PASS_RESET_VERSION,
   keys: 0,
   locker: [],
   pendingRewards: [],
@@ -239,7 +221,7 @@ export function loadProgress(): Progress {
       }
     }
     if (!raw) {
-      const seeded = { ...DEFAULT, profile: { ...DEFAULT.profile, friendCode: randomCode(6) } };
+      const seeded = { ...DEFAULT, passResetVersion: PASS_RESET_VERSION, profile: { ...DEFAULT.profile, friendCode: randomCode(6) } };
       saveProgress(seeded);
       return seeded;
     }
@@ -287,8 +269,8 @@ export function loadProgress(): Progress {
 
     migrateSeason(merged);
     
-    // Tarkistetaan ja suoritetaan passin nollaus kaikille pelaajille
-    if (merged.passResetVersion !== PASS_RESET_VERSION) {
+    // Tarkistetaan nollaus suoraan tallennetusta 'parsed'-objektista
+    if (parsed.passResetVersion !== PASS_RESET_VERSION) {
       merged.passLevel = 0;
       merged.passXp = 0;
       merged.prestigeXp = 0;
@@ -301,20 +283,17 @@ export function loadProgress(): Progress {
 
     return merged;
   } catch {
-    return { ...DEFAULT };
+    return { ...DEFAULT, passResetVersion: PASS_RESET_VERSION };
   }
 }
 
 const TEAM_CODES = ["fr", "ma", "en", "no", "es", "be", "ar", "ch"];
 
-/** Kauden vaihto: Tile Pass nollataan ja kausi 1:n fanipaketit muutetaan profiilikuviksi. */
 function migrateSeason(p: Progress): void {
-  // Vanhat maalippu-profiilikuvat poistuvat pelistä
   p.owned.avatars = (p.owned.avatars ?? ["default"]).filter((id) => !id.startsWith("qf-"));
   if (!p.owned.avatars.includes("default")) p.owned.avatars.push("default");
   if (p.equipped.avatar?.startsWith("qf-")) p.equipped.avatar = "default";
 
-  // Kausi 1:n puolivälieräpaketin ostajat saavat vastaavan profiilikuvan
   for (const raw of p.teamOffersPurchased ?? []) {
     const code = TEAM_CODES.find((c) => raw.toLowerCase().endsWith(c));
     if (!code) continue;
@@ -337,7 +316,6 @@ function migrateSeason(p: Progress): void {
   }
 }
 
-/** Reppujahti-kaapin arvonta: 50 lokeroa, kiinteä jakauma. */
 export function generateLocker(): LockerCell[] {
   const pool: LockerCell["reward"][] = [
     ...Array(15).fill("key"),
@@ -485,4 +463,4 @@ export function calcStars(movesLeft: number, totalMoves: number): number {
   if (ratio >= 0.5) return 3;
   if (ratio >= 0.25) return 2;
   return 1;
-}
+                                     }
