@@ -44,8 +44,11 @@ export function formatCountdown(ms: number): string {
   return `${h}h ${m}m ${ss}s`;
 }
 
-/** Tile Rush season end (v4.5): 30.7.2026 00:00 UTC. */
-export const SEASON_END_UTC = Date.UTC(2026, 6, 30, 0, 0, 0);
+/** Nykyinen kausi (Kausi 2). */
+export const CURRENT_SEASON = 2;
+
+/** Kausi 2 päättyy / uusi Tile Pass saapuu 1.9.2026 00:00 UTC. */
+export const SEASON_END_UTC = Date.UTC(2026, 8, 1, 0, 0, 0);
 
 export function msUntilSeasonEnd(): number {
   return Math.max(0, SEASON_END_UTC - Date.now());

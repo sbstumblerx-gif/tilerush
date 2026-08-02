@@ -43,21 +43,33 @@ export function rarityRank(r: Rarity): number {
   return RARITY_ORDER.indexOf(r);
 }
 
-/** Upgrade roll: 4 attempts. Returns new rarity index (may stay). */
+/** Upgrade roll: 4 attempts. Kausi 2: korkeat tasot ovat selvästi harvinaisempia. */
 export function rollUpgrade(base: Rarity): { rarity: Rarity; steps: number } {
   let idx = rarityRank(base);
   let totalSteps = 0;
   for (let i = 0; i < 4; i++) {
     const roll = Math.random();
-    // 50% coins branch handled by caller; here 63% no-move / 20% +1 / 10% +2 / 5% +3 / 2% +4
     let step = 0;
-    if (roll < 0.63) step = 0;
-    else if (roll < 0.83) step = 1;
-    else if (roll < 0.93) step = 2;
-    else if (roll < 0.98) step = 3;
+    if (roll < UPGRADE_ODDS[0]) step = 0;
+    else if (roll < UPGRADE_ODDS[1]) step = 1;
+    else if (roll < UPGRADE_ODDS[2]) step = 2;
+    else if (roll < UPGRADE_ODDS[3]) step = 3;
     else step = 4;
     idx = Math.min(RARITY_ORDER.length - 1, idx + step);
     totalSteps += step;
   }
   return { rarity: RARITY_ORDER[idx], steps: totalSteps };
+}
+
+/** Kumulatiiviset rajat: 82 % ei muutosta, 12 % +1, 4 % +2, 1,5 % +3, 0,5 % +4. */
+export const UPGRADE_ODDS = [0.82, 0.94, 0.98, 0.995] as const;
+
+/** Yksi napautus: palauttaa montako askelta harvinaisuus nousee. */
+export function rollUpgradeStep(): number {
+  const roll = Math.random();
+  if (roll < UPGRADE_ODDS[0]) return 0;
+  if (roll < UPGRADE_ODDS[1]) return 1;
+  if (roll < UPGRADE_ODDS[2]) return 2;
+  if (roll < UPGRADE_ODDS[3]) return 3;
+  return 4;
 }

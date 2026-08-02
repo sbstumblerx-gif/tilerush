@@ -1,4 +1,5 @@
 import type { Reward } from "./lootbox";
+import { CURRENT_SEASON } from "./dailyReward";
 
 const KEY = "tilerush.progress.v3";
 const OLD_KEYS = ["tilerush.progress.v2"];
@@ -61,6 +62,14 @@ export interface WeeklyTasks {
 export interface Inventory {
   boxes: { id: string; rarity: import("./rarity").Rarity }[];
   hearts: { id: string; rarity: import("./rarity").Rarity }[];
+  /** Kausi 2: Reppujahti-reput (avataan suoraan tai varastosta). */
+  backpacks?: { id: string }[];
+}
+
+/** Reppujahti: koulun kaapin yksi lokero. */
+export interface LockerCell {
+  reward: "key" | "backpack" | "coins" | "heart" | "box";
+  opened: boolean;
 }
 
 export interface Settings {
@@ -124,6 +133,14 @@ export interface Progress {
   promoRedeemed: string[];
   /** v4.5: purchased quarter-finalist team offer ids. */
   teamOffersPurchased: string[];
+  /** Kauden numero — käytetään Tile Passin nollaukseen. */
+  season?: number;
+  /** Reppujahti: käytettävissä olevat avaimet. */
+  keys?: number;
+  /** Reppujahti: pelaajan henkilökohtainen 50-lokeroinen kaappi. */
+  locker?: LockerCell[];
+  /** ISO date (UTC) jolloin päivittäinen avaintarjous on viimeksi ostettu. */
+  lastKeyOfferClaim?: string;
   tileCup: {
     goals: number;
     volleyUses: number;
@@ -191,6 +208,9 @@ const DEFAULT: Progress = {
     ],
   },
   inventory: { boxes: [], hearts: [] },
+  season: CURRENT_SEASON,
+  keys: 0,
+  locker: [],
   pendingRewards: [],
   settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false, showEmojis: true },
   profile: { username: "Pelaaja", friendCode: "" },
@@ -229,7 +249,11 @@ export function loadProgress(): Progress {
         ...(parsed.tileCup ?? {}),
         tasks: mergeTileCupTasks(parsed.tileCup?.tasks),
       },
-      inventory: parsed.inventory ?? { boxes: [], hearts: [] },
+      inventory: {
+        boxes: parsed.inventory?.boxes ?? [],
+        hearts: parsed.inventory?.hearts ?? [],
+        backpacks: parsed.inventory?.backpacks ?? [],
+      },
       pendingRewards: parsed.pendingRewards ?? [],
       settings: { ...DEFAULT.settings, ...(parsed.settings ?? {}) },
       profile: { ...DEFAULT.profile, ...(parsed.profile ?? {}) },
@@ -254,10 +278,69 @@ export function loadProgress(): Progress {
     if (!merged.equipped.emojis || merged.equipped.emojis.length !== 4) {
       merged.equipped.emojis = (DEFAULT.equipped.emojis ?? ["😭", "😃", "😅", "👍"]).slice();
     }
+
+    migrateSeason(merged);
     return merged;
   } catch {
     return { ...DEFAULT };
   }
+}
+
+const TEAM_CODES = ["fr", "ma", "en", "no", "es", "be", "ar", "ch"];
+
+/** Reppujahti-kaapin arvonta: 50 lokeroa, kiinteä jakauma. */
+export function generateLocker(): LockerCell[] {
+  const pool: LockerCell["reward"][] = [
+    ...Array(15).fill("key"),
+    ...Array(10).fill("backpack"),
+    ...Array(10).fill("coins"),
+    ...Array(10).fill("heart"),
+    ...Array(5).fill("box"),
+  ];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.map((reward) => ({ reward, opened: false }));
+}
+
+/** Kauden vaihto: Tile Pass nollataan ja kausi 1:n fanipaketit muutetaan profiilikuviksi. */
+function migrateSeason(p: Progress): void {
+  // Vanhat maalippu-profiilikuvat poistuvat pelistä
+  p.owned.avatars = (p.owned.avatars ?? ["default"]).filter((id) => !id.startsWith("qf-"));
+  if (!p.owned.avatars.includes("default")) p.owned.avatars.push("default");
+  if (p.equipped.avatar?.startsWith("qf-")) p.equipped.avatar = "default";
+
+  // Kausi 1:n puolivälieräpaketin ostajat saavat vastaavan profiilikuvan
+  for (const raw of p.teamOffersPurchased ?? []) {
+    const code = TEAM_CODES.find((c) => raw.toLowerCase().endsWith(c));
+    if (!code) continue;
+    const id = `av-team-${code}`;
+    if (!p.owned.avatars.includes(id)) p.owned.avatars.push(id);
+  }
+
+  if (!p.locker || p.locker.length !== 50) p.locker = generateLocker();
+  if (typeof p.keys !== "number") p.keys = 0;
+  if (!p.inventory.backpacks) p.inventory.backpacks = [];
+
+  if (p.season !== CURRENT_SEASON) {
+    p.season = CURRENT_SEASON;
+    p.passLevel = 0;
+    p.passXp = 0;
+    p.prestigeXp = 0;
+    p.claimedPass = [];
+    p.passSeasonLevels = [];
+    p.passSeasonPacks = [];
+  }
+}
+
+export function grantKeys(p: Progress, n: number): void {
+  p.keys = (p.keys ?? 0) + n;
+}
+
+export function grantBackpack(p: Progress): void {
+  if (!p.inventory.backpacks) p.inventory.backpacks = [];
+  p.inventory.backpacks.push({ id: `bp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` });
 }
 
 function mergeTileCupTasks(stored: TileCupTask[] | undefined): TileCupTask[] {
