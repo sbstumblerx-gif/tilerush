@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
+import { addPassXp, grantKeys, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
 import { generateDaily, generateWeekly, today, weekKey } from "@/lib/game/tasks";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, KeyRound } from "lucide-react";
 import { RARITY_EMOJI, type Rarity } from "@/lib/game/rarity";
+import { presentContainer } from "@/lib/game/containers";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({ meta: [{ title: "Tehtävät · Tile Rush" }] }),
@@ -34,6 +35,8 @@ function TasksPage() {
     task.claimed = true;
     cur.coins += task.reward;
     addPassXp(cur, 30);
+    // Reppujahti: päivän ensimmäinen tehtävä antaa lisäksi yhden avaimen
+    if (cur.daily?.tasks[0]?.id === id) grantKeys(cur, 1);
     saveProgress(cur);
     setP(cur);
   };
@@ -43,12 +46,11 @@ function TasksPage() {
     const task = cur.weekly?.tasks.find((x) => x.id === id);
     if (!task || task.claimed || task.progress < task.target) return;
     task.claimed = true;
-    // reward: a common lootbox (upgradable) + 100 XP
     const rar: Rarity = "common";
-    cur.inventory.boxes.push({ id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
     addPassXp(cur, 100);
     saveProgress(cur);
     setP(cur);
+    presentContainer("box", rar);
   };
 
   if (!p) return null;
@@ -58,19 +60,23 @@ function TasksPage() {
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
           <ArrowLeft className="h-4 w-4" /> Lobby
         </Link>
-        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins}</span>
+        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
       </div>
       <h1 className="mt-4 text-3xl font-black">Päivittäiset tehtävät</h1>
-      <p className="text-sm text-muted-foreground">Päivittyvät 24 h välein · palkkio + 30 XP</p>
+      <p className="text-sm text-muted-foreground flex items-center gap-1">
+        Päivittyvät 24 h välein · palkkio + 30 XP · <KeyRound className="h-3.5 w-3.5 text-amber-400" /> ensimmäinen tehtävä antaa avaimen
+      </p>
       <div className="mt-6 space-y-3">
-        {p.daily?.tasks.map((t) => {
+        {p.daily?.tasks.map((t, ti) => {
           const pct = Math.min(100, (t.progress / t.target) * 100);
           const ready = t.progress >= t.target && !t.claimed;
           return (
             <div key={t.id} className="neon-panel p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="font-semibold text-sm">{t.label}</div>
-                <div className="text-xs text-muted-foreground">🪙 {t.reward} · ⭐ 30</div>
+                <div className="text-xs text-muted-foreground whitespace-nowrap">
+                  🪙 {t.reward} · ⭐ 30{ti === 0 ? " · 🔑 1" : ""}
+                </div>
               </div>
               <div className="mt-2 h-2 rounded-full bg-background/60 overflow-hidden">
                 <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
