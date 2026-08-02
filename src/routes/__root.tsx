@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { RewardScreen } from "@/components/game/RewardScreen";
+import { ContainerHost } from "@/components/game/ContainerHost";
 import { installUiClickSound, loadSoundSettings, playBgm, setMusicVolume, setSfxVolume } from "@/lib/game/sound";
 import { loadProgress } from "@/lib/game/progress";
 
@@ -140,6 +141,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <ContainerHost />
       <RewardScreen />
     </QueryClientProvider>
   );

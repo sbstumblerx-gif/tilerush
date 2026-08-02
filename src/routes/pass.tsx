@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addPassXp, loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
+import { grantKeys, loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
 import { ArrowLeft, Coins } from "lucide-react";
 import { OpenContainer } from "@/components/game/OpenContainer";
 import { RewardScreen } from "@/components/game/RewardScreen";
 import { RARITY_EMOJI, type Rarity } from "@/lib/game/rarity";
+import { presentContainer } from "@/lib/game/containers";
 import { msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/pass")({
@@ -16,6 +17,10 @@ type Reward =
   | { kind: "coins"; amount: number }
   | { kind: "heart"; rarity: Rarity }
   | { kind: "box"; rarity: Rarity };
+
+const TIER_PRICE = 2000;
+const BACKPACK_TIERS = [5, 15, 25, 35, 45, 55];
+const KEY_TIERS = [3, 13, 23, 33, 43, 53];
 
 function rewardFor(tier: number): Reward {
   // guaranteed at 30/60
@@ -36,9 +41,15 @@ function rewardLabel(r: Reward): string {
   return `📦 Laatikko ${RARITY_EMOJI[r.rarity]}`;
 }
 
+function extraLabel(tier: number): string | null {
+  if (BACKPACK_TIERS.includes(tier)) return "🎒 1x reppu";
+  if (KEY_TIERS.includes(tier)) return "🔑 1x avain";
+  return null;
+}
+
 function PassPage() {
   const [p, setP] = useState<Progress | null>(null);
-  const [opening, setOpening] = useState<{ id: string; kind: "box" | "heart"; rarity: Rarity } | null>(null);
+  const [opening, setOpening] = useState<{ id: string; kind: "box" | "heart" | "backpack"; rarity: Rarity } | null>(null);
 
   useEffect(() => {
     const load = () => setP(loadProgress());
@@ -56,23 +67,27 @@ function PassPage() {
     if (tier > p.passLevel || p.claimedPass.includes(tier)) return;
     const cp = loadProgress();
     const r = rewardFor(tier);
+    const present: { kind: "box" | "heart" | "backpack"; rarity: Rarity }[] = [];
     if (r.kind === "coins") {
       cp.coins += r.amount;
     } else if (r.kind === "heart") {
-      cp.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: r.rarity });
+      present.push({ kind: "heart", rarity: r.rarity });
     } else {
-      cp.inventory.boxes.push({ id: `box-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: r.rarity });
+      present.push({ kind: "box", rarity: r.rarity });
     }
+    if (BACKPACK_TIERS.includes(tier)) present.push({ kind: "backpack", rarity: "common" });
+    if (KEY_TIERS.includes(tier)) grantKeys(cp, 1);
     cp.claimedPass.push(tier);
     saveProgress(cp);
     setP(cp);
+    for (const c of present) presentContainer(c.kind, c.rarity);
   };
 
   const buyNext = () => {
     if (p.passLevel >= 60) return;
-    if (p.coins < 300) return;
+    if (p.coins < TIER_PRICE) return;
     const cp = loadProgress();
-    cp.coins -= 300;
+    cp.coins -= TIER_PRICE;
     cp.passLevel += 1;
     cp.passXp = 0;
     saveProgress(cp);
@@ -89,9 +104,12 @@ function PassPage() {
         <ArrowLeft className="h-4 w-4" /> Lobby
       </Link>
       <div className="mt-4 flex justify-between items-end">
-        <h1 className="text-3xl font-black">Tile Pass</h1>
+        <div>
+          <h1 className="text-3xl font-black">Tile Pass</h1>
+          <div className="text-xs uppercase tracking-widest text-primary">Kausi 2 · Reppujahti</div>
+        </div>
         <span className="text-xs text-muted-foreground text-right">
-          Passi päättyy 30.7.2026<br />
+          Uusi passi 1.9.2026 (UTC)<br />
           <span className="text-primary">{formatDaysCountdown(msUntilSeasonEnd())}</span>
         </span>
       </div>
@@ -104,13 +122,13 @@ function PassPage() {
 
       <div className="mt-4 flex items-center gap-3">
         <button
-          disabled={p.passLevel >= 60 || p.coins < 300}
+          disabled={p.passLevel >= 60 || p.coins < TIER_PRICE}
           onClick={buyNext}
           className="neon-panel px-4 py-2 text-sm font-bold flex items-center gap-2 disabled:opacity-40"
         >
-          <Coins className="h-4 w-4" /> Osta seuraava taso · 300
+          <Coins className="h-4 w-4" /> Osta seuraava taso · {TIER_PRICE}
         </button>
-        <span className="text-xs text-muted-foreground">Kolikoita: {p.coins}</span>
+        <span className="text-xs text-muted-foreground">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
       </div>
 
       <div className="mt-6 space-y-2">
@@ -119,6 +137,7 @@ function PassPage() {
           const claimed = p.claimedPass.includes(tier);
           const r = rewardFor(tier);
           const guaranteed = tier === 30 || tier === 60;
+          const extra = extraLabel(tier);
           return (
             <div key={tier} className={`neon-panel p-3 flex items-center justify-between ${!unlocked && "opacity-50"} ${guaranteed && "border-primary/70"}`}>
               <div>
@@ -127,6 +146,7 @@ function PassPage() {
                   {guaranteed && <span className="ml-2 text-primary">TAATTU</span>}
                 </div>
                 <div className="font-semibold text-sm">{rewardLabel(r)}</div>
+                {extra && <div className="text-xs font-bold text-amber-400">+ {extra}</div>}
               </div>
               <button
                 disabled={!unlocked || claimed}
@@ -140,7 +160,7 @@ function PassPage() {
         })}
       </div>
 
-      {p.inventory.hearts.length + p.inventory.boxes.length > 0 && (
+      {p.inventory.hearts.length + p.inventory.boxes.length + (p.inventory.backpacks?.length ?? 0) > 0 && (
         <div className="mt-8 neon-panel p-4">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Inventaario</div>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -152,6 +172,11 @@ function PassPage() {
             {p.inventory.hearts.map((h) => (
               <button key={h.id} onClick={() => openContainer("heart", h.rarity, h.id)} className="neon-panel px-2 py-1 text-xs">
                 💗 {RARITY_EMOJI[h.rarity]}
+              </button>
+            ))}
+            {(p.inventory.backpacks ?? []).map((b) => (
+              <button key={b.id} onClick={() => setOpening({ id: b.id, kind: "backpack", rarity: "common" })} className="neon-panel px-2 py-1 text-xs">
+                🎒
               </button>
             ))}
           </div>
@@ -170,6 +195,3 @@ function PassPage() {
     </div>
   );
 }
-
-// silence unused import if bundler complains
-void addPassXp;

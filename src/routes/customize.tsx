@@ -23,14 +23,8 @@ const CATS: { key: CosmeticCategory | "avatars"; label: string; equipKey: keyof 
 
 const DEFAULT_EMOJIS = ["😭", "😃", "😅", "👍"];
 
-// Puolivälierien ja muiden profiilikuvien määrittelyt
-const AVATAR_ITEMS: CosmeticItem[] = [
-  { id: "default", label: "Oletus Token", rarity: "common", preview: "👤" },
-  { id: "qf-finla", label: "QF - Suomi", rarity: "epic", preview: "/assets/avatars/qf_finland.png" },
-  { id: "qf-swede", label: "QF - Ruotsi", rarity: "epic", preview: "/assets/avatars/qf_sweden.png" },
-  { id: "qf-canad", label: "QF - Kanada", rarity: "epic", preview: "/assets/avatars/qf_canada.png" },
-  { id: "qf-usa", label: "QF - USA", rarity: "epic", preview: "/assets/avatars/qf_usa.png" },
-];
+// Profiilikuvat tulevat suoraan kosmetiikkakatalogista
+const AVATAR_ITEMS: CosmeticItem[] = CATALOGS.avatars;
 
 function CustomizePage() {
   const [p, setP] = useState<Progress | null>(null);
@@ -174,7 +168,11 @@ function CustomizePage() {
 
           {/* Listataan valitun kategorian esineet */}
           {sorted.map((item) => {
-            const owned = item.id === "default" || p.owned.avatars?.includes(item.id) || p.teamOffersPurchased?.includes(item.id.replace("qf-", ""));
+            const ownedList = (p.owned as unknown as Record<string, string[]>)[cat] ?? [];
+            const owned =
+              item.id === "default" ||
+              ownedList.includes(item.id) ||
+              (cat === "emojis" && !item.exclusive && (item.price ?? 0) === 0);
             
             let isCurrentEquipped = false;
             if (cat === "emojis") {

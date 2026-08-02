@@ -1,4 +1,4 @@
-import { ACCESSORIES, COLORS, PATTERNS, SHAPES } from "@/lib/game/cosmetics";
+import { ACCESSORIES, AVATARS, COLORS, PATTERNS, SHAPES } from "@/lib/game/cosmetics";
 import type { Equipped } from "@/lib/game/progress";
 import fifaBall from "@/assets/fifa-ball.png.asset.json";
 
@@ -15,28 +15,13 @@ const SHAPE_CLIP: Record<string, string> = {
   kolmio: "polygon(50% 0%, 100% 100%, 0% 100%)",
   hex: "polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)",
   tiimalasi: "polygon(0% 0%, 100% 0%, 20% 50%, 100% 100%, 0% 100%, 80% 50%)",
+  kirjankansi: "polygon(10% 0%, 100% 0%, 100% 100%, 10% 100%, 0% 50%)",
 };
 
 // Mäppäys profiilikuvan ID:stä emojiksi
-const AVATAR_EMOJIS: Record<string, string> = {
-  "av-banana": "🍌",
-  "av-pizza": "🍕",
-  "av-car": "🚙",
-  "av-dizzy": "😵‍💫",
-  "av-popcorn": "🍿",
-  "av-headphones": "🎧",
-  "av-alien": "👾",
-  "av-oni": "👹",
-  "av-robot": "🤖",
-  "av-skull": "💀",
-  "av-nerd": "🤓",
-  "av-goat": "🐐",
-  "av-clown": "🤡",
-  "qf-finla": "🇫🇮",
-  "qf-swede": "🇸🇪",
-  "qf-canad": "🇨🇦",
-  "qf-usa": "🇺🇸",
-};
+const AVATAR_EMOJIS: Record<string, string> = Object.fromEntries(
+  AVATARS.filter((a) => a.id !== "default" && a.preview).map((a) => [a.id, a.preview as string]),
+);
 
 export function PlayerToken({ equipped, size = 44, showAccessory = true }: Props) {
   // Jos käytössä on jokin emoji-profiilikuva, hypätään suoraan emojin piirtoon

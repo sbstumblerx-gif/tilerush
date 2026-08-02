@@ -29,7 +29,7 @@ export const COIN_BY_TIER: Record<Rarity, number> = {
 // Tunnistetaan ilmaiset oletusemojit kuvakkeista
 const FREE_EMOJI_PREVIEWS = ["😭", "😃", "😅", "👍"];
 
-// Sisäinen katalogi avatareille, jotta ne saadaan drop-logiikkaan mukaan
+// Laatikoista tippuvat profiilikuvat (kaupan ja tapahtuman kuvat eivät tipu)
 const AVATAR_CATALOG: CosmeticItem[] = [
   { id: "av-banana", label: "Banaani", rarity: "common", preview: "🍌" },
   { id: "av-pizza", label: "Pizza", rarity: "common", preview: "🍕" },
@@ -37,18 +37,10 @@ const AVATAR_CATALOG: CosmeticItem[] = [
   { id: "av-dizzy", label: "Pyörryksissä", rarity: "rare", preview: "😵‍💫" },
   { id: "av-popcorn", label: "Popkorni", rarity: "rare", preview: "🍿" },
   { id: "av-headphones", label: "Kuulokkeet", rarity: "rare", preview: "🎧" },
-  { id: "av-alien", label: "Avaruusolio", rarity: "epic", preview: "👾" },
   { id: "av-oni", label: "Oni-maski", rarity: "epic", preview: "👹" },
-  { id: "av-robot", label: "Robotti", rarity: "epic", preview: "🤖" },
   { id: "av-skull", label: "Pääkallo", rarity: "epic", preview: "💀" },
-  { id: "av-nerd", label: "Nörtti", rarity: "legendary", preview: "🤓" },
   { id: "av-goat", label: "GOAT", rarity: "legendary", preview: "🐐" },
   { id: "av-clown", label: "Pelle", rarity: "legendary", preview: "🤡" },
-  // Myyttiset QF-liput ovat exclusive-kohteita, joten niille asetetaan lipun myötä esto (tai ne rajautuvat drop-säännöillä)
-  { id: "qf-finla", label: "QF - Suomi", rarity: "mythic", preview: "🇫🇮", exclusive: true },
-  { id: "qf-swede", label: "QF - Ruotsi", rarity: "mythic", preview: "🇸🇪", exclusive: true },
-  { id: "qf-canad", label: "QF - Kanada", rarity: "mythic", preview: "🇨🇦", exclusive: true },
-  { id: "qf-usa", label: "QF - USA", rarity: "mythic", preview: "🇺🇸", exclusive: true },
 ];
 
 /** Tarkistetaan sopiiko kosmetiikan taso konttiin. */
@@ -137,14 +129,50 @@ export function topRarity(rewards: Reward[]): Rarity {
   return best;
 }
 
+/** Reppujahti-tapahtuman eksklusiiviset kosmetiikat (vain repuista). */
+export const EVENT_ITEMS: RewardCosmetic[] = [
+  { type: "cosmetic", category: "emojis", itemId: "ev-backpack", rarity: "rare" },
+  { type: "cosmetic", category: "emojis", itemId: "ev-books", rarity: "rare" },
+  { type: "cosmetic", category: "emojis", itemId: "ev-school", rarity: "rare" },
+  { type: "cosmetic", category: "emojis", itemId: "ev-alarm", rarity: "legendary" },
+  { type: "cosmetic", category: "avatars", itemId: "av-teacher", rarity: "epic" },
+  { type: "cosmetic", category: "avatars", itemId: "av-nerd", rarity: "mythic" },
+  { type: "cosmetic", category: "accessories", itemId: "acc-books", rarity: "epic" },
+  { type: "cosmetic", category: "accessories", itemId: "acc-notebook", rarity: "epic" },
+  { type: "cosmetic", category: "shapes", itemId: "kirjankansi", rarity: "legendary" },
+  { type: "cosmetic", category: "themes", itemId: "koulubussi", rarity: "epic" },
+];
+
+const BACKPACK_COINS = [50, 100, 200];
+
+/** Reppu: 50 % kolikkoja, 50 % tapahtuman eksklusiivi. */
+export function rollBackpack(
+  ownedFilter: (cat: CosmeticCategory | "avatars", id: string) => boolean,
+): Reward {
+  const coins = (): Reward => ({
+    type: "coins",
+    amount: BACKPACK_COINS[Math.floor(Math.random() * BACKPACK_COINS.length)],
+  });
+  if (Math.random() < 0.5) return coins();
+  const safeFilter = typeof ownedFilter === "function" ? ownedFilter : () => false;
+  const pool = EVENT_ITEMS.filter((i) => !safeFilter(i.category, i.itemId));
+  if (!pool.length) return coins();
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function unusedTopRarity(rewards: Reward[]): Rarity {
+  let best: Rarity = "common";
+  for (const r of rewards) {
+    const rr = r.type === "cosmetic" ? r.rarity : ("common" as Rarity);
+    if (rarityRank(rr) > rarityRank(best)) best = rr;
+  }
+  return best;
+}
+void unusedTopRarity;
+
 export function itemLabel(r: Reward): string {
   if (r.type === "coins") return `🪙 ${r.amount}`;
-  // Jos kyseessä on avatar, haetaan sen nimi paikallisesta listasta
-  if (r.category === "avatars") {
-    const av = AVATAR_CATALOG.find((a) => a.id === r.itemId);
-    return av?.label ?? r.itemId;
-  }
-  const it = findItem(r.category, r.itemId);
+  const it = findItem(r.category, r.itemId) ?? AVATAR_CATALOG.find((a) => a.id === r.itemId);
   return it?.label ?? r.itemId;
 }
 

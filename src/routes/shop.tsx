@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CATALOGS, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
 import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
-import { ArrowLeft, Check, Gift, Ticket } from "lucide-react";
+import { ArrowLeft, Check, Gift, KeyRound, Ticket } from "lucide-react";
+import { presentContainer } from "@/lib/game/containers";
 import {
   pickDailyReward, todayUtc, msUntilUtcMidnight, formatCountdown, labelReward,
   msUntilSeasonEnd, formatDaysCountdown,
@@ -21,7 +22,11 @@ const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
   { key: "accessories", label: "Asusteet", emoji: "👑" },
   { key: "themes", label: "Taustat", emoji: "🖼️" },
   { key: "emojis" as CosmeticCategory, label: "Emojit", emoji: "😎" }, 
+  { key: "avatars" as CosmeticCategory, label: "Profiilikuvat", emoji: "🧑" },
 ];
+
+const KEY_OFFER_PRICE = 2000;
+const KEY_OFFER_AMOUNT = 5;
 
 /** Promo codes → grant callback. */
 const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }> = {
@@ -88,9 +93,20 @@ function ShopPage() {
     if (cur.lastDailyClaim === today) return;
     if (reward.type === "coins") cur.coins += reward.amount;
     else if (reward.type === "xp") addPassXp(cur, reward.amount);
-    else if (reward.type === "heart") cur.inventory.hearts.push({ id: `heart-${Date.now()}`, rarity: reward.rarity });
-    else if (reward.type === "box") cur.inventory.boxes.push({ id: `box-${Date.now()}`, rarity: reward.rarity });
     cur.lastDailyClaim = today;
+    saveProgress(cur);
+    setP(cur);
+    if (reward.type === "heart") presentContainer("heart", reward.rarity);
+    if (reward.type === "box") presentContainer("box", reward.rarity);
+  };
+
+  const buyKeys = () => {
+    const cur = loadProgress();
+    if (cur.lastKeyOfferClaim === today) return;
+    if (cur.coins < KEY_OFFER_PRICE) return;
+    cur.coins -= KEY_OFFER_PRICE;
+    cur.keys = (cur.keys ?? 0) + KEY_OFFER_AMOUNT;
+    cur.lastKeyOfferClaim = today;
     saveProgress(cur);
     setP(cur);
   };
@@ -134,14 +150,14 @@ function ShopPage() {
         >
           <ArrowLeft className="h-4 w-4" /> {open ? "Katalogit" : "Takaisin"}
         </button>
-        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins}</span>
+        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
       </div>
 
       {!open && (
         <>
           <h1 className="mt-4 text-3xl font-black">Kauppa</h1>
           <div className="mt-1 text-xs text-muted-foreground">
-            Kausi päättyy 30.7.2026 · {formatDaysCountdown(msUntilSeasonEnd())}
+            Kausi 2 päättyy 1.9.2026 (UTC) · {formatDaysCountdown(msUntilSeasonEnd())}
           </div>
 
           <div className="mt-4 neon-panel p-4 flex items-center justify-between">
@@ -158,6 +174,28 @@ function ShopPage() {
               className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 disabled:opacity-40"
             >
               <Gift className="h-4 w-4" /> {dailyAvailable ? "Lunasta" : "Lunastettu"}
+            </button>
+          </div>
+
+          {/* Reppujahti: päivittäinen avaintarjous */}
+          <div className="mt-4 neon-panel p-4 flex items-center justify-between border-amber-500/40">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-amber-400">Tarjous · Avaimia!</div>
+              <div className="font-bold flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-amber-400" /> {KEY_OFFER_AMOUNT}x avain
+              </div>
+              {p.lastKeyOfferClaim === today ? (
+                <div className="text-xs text-muted-foreground mt-1">Uusiutuu: {formatCountdown(msUntilUtcMidnight())}</div>
+              ) : (
+                <div className="text-xs text-muted-foreground mt-1">Ostettavissa kerran päivässä</div>
+              )}
+            </div>
+            <button
+              onClick={buyKeys}
+              disabled={p.lastKeyOfferClaim === today || p.coins < KEY_OFFER_PRICE}
+              className="px-4 py-2 rounded bg-amber-500 text-black text-sm font-black disabled:opacity-40"
+            >
+              {p.lastKeyOfferClaim === today ? "Ostettu" : `🪙 ${KEY_OFFER_PRICE}`}
             </button>
           </div>
 

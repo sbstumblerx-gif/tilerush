@@ -40,6 +40,7 @@ export const SHAPES: CosmeticItem[] = [
   { id: "kolmio", label: "Kolmio", price: 200, rarity: "rare", preview: "▲" },
   { id: "hex", label: "Kuusikulmio", price: 250, rarity: "epic", preview: "⬡" },
   { id: "tiimalasi", label: "Tiimalasi", price: 250, rarity: "epic", preview: "⧗" },
+  { id: "kirjankansi", label: "Kirjan kansi", price: 0, rarity: "legendary", exclusive: true, preview: "📕" },
 ];
 
 export const PATTERNS: CosmeticItem[] = [
@@ -63,6 +64,8 @@ export const ACCESSORIES: CosmeticItem[] = [
   { id: "aurinkolasit", label: "Aurinkolasit", price: 250, rarity: "rare", preview: "🕶️" },
   { id: "kruunu", label: "Kruunu", price: 300, rarity: "epic", preview: "👑" },
   { id: "avaruus", label: "Avaruuskypärä", price: 350, rarity: "legendary", preview: "🪐" },
+  { id: "acc-books", label: "Kirjapino", price: 0, rarity: "epic", exclusive: true, preview: "📚" },
+  { id: "acc-notebook", label: "Vihko", price: 0, rarity: "epic", exclusive: true, preview: "📒" },
   { id: "yellowcard", label: "Keltainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟨" },
   { id: "redcard", label: "Punainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟥" },
   { id: "team-fr", label: "Ranska", price: 750, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
@@ -88,6 +91,7 @@ export const THEMES: CosmeticItem[] = [
   { id: "puisto", label: "Rauhallinen puisto", price: 200, rarity: "rare" },
   { id: "cyber", label: "Cyberpunk", price: 250, rarity: "epic" },
   { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
+  { id: "koulubussi", label: "Koulubussi", price: 0, rarity: "epic", exclusive: true },
   { id: "jalkapallo", label: "Jalkapallokenttä", price: 0, rarity: "legendary", exclusive: true },
   { id: "team-fr", label: "Ranskan lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-ma", label: "Marokon lippu", price: 0, rarity: "mythic", exclusive: true },
@@ -125,6 +129,10 @@ export const EMOJIS: CosmeticItem[] = [
   { id: "cold", label: "Jäässä", price: 650, rarity: "mythic", preview: "🥶" },
   { id: "nerd", label: "Nörtti", price: 650, rarity: "mythic", preview: "🤓" },
   { id: "poop", label: "Kakka", price: 650, rarity: "mythic", preview: "💩" },
+  { id: "ev-backpack", label: "Reppu", price: 0, rarity: "rare", exclusive: true, preview: "🎒" },
+  { id: "ev-books", label: "Kirjapino", price: 0, rarity: "rare", exclusive: true, preview: "📚" },
+  { id: "ev-school", label: "Koulu", price: 0, rarity: "rare", exclusive: true, preview: "🏫" },
+  { id: "ev-alarm", label: "Herätyskello", price: 0, rarity: "legendary", exclusive: true, preview: "⏰" },
   { id: "wilted_rose", label: "Kastunut ruusu", price: 0, rarity: "ultra", exclusive: true, preview: "🥀" },
   { id: "goat", label: "GOAT", price: 0, rarity: "ultra", exclusive: true, preview: "🐐" },
   { id: "devil", label: "Demoni", price: 0, rarity: "ultra", exclusive: true, preview: "😈" },
@@ -133,23 +141,37 @@ export const EMOJIS: CosmeticItem[] = [
 ];
 
 export const AVATARS: CosmeticItem[] = [
-  { id: "av-banana", label: "Banaani", price: 0, rarity: "common", preview: "🍌" },
-  { id: "av-pizza", label: "Pizza", price: 0, rarity: "common", preview: "🍕" },
-  { id: "av-car", label: "Auto", price: 0, rarity: "common", preview: "🚙" },
-  { id: "av-dizzy", label: "Pyörryksissä", price: 0, rarity: "rare", preview: "😵‍💫" },
-  { id: "av-popcorn", label: "Popkorni", price: 0, rarity: "rare", preview: "🍿" },
-  { id: "av-headphones", label: "Kuulokkeet", price: 0, rarity: "rare", preview: "🎧" },
-  { id: "av-alien", label: "Avaruusolio", price: 0, rarity: "epic", preview: "👾" },
-  { id: "av-oni", label: "Oni-maski", price: 0, rarity: "epic", preview: "👹" },
-  { id: "av-robot", label: "Robotti", price: 0, rarity: "epic", preview: "🤖" },
-  { id: "av-skull", label: "Pääkallo", price: 0, rarity: "epic", preview: "💀" },
-  { id: "av-nerd", label: "Nörtti", price: 0, rarity: "legendary", preview: "🤓" },
-  { id: "av-goat", label: "GOAT", price: 0, rarity: "legendary", preview: "🐐" },
-  { id: "av-clown", label: "Pelle", price: 0, rarity: "legendary", preview: "🤡" },
-  { id: "qf-finla", label: "QF - Suomi", price: 0, rarity: "mythic", exclusive: true, preview: "🇫🇮" },
-  { id: "qf-swede", label: "QF - Ruotsi", price: 0, rarity: "mythic", exclusive: true, preview: "🇸🇪" },
-  { id: "qf-canad", label: "QF - Kanada", price: 0, rarity: "mythic", exclusive: true, preview: "🇨🇦" },
-  { id: "qf-usa", label: "QF - USA", price: 0, rarity: "mythic", exclusive: true, preview: "🇺🇸" },
+  { id: "default", label: "Oletus (pelimerkki)", price: 0, rarity: "common", preview: "👤" },
+  // Kaupassa ostettavat profiilikuvat
+  { id: "av-cool", label: "Cool", price: 200, rarity: "common", preview: "😎" },
+  { id: "av-bit", label: "Bitti", price: 300, rarity: "rare", preview: "👾" },
+  { id: "av-bot", label: "Botti", price: 750, rarity: "epic", preview: "🤖" },
+  { id: "av-pirate", label: "Merirosvo", price: 1000, rarity: "legendary", preview: "🏴‍☠️" },
+  { id: "av-moai", label: "Moai", price: 2000, rarity: "ultra", preview: "🗿" },
+  { id: "av-demon", label: "Demoni", price: 2000, rarity: "ultra", preview: "😈" },
+  // Laatikoista tippuvat
+  { id: "av-banana", label: "Banaani", price: 0, rarity: "common", exclusive: true, preview: "🍌" },
+  { id: "av-pizza", label: "Pizza", price: 0, rarity: "common", exclusive: true, preview: "🍕" },
+  { id: "av-car", label: "Auto", price: 0, rarity: "common", exclusive: true, preview: "🚙" },
+  { id: "av-dizzy", label: "Pyörryksissä", price: 0, rarity: "rare", exclusive: true, preview: "😵‍💫" },
+  { id: "av-popcorn", label: "Popkorni", price: 0, rarity: "rare", exclusive: true, preview: "🍿" },
+  { id: "av-headphones", label: "Kuulokkeet", price: 0, rarity: "rare", exclusive: true, preview: "🎧" },
+  { id: "av-oni", label: "Oni-maski", price: 0, rarity: "epic", exclusive: true, preview: "👹" },
+  { id: "av-skull", label: "Pääkallo", price: 0, rarity: "epic", exclusive: true, preview: "💀" },
+  { id: "av-goat", label: "GOAT", price: 0, rarity: "legendary", exclusive: true, preview: "🐐" },
+  { id: "av-clown", label: "Pelle", price: 0, rarity: "legendary", exclusive: true, preview: "🤡" },
+  // Reppujahti-tapahtuman eksklusiivit
+  { id: "av-teacher", label: "Opettaja", price: 0, rarity: "epic", exclusive: true, preview: "🧑‍🏫" },
+  { id: "av-nerd", label: "Nörtti", price: 0, rarity: "mythic", exclusive: true, preview: "🤓" },
+  // Puolivälierä-fanipaketeista (kausi 1)
+  { id: "av-team-ma", label: "Marokko", price: 0, rarity: "mythic", exclusive: true, preview: "🇲🇦" },
+  { id: "av-team-fr", label: "Ranska", price: 0, rarity: "mythic", exclusive: true, preview: "🇫🇷" },
+  { id: "av-team-no", label: "Norja", price: 0, rarity: "mythic", exclusive: true, preview: "🇳🇴" },
+  { id: "av-team-en", label: "Englanti", price: 0, rarity: "mythic", exclusive: true, preview: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { id: "av-team-ar", label: "Argentiina", price: 0, rarity: "mythic", exclusive: true, preview: "🇦🇷" },
+  { id: "av-team-ch", label: "Sveitsi", price: 0, rarity: "mythic", exclusive: true, preview: "🇨🇭" },
+  { id: "av-team-es", label: "Espanja", price: 0, rarity: "mythic", exclusive: true, preview: "🇪🇸" },
+  { id: "av-team-be", label: "Belgia", price: 0, rarity: "mythic", exclusive: true, preview: "🇧🇪" },
 ];
 
 // KORJATTU: EMOJIS + AVATARS kytketty mukaan CATALOGS-objektiin
@@ -194,6 +216,7 @@ export function themeBg(themeId: string): string {
     lentaja: "from-[oklch(0.78_0.16_95)] to-[oklch(0.5_0.12_75)]",
     mysteeri: "from-[oklch(0.4_0.18_290)] to-[oklch(0.25_0.15_260)]",
     tumma: "from-[oklch(0.18_0.03_265)] to-[oklch(0.1_0.02_265)]",
+    koulubussi: "from-[oklch(0.82_0.16_92)] to-[oklch(0.52_0.13_78)]",
     "team-fr": "from-[#0055A4] via-white to-[#EF4135]",
     "team-ma": "from-[#C1272D] to-[#006233]",
     "team-en": "from-white via-[#CE1124] to-white",
