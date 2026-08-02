@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVELS } from "@/lib/game/levels";
-import { firstUnfinished, loadProgress } from "@/lib/game/progress";
+import { firstUnfinished, loadProgress, type Equipped } from "@/lib/game/progress";
 import { themeBg } from "@/lib/game/cosmetics";
 import { PlayerToken } from "@/components/game/PlayerToken";
 import { todayUtc, msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
@@ -33,7 +33,7 @@ function Lobby() {
   const [passLevel, setPassLevel] = useState(0);
   const [themeId, setThemeId] = useState("default");
   const [username, setUsername] = useState("Pelaaja");
-  const [equipped, setEquipped] = useState({ color: "cyan", shape: "circle", pattern: "none", accessory: "none", theme: "default", avatar: "default" });
+  const [equipped, setEquipped] = useState<Equipped>({ color: "cyan", shape: "circle", pattern: "none", accessory: "none", theme: "default", avatar: "default" });
   const [dailyAvail, setDailyAvail] = useState(false);
 
   useEffect(() => {
