@@ -4,6 +4,9 @@ import { CURRENT_SEASON } from "./dailyReward";
 const KEY = "tilerush.progress.v3";
 const OLD_KEYS = ["tilerush.progress.v2"];
 
+// Versiointitunniste passi-nollaukselle (vaihtaminen laukaisee passin nollauksen kaikilla pelaajilla)
+const PASS_RESET_VERSION = "v2_full_reset";
+
 export interface Stats {
   starts: number;
   totalMoves: number;
@@ -141,6 +144,8 @@ export interface Progress {
   locker?: LockerCell[];
   /** ISO date (UTC) jolloin päivittäinen avaintarjous on viimeksi ostettu. */
   lastKeyOfferClaim?: string;
+  /** Passin reset-versio */
+  passResetVersion?: string;
   tileCup: {
     goals: number;
     volleyUses: number;
@@ -203,12 +208,13 @@ const DEFAULT: Progress = {
       { id: "g20", label: "Tee 20 maalia Tile Cupissa", target: 20, progress: 0, reward: "asuste: keltainen kortti", claimed: false },
       { id: "g50", label: "Tee 50 maalia Tile Cupissa", target: 50, progress: 0, reward: "asuste: punainen kortti", claimed: false },
       { id: "g75", label: "Tee 75 maalia Tile Cupissa", target: 75, progress: 0, reward: "taustakuva: jalkapallokenttä", claimed: false },
-      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kolikoita", claimed: false },
-      { id: "vb25", label: "Käytä lentopalloa 25 kertaa", target: 25, progress: 0, reward: "🪙 200 kolikoita", claimed: false },
+      { id: "g100", label: "Tee 100 maalia Tile Cupissa", target: 100, progress: 0, reward: "🪙 500 kokikot", claimed: false },
+      { id: "vb25", label: "Käytä lentopalloa 25 kertaa", target: 25, progress: 0, reward: "🪙 200 kolikot", claimed: false },
     ],
   },
   inventory: { boxes: [], hearts: [] },
   season: CURRENT_SEASON,
+  passResetVersion: PASS_RESET_VERSION,
   keys: 0,
   locker: [],
   pendingRewards: [],
@@ -241,7 +247,7 @@ export function loadProgress(): Progress {
     const merged: Progress = {
       ...DEFAULT,
       ...parsed,
-      stats: { ...DEFAULT.stats, ...(parsed.stats ?? {}), tileUses: { ...(parsed.stats?.tileUses ?? {}) } },
+      stats: { ...DEFAULT.stats, ...(parsed.stats ?? {}) },
       owned: { ...DEFAULT.owned, ...(parsed.owned ?? {}) },
       equipped: { ...DEFAULT.equipped, ...(parsed.equipped ?? {}) },
       tileCup: {
@@ -280,6 +286,19 @@ export function loadProgress(): Progress {
     }
 
     migrateSeason(merged);
+    
+    // Tarkistetaan ja suoritetaan passin nollaus kaikille pelaajille
+    if (merged.passResetVersion !== PASS_RESET_VERSION) {
+      merged.passLevel = 0;
+      merged.passXp = 0;
+      merged.prestigeXp = 0;
+      merged.claimedPass = [];
+      merged.passSeasonLevels = [];
+      merged.passSeasonPacks = [];
+      merged.passResetVersion = PASS_RESET_VERSION;
+      saveProgress(merged);
+    }
+
     return merged;
   } catch {
     return { ...DEFAULT };
@@ -287,22 +306,6 @@ export function loadProgress(): Progress {
 }
 
 const TEAM_CODES = ["fr", "ma", "en", "no", "es", "be", "ar", "ch"];
-
-/** Reppujahti-kaapin arvonta: 50 lokeroa, kiinteä jakauma. */
-export function generateLocker(): LockerCell[] {
-  const pool: LockerCell["reward"][] = [
-    ...Array(15).fill("key"),
-    ...Array(10).fill("backpack"),
-    ...Array(10).fill("coins"),
-    ...Array(10).fill("heart"),
-    ...Array(5).fill("box"),
-  ];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.map((reward) => ({ reward, opened: false }));
-}
 
 /** Kauden vaihto: Tile Pass nollataan ja kausi 1:n fanipaketit muutetaan profiilikuviksi. */
 function migrateSeason(p: Progress): void {
@@ -332,6 +335,22 @@ function migrateSeason(p: Progress): void {
     p.passSeasonLevels = [];
     p.passSeasonPacks = [];
   }
+}
+
+/** Reppujahti-kaapin arvonta: 50 lokeroa, kiinteä jakauma. */
+export function generateLocker(): LockerCell[] {
+  const pool: LockerCell["reward"][] = [
+    ...Array(15).fill("key"),
+    ...Array(10).fill("backpack"),
+    ...Array(10).fill("coins"),
+    ...Array(10).fill("heart"),
+    ...Array(5).fill("box"),
+  ];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.map((reward) => ({ reward, opened: false }));
 }
 
 export function grantKeys(p: Progress, n: number): void {
@@ -466,4 +485,4 @@ export function calcStars(movesLeft: number, totalMoves: number): number {
   if (ratio >= 0.5) return 3;
   if (ratio >= 0.25) return 2;
   return 1;
-    }
+}
