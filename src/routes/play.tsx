@@ -19,6 +19,7 @@ import {
 import { playSfx } from "@/lib/game/sound";
 import { PACKS, packProgress } from "@/lib/game/packs";
 import { openContainer } from "@/lib/game/lootbox";
+import { applyRewards } from "@/lib/game/containers";
 
 const searchSchema = z.object({
   level: z.coerce.number().int().min(1).default(1),
@@ -80,11 +81,7 @@ function PlayPage() {
         if (pack && packProgress(pack, p.completed) === pack.levelIds.length) {
           const rarity = (["common","rare","epic","legendary","mythic","ultra"] as const)[Math.min(5, Math.floor((pack.id - 1) / 2))];
           const rewards = openContainer("box", rarity, (cat, id) => p.owned[cat].includes(id));
-          for (const r of rewards) {
-            if (r.type === "coins") p.coins += r.amount;
-            else if (!p.owned[r.category].includes(r.itemId)) p.owned[r.category] = [...p.owned[r.category], r.itemId];
-          }
-          p.pendingRewards = [...p.pendingRewards, ...rewards];
+          applyRewards(p, rewards);
           if (p.weekly) p.weekly.tasks.forEach((t) => { if (t.id === "w-pack-2") t.progress = Math.min(t.target, t.progress + 1); });
           if (p.weekly) p.weekly.packsCompletedThisWeek = (p.weekly.packsCompletedThisWeek ?? 0) + 1;
           awardPackCompletion(p, pack.id);

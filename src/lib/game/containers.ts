@@ -24,10 +24,12 @@ function ownedFilter(p: Progress) {
     (p.owned as unknown as Record<string, string[]>)[cat]?.includes(id) ?? false;
 }
 
-function applyRewards(p: Progress, rewards: Reward[]): void {
+export function applyRewards(p: Progress, rewards: Reward[]): void {
   for (const r of rewards) {
     if (r.type === "coins") {
       p.coins += r.amount;
+    } else if (r.type === "gems") {
+      p.gems = (p.gems ?? 0) + r.amount;
     } else {
       const list = (p.owned as unknown as Record<string, string[]>)[r.category] ?? [];
       if (!list.includes(r.itemId)) {

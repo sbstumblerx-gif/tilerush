@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrophiesRouteImport } from './routes/trophies'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StatsRouteImport } from './routes/stats'
@@ -17,14 +18,22 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
+import { Route as OnlineRouteImport } from './routes/online'
 import { Route as MultiplayerRouteImport } from './routes/multiplayer'
 import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as EventRouteImport } from './routes/event'
 import { Route as CustomizeRouteImport } from './routes/customize'
+import { Route as CreateRouteImport } from './routes/create'
+import { Route as CplayRouteImport } from './routes/cplay'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartyCodeRouteImport } from './routes/party.$code'
 
+const TrophiesRoute = TrophiesRouteImport.update({
+  id: '/trophies',
+  path: '/trophies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -65,6 +74,11 @@ const PassRoute = PassRouteImport.update({
   path: '/pass',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnlineRoute = OnlineRouteImport.update({
+  id: '/online',
+  path: '/online',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MultiplayerRoute = MultiplayerRouteImport.update({
   id: '/multiplayer',
   path: '/multiplayer',
@@ -90,6 +104,16 @@ const CustomizeRoute = CustomizeRouteImport.update({
   path: '/customize',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CplayRoute = CplayRouteImport.update({
+  id: '/cplay',
+  path: '/cplay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -103,11 +127,14 @@ const PartyCodeRoute = PartyCodeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cplay': typeof CplayRoute
+  '/create': typeof CreateRoute
   '/customize': typeof CustomizeRoute
   '/event': typeof EventRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/multiplayer': typeof MultiplayerRoute
+  '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -116,15 +143,19 @@ export interface FileRoutesByFullPath {
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/team': typeof TeamRoute
+  '/trophies': typeof TrophiesRoute
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cplay': typeof CplayRoute
+  '/create': typeof CreateRoute
   '/customize': typeof CustomizeRoute
   '/event': typeof EventRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/multiplayer': typeof MultiplayerRoute
+  '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -133,16 +164,20 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/team': typeof TeamRoute
+  '/trophies': typeof TrophiesRoute
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cplay': typeof CplayRoute
+  '/create': typeof CreateRoute
   '/customize': typeof CustomizeRoute
   '/event': typeof EventRoute
   '/friends': typeof FriendsRoute
   '/levels': typeof LevelsRoute
   '/multiplayer': typeof MultiplayerRoute
+  '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
   '/profile': typeof ProfileRoute
@@ -151,17 +186,21 @@ export interface FileRoutesById {
   '/stats': typeof StatsRoute
   '/tasks': typeof TasksRoute
   '/team': typeof TeamRoute
+  '/trophies': typeof TrophiesRoute
   '/party/$code': typeof PartyCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cplay'
+    | '/create'
     | '/customize'
     | '/event'
     | '/friends'
     | '/levels'
     | '/multiplayer'
+    | '/online'
     | '/pass'
     | '/play'
     | '/profile'
@@ -170,15 +209,19 @@ export interface FileRouteTypes {
     | '/stats'
     | '/tasks'
     | '/team'
+    | '/trophies'
     | '/party/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cplay'
+    | '/create'
     | '/customize'
     | '/event'
     | '/friends'
     | '/levels'
     | '/multiplayer'
+    | '/online'
     | '/pass'
     | '/play'
     | '/profile'
@@ -187,15 +230,19 @@ export interface FileRouteTypes {
     | '/stats'
     | '/tasks'
     | '/team'
+    | '/trophies'
     | '/party/$code'
   id:
     | '__root__'
     | '/'
+    | '/cplay'
+    | '/create'
     | '/customize'
     | '/event'
     | '/friends'
     | '/levels'
     | '/multiplayer'
+    | '/online'
     | '/pass'
     | '/play'
     | '/profile'
@@ -204,16 +251,20 @@ export interface FileRouteTypes {
     | '/stats'
     | '/tasks'
     | '/team'
+    | '/trophies'
     | '/party/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CplayRoute: typeof CplayRoute
+  CreateRoute: typeof CreateRoute
   CustomizeRoute: typeof CustomizeRoute
   EventRoute: typeof EventRoute
   FriendsRoute: typeof FriendsRoute
   LevelsRoute: typeof LevelsRoute
   MultiplayerRoute: typeof MultiplayerRoute
+  OnlineRoute: typeof OnlineRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
   ProfileRoute: typeof ProfileRoute
@@ -222,11 +273,19 @@ export interface RootRouteChildren {
   StatsRoute: typeof StatsRoute
   TasksRoute: typeof TasksRoute
   TeamRoute: typeof TeamRoute
+  TrophiesRoute: typeof TrophiesRoute
   PartyCodeRoute: typeof PartyCodeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trophies': {
+      id: '/trophies'
+      path: '/trophies'
+      fullPath: '/trophies'
+      preLoaderRoute: typeof TrophiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/team': {
       id: '/team'
       path: '/team'
@@ -283,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PassRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/online': {
+      id: '/online'
+      path: '/online'
+      fullPath: '/online'
+      preLoaderRoute: typeof OnlineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/multiplayer': {
       id: '/multiplayer'
       path: '/multiplayer'
@@ -318,6 +384,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomizeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cplay': {
+      id: '/cplay'
+      path: '/cplay'
+      fullPath: '/cplay'
+      preLoaderRoute: typeof CplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -337,11 +417,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CplayRoute: CplayRoute,
+  CreateRoute: CreateRoute,
   CustomizeRoute: CustomizeRoute,
   EventRoute: EventRoute,
   FriendsRoute: FriendsRoute,
   LevelsRoute: LevelsRoute,
   MultiplayerRoute: MultiplayerRoute,
+  OnlineRoute: OnlineRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
   ProfileRoute: ProfileRoute,
@@ -350,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatsRoute: StatsRoute,
   TasksRoute: TasksRoute,
   TeamRoute: TeamRoute,
+  TrophiesRoute: TrophiesRoute,
   PartyCodeRoute: PartyCodeRoute,
 }
 export const routeTree = rootRouteImport

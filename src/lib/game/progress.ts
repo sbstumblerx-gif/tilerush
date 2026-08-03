@@ -1,5 +1,6 @@
 import type { Reward } from "./lootbox";
 import { CURRENT_SEASON } from "./dailyReward";
+import { PACKS } from "./packs";
 
 const KEY = "tilerush.progress.v3";
 const OLD_KEYS = ["tilerush.progress.v2"];
@@ -104,6 +105,18 @@ export interface TileCupTask {
 export interface Progress {
   completed: number[];
   coins: number;
+  gems: number;
+  trophies: number;
+  claimedTrophy: number[];
+  /** Yhteisökenttien läpäisyt (kenttäkoodit). */
+  communityCompleted: string[];
+  /** Yhteisöpaketit, joista pokaalit on jo myönnetty (pakettikoodit). */
+  communityPacksAwarded: string[];
+  /** Pelaajapakettien pokaalipalkkiot: enintään 5 / päivä. */
+  playerPackAwards?: { date: string; count: number };
+  /** Virallisten pakettien pokaalisynkronointi. */
+  officialPacksAwarded: number[];
+  lastEventGiftClaim?: string;
   stars: Record<number, number>;
   stats: Stats;
   passLevel: number;
@@ -146,6 +159,12 @@ function randomCode(len: number): string {
 const DEFAULT: Progress = {
   completed: [],
   coins: 0,
+  gems: 0,
+  trophies: 0,
+  claimedTrophy: [],
+  communityCompleted: [],
+  communityPacksAwarded: [],
+  officialPacksAwarded: [],
   stars: {},
   stats: {
     starts: 0,
@@ -254,6 +273,14 @@ export function loadProgress(): Progress {
       weekly: parsed.weekly,
       promoRedeemed: parsed.promoRedeemed ?? [],
       teamOffersPurchased: parsed.teamOffersPurchased ?? [],
+      gems: parsed.gems ?? 0,
+      trophies: parsed.trophies ?? 0,
+      claimedTrophy: parsed.claimedTrophy ?? [],
+      communityCompleted: parsed.communityCompleted ?? [],
+      communityPacksAwarded: parsed.communityPacksAwarded ?? [],
+      officialPacksAwarded: parsed.officialPacksAwarded ?? [],
+      playerPackAwards: parsed.playerPackAwards,
+      lastEventGiftClaim: parsed.lastEventGiftClaim,
     };
     
     if (!merged.owned.avatars) merged.owned.avatars = ["default"];
@@ -305,6 +332,9 @@ function migrateSeason(p: Progress): void {
   if (typeof p.keys !== "number") p.keys = 0;
   if (!p.inventory.backpacks) p.inventory.backpacks = [];
 
+  // Pokaalipolku: synkronoi jo läpäistyt viralliset paketit pokaaleiksi.
+  syncOfficialPackTrophies(p);
+
   if (p.season !== CURRENT_SEASON) {
     p.season = CURRENT_SEASON;
     p.passLevel = 0;
@@ -333,6 +363,59 @@ export function generateLocker(): LockerCell[] {
 
 export function grantKeys(p: Progress, n: number): void {
   p.keys = (p.keys ?? 0) + n;
+}
+
+/* ---------------- Pokaalipolku ---------------- */
+
+export const TROPHY_PER_LEVEL = 100;
+export const TROPHY_MAX_LEVEL = 50;
+
+/** Pokaalimäärät suorituksista. */
+export const TROPHY_ONLINE_WIN = 30;
+export const TROPHY_ONLINE_LOSS = -10;
+export const TROPHY_OFFICIAL_PACK = 20;
+export const TROPHY_PLAYER_PACK = 5;
+export const TROPHY_PLAYER_PACK_DAILY_CAP = 5;
+
+export function trophyLevel(trophies: number): number {
+  return Math.min(TROPHY_MAX_LEVEL, Math.floor(Math.max(0, trophies) / TROPHY_PER_LEVEL));
+}
+
+export function addTrophies(p: Progress, n: number): void {
+  p.trophies = Math.max(0, (p.trophies ?? 0) + n);
+}
+
+export function grantGems(p: Progress, n: number): void {
+  p.gems = (p.gems ?? 0) + n;
+}
+
+/** Myöntää 20 pokaalia jokaisesta läpäistystä virallisesta paketista (kertaluontoisesti). */
+export function syncOfficialPackTrophies(p: Progress): void {
+  if (!p.officialPacksAwarded) p.officialPacksAwarded = [];
+  for (const pack of PACKS) {
+    if (p.officialPacksAwarded.includes(pack.id)) continue;
+    if (pack.levelIds.every((id) => p.completed.includes(id))) {
+      p.officialPacksAwarded.push(pack.id);
+      addTrophies(p, TROPHY_OFFICIAL_PACK);
+    }
+  }
+}
+
+/** Pelaajapaketin läpäisy: 5 pokaalia, enintään 5 kertaa päivässä. */
+export function awardPlayerPackTrophies(p: Progress, packCode: string): "granted" | "capped" | "already" {
+  if (!p.communityPacksAwarded) p.communityPacksAwarded = [];
+  if (p.communityPacksAwarded.includes(packCode)) return "already";
+  const today = new Date().toISOString().slice(0, 10);
+  const rec = p.playerPackAwards?.date === today ? p.playerPackAwards : { date: today, count: 0 };
+  if (rec.count >= TROPHY_PLAYER_PACK_DAILY_CAP) {
+    p.playerPackAwards = rec;
+    return "capped";
+  }
+  rec.count += 1;
+  p.playerPackAwards = rec;
+  p.communityPacksAwarded.push(packCode);
+  addTrophies(p, TROPHY_PLAYER_PACK);
+  return "granted";
 }
 
 export function grantBackpack(p: Progress): void {
@@ -378,6 +461,7 @@ export function markComplete(levelId: number, opts: { movesLeft: number; totalMo
       const rar = (levelId <= 30 ? "common" : levelId <= 60 ? "rare" : "epic") as import("./rarity").Rarity;
       p.inventory.hearts.push({ id: `heart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, rarity: rar });
     }
+    syncOfficialPackTrophies(p);
   });
 }
 

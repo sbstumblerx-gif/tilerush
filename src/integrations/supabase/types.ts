@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_levels: {
+        Row: {
+          author_id: string
+          code: string
+          created_at: string
+          grid: Json
+          id: string
+          moves: number
+          name: string
+          size: number
+        }
+        Insert: {
+          author_id: string
+          code?: string
+          created_at?: string
+          grid?: Json
+          id?: string
+          moves?: number
+          name?: string
+          size?: number
+        }
+        Update: {
+          author_id?: string
+          code?: string
+          created_at?: string
+          grid?: Json
+          id?: string
+          moves?: number
+          name?: string
+          size?: number
+        }
+        Relationships: []
+      }
+      community_packs: {
+        Row: {
+          author_id: string
+          code: string
+          created_at: string
+          id: string
+          level_codes: string[]
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          code?: string
+          created_at?: string
+          id?: string
+          level_codes?: string[]
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          level_codes?: string[]
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -49,6 +112,24 @@ export type Database = {
         Update: {
           created_at?: string
           friend_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      matchmaking_queue: {
+        Row: {
+          created_at: string
+          match_code: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          match_code?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          match_code?: string | null
           user_id?: string
         }
         Relationships: []
@@ -145,6 +226,9 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      matchmaking_join: { Args: never; Returns: string }
+      matchmaking_leave: { Args: never; Returns: undefined }
+      matchmaking_poll: { Args: never; Returns: string }
       send_friend_request_by_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {

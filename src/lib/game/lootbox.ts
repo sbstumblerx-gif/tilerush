@@ -8,13 +8,20 @@ export interface RewardCoins {
   type: "coins";
   amount: number;
 }
+export interface RewardGems {
+  type: "gems";
+  amount: number;
+}
 export interface RewardCosmetic {
   type: "cosmetic";
   category: CosmeticCategory | "avatars";
   itemId: string;
   rarity: Rarity;
 }
-export type Reward = RewardCoins | RewardCosmetic;
+export type Reward = RewardCoins | RewardGems | RewardCosmetic;
+
+/** Jalokivien tippumismahdollisuus ultralaatikoista. */
+export const GEM_ULTRA_CHANCE = 0.05;
 
 /** Päivitetyt kiinteät kolikkomäärät per taso. */
 export const COIN_BY_TIER: Record<Rarity, number> = {
@@ -75,8 +82,8 @@ function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory | "avata
       if (safeFilter(cat, it.id)) continue;
 
       if (cat === "emojis" && it.preview && FREE_EMOJI_PREVIEWS.includes(it.preview)) continue;
-      // Estetään Limited Time / Exclusive tarjousten dropit
-      if (it.exclusive && cat !== "emojis") continue;
+      // Eksklusiiviset tuotteet ovat saatavilla VAIN tapahtumapalkinnoista – ei koskaan laatikoista.
+      if (it.exclusive) continue;
 
       if (!isCosmeticEligible(it.rarity, tier)) continue;
 
@@ -96,6 +103,10 @@ function pickCosmetic(tier: Rarity, ownedFilter: (cat: CosmeticCategory | "avata
 /** Roll one reward from a container of given base rarity. */
 export function rollReward(base: Rarity, ownedFilter: (cat: CosmeticCategory | "avatars", id: string) => boolean): Reward {
   const rarity = base;
+  // Jalokivet: vain ultralaatikoista, 5 % mahdollisuudella ja aina 1 kappale.
+  if (rarity === "ultra" && Math.random() < GEM_ULTRA_CHANCE) {
+    return { type: "gems", amount: 1 };
+  }
   const cos = pickCosmetic(rarity, ownedFilter);
   
   if (cos && Math.random() < 0.5) {
@@ -172,6 +183,7 @@ void unusedTopRarity;
 
 export function itemLabel(r: Reward): string {
   if (r.type === "coins") return `🪙 ${r.amount}`;
+  if (r.type === "gems") return `💎 ${r.amount}`;
   const it = findItem(r.category, r.itemId) ?? AVATAR_CATALOG.find((a) => a.id === r.itemId);
   return it?.label ?? r.itemId;
 }
