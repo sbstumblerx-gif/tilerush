@@ -12,7 +12,7 @@ import type { GameState, Pos } from "@/lib/game/types";
 import { formatMs, pickRoundLevel, rankResults, RESULTS_MS, ROUND_MS, type RoundResult } from "@/lib/cloud/match";
 import { BOT_FALLBACK_MS, joinQueue, leaveQueue, ONLINE_ROUNDS, pollQueue } from "@/lib/cloud/matchmaking";
 import { BOT_ID, randomBotName, simulateBot } from "@/lib/game/bot";
-import { upsertMyProfile, fetchMyProfile } from "@/lib/cloud/social";
+import { upsertMyProfile } from "@/lib/cloud/social";
 
 export const Route = createFileRoute("/online")({
   head: () => ({
@@ -30,8 +30,6 @@ export const Route = createFileRoute("/online")({
 
 type Phase = "search" | "round" | "results" | "final" | "error";
 interface Opp { id: string; name: string; avatar?: string | null; bot: boolean }
-
-export default function noop() {}
 
 function OnlinePage() {
   const navigate = useNavigate();
@@ -113,7 +111,6 @@ function OnlinePage() {
     const delta = mine > theirs ? TROPHY_ONLINE_WIN : mine < theirs ? TROPHY_ONLINE_LOSS : 0;
     const cur = loadProgress();
     if (delta !== 0) addTrophies(cur, delta);
-    if (mine > theirs) cur.stats.wins += 0; // online-voitto ei vaikuta kenttätilastoihin
     saveProgress(cur);
     setTrophyDelta(delta);
     setP(loadProgress());
