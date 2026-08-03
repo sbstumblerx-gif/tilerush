@@ -1,4 +1,4 @@
-import { ACCESSORIES, AVATARS, COLORS, PATTERNS, SHAPES } from "@/lib/game/cosmetics";
+import { ACCESSORIES, COLORS, PATTERNS, SHAPES } from "@/lib/game/cosmetics";
 import type { Equipped } from "@/lib/game/progress";
 import fifaBall from "@/assets/fifa-ball.png.asset.json";
 
@@ -18,28 +18,11 @@ const SHAPE_CLIP: Record<string, string> = {
   kirjankansi: "polygon(10% 0%, 100% 0%, 100% 100%, 10% 100%, 0% 50%)",
 };
 
-// Mäppäys profiilikuvan ID:stä emojiksi
-const AVATAR_EMOJIS: Record<string, string> = Object.fromEntries(
-  AVATARS.filter((a) => a.id !== "default" && a.preview).map((a) => [a.id, a.preview as string]),
-);
-
+/**
+ * Pelihahmo – tämä on se merkki, joka näkyy kentällä pelatessa.
+ * Profiilikuva on eri asia: käytä <AvatarBadge />.
+ */
 export function PlayerToken({ equipped, size = 44, showAccessory = true }: Props) {
-  // Jos käytössä on jokin emoji-profiilikuva, hypätään suoraan emojin piirtoon
-  const isEmojiAvatar = equipped.avatar && equipped.avatar !== "default";
-
-  if (isEmojiAvatar) {
-    const emoji = AVATAR_EMOJIS[equipped.avatar ?? ""] || "👤";
-    return (
-      <div 
-        className="relative inline-flex items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 shadow-inner select-none"
-        style={{ width: size, height: size, fontSize: size * 0.6 }}
-      >
-        <span>{emoji}</span>
-      </div>
-    );
-  }
-
-  // OLETUS: Pelaajan kustomoitu pelihahmo (alkuperäinen hieno logiikkasi)
   const color = COLORS.find((c) => c.id === equipped.color)?.preview ?? "#22d3ee";
   const shape = SHAPES.find((s) => s.id === equipped.shape)?.id ?? "circle";
   const pattern = PATTERNS.find((p) => p.id === equipped.pattern);
