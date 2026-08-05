@@ -12,12 +12,15 @@ import {
   Shield,
   PartyPopper,
   Gift,
+  Trophy,
+  Swords,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVELS } from "@/lib/game/levels";
 import { firstUnfinished, loadProgress, type Equipped } from "@/lib/game/progress";
 import { themeBg } from "@/lib/game/cosmetics";
-import { PlayerToken } from "@/components/game/PlayerToken";
+import { AvatarBadge } from "@/components/game/AvatarBadge";
+import { trophyLevel, TROPHY_PER_LEVEL, TROPHY_MAX_LEVEL } from "@/lib/game/progress";
 import { todayUtc, msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/")({
@@ -35,6 +38,8 @@ function Lobby() {
   const [username, setUsername] = useState("Pelaaja");
   const [equipped, setEquipped] = useState<Equipped>({ color: "cyan", shape: "circle", pattern: "none", accessory: "none", theme: "default", avatar: "default" });
   const [dailyAvail, setDailyAvail] = useState(false);
+  const [gems, setGems] = useState(0);
+  const [trophies, setTrophies] = useState(0);
 
   useEffect(() => {
     const load = () => {
@@ -48,6 +53,8 @@ function Lobby() {
       setUsername(p.profile.username);
       setEquipped(p.equipped);
       setDailyAvail(p.lastDailyClaim !== todayUtc());
+      setGems(p.gems ?? 0);
+      setTrophies(p.trophies ?? 0);
     };
     load();
     window.addEventListener("tilerush:progress", load);
@@ -58,17 +65,43 @@ function Lobby() {
     <div className={`min-h-screen flex flex-col items-center px-4 py-6 sm:py-10 bg-gradient-to-br ${themeBg(themeId)}`}>
       <div className="w-full max-w-[420px] flex justify-between items-center text-sm mb-3">
         <Link to="/profile" className="neon-panel px-2 py-1 flex items-center gap-2 hover:border-primary/70">
-          <PlayerToken equipped={equipped} size={28} showAccessory={false} />
+          <AvatarBadge avatar={equipped.avatar} name={username} size={28} />
           <span className="font-bold text-sm">{username}</span>
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/shop" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">🪙 {coins}</Link>
+          <Link to="/shop" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">💎 {gems}</Link>
           <Link to="/event" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">🔑 {keys}</Link>
           <Link to="/settings" className="neon-panel px-2 py-2 hover:border-primary/70" aria-label="Asetukset">
             <Settings className="h-4 w-4 text-primary" />
           </Link>
         </div>
       </div>
+      <div className="w-full max-w-[420px] mb-4">
+        <Link to="/trophies" className="block neon-panel p-3 hover:border-primary/70">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-6 w-6 text-primary shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-primary">Pokaalipolku</span>
+                <span className="text-xs font-bold">🏆 {trophies}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black">Taso {trophyLevel(trophies)}</span>
+                <div className="flex-1 h-2 rounded-full bg-background/60 overflow-hidden">
+                  <div
+                    className="h-full bg-primary"
+                    style={{
+                      width: `${trophyLevel(trophies) >= TROPHY_MAX_LEVEL ? 100 : ((trophies % TROPHY_PER_LEVEL) / TROPHY_PER_LEVEL) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
       <header className="text-center mb-6">
         <div className="text-xs uppercase tracking-[0.4em] text-primary/80">Tile</div>
         <h1 className="mt-1 text-5xl sm:text-6xl font-black tracking-tight bg-gradient-to-br from-[oklch(0.85_0.15_200)] via-[oklch(0.75_0.18_265)] to-[oklch(0.72_0.2_320)] bg-clip-text text-transparent">
@@ -90,7 +123,8 @@ function Lobby() {
           </span>
         </Button>
 
-        <MenuTile to="/multiplayer" icon={<Users className="h-5 w-5" />} label="Online party ja matchmaking" full />
+        <MenuTile to="/online" icon={<Swords className="h-5 w-5" />} label="Online 1v1 matchmaking" full />
+        <MenuTile to="/multiplayer" icon={<Users className="h-5 w-5" />} label="Online party (max 8)" full />
         <MenuTile to="/event" icon={<PartyPopper className="h-5 w-5" />} label="Tapahtumat" badge="Reppujahti" full />
 
         <div className="grid grid-cols-3 gap-3">
@@ -124,7 +158,7 @@ function Lobby() {
         </Link>
       </div>
 
-      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 5.0</div>
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 5.5</div>
     </div>
   );
 }

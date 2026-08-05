@@ -217,6 +217,144 @@ export type Database = {
         }
         Relationships: []
       }
+      team_gifts: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          rarity: string | null
+          team_id: string
+          to_user: string
+        }
+        Insert: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          from_user: string
+          id?: string
+          kind: string
+          rarity?: string | null
+          team_id: string
+          to_user: string
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          from_user?: string
+          id?: string
+          kind?: string
+          rarity?: string | null
+          team_id?: string
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_gifts_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          joined_at: string
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          role?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          role?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          max_members: number
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          max_members?: number
+          name?: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          max_members?: number
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -225,6 +363,14 @@ export type Database = {
       accept_friend_request: {
         Args: { _request_id: string }
         Returns: undefined
+      }
+      is_team_member: {
+        Args: { _team: string; _user: string }
+        Returns: boolean
+      }
+      is_team_owner: {
+        Args: { _team: string; _user: string }
+        Returns: boolean
       }
       matchmaking_join: { Args: never; Returns: string }
       matchmaking_leave: { Args: never; Returns: undefined }

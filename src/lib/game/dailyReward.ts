@@ -70,3 +70,22 @@ export function labelReward(r: DailyReward): string {
     case "box": return `📦 Laatikko`;
   }
 }
+/* -------- Reppujahti: päivittäinen ilmainen tapahtumalahja -------- */
+
+/** Päivien lukumäärä epookista (UTC). */
+export function dayIndexUtc(): number {
+  return Math.floor(Date.now() / 86_400_000);
+}
+
+/** Onko tapahtuma vielä käynnissä (päättyy 1.9.2026 UTC). */
+export function isEventActive(): boolean {
+  return Date.now() < SEASON_END_UTC;
+}
+
+/** Joka kolmas päivä ilmainen reppu, muuten ilmainen avain. Null kun tapahtuma on päättynyt. */
+export function eventGiftForToday(): { kind: "backpack" | "key"; label: string } | null {
+  if (!isEventActive()) return null;
+  return dayIndexUtc() % 3 === 0
+    ? { kind: "backpack", label: "🎒 Ilmainen reppu" }
+    : { kind: "key", label: "🔑 Ilmainen avain" };
+}

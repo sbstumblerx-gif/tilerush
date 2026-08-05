@@ -6,8 +6,9 @@ import { ArrowLeft, Check, Gift, KeyRound, Ticket } from "lucide-react";
 import { presentContainer } from "@/lib/game/containers";
 import {
   pickDailyReward, todayUtc, msUntilUtcMidnight, formatCountdown, labelReward,
-  msUntilSeasonEnd, formatDaysCountdown,
+  msUntilSeasonEnd, formatDaysCountdown, eventGiftForToday,
 } from "@/lib/game/dailyReward";
+import { grantKeys, grantBackpack } from "@/lib/game/progress";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
@@ -100,6 +101,20 @@ function ShopPage() {
     if (reward.type === "box") presentContainer("box", reward.rarity);
   };
 
+  const eventGift = eventGiftForToday();
+  const eventGiftClaimed = p.lastEventGiftClaim === today;
+
+  const claimEventGift = () => {
+    if (!eventGift) return;
+    const cur = loadProgress();
+    if (cur.lastEventGiftClaim === today) return;
+    if (eventGift.kind === "key") grantKeys(cur, 1);
+    else grantBackpack(cur);
+    cur.lastEventGiftClaim = today;
+    saveProgress(cur);
+    setP(cur);
+  };
+
   const buyKeys = () => {
     const cur = loadProgress();
     if (cur.lastKeyOfferClaim === today) return;
@@ -176,6 +191,28 @@ function ShopPage() {
               <Gift className="h-4 w-4" /> {dailyAvailable ? "Lunasta" : "Lunastettu"}
             </button>
           </div>
+
+          {/* Reppujahti: päivittäinen ilmainen tapahtumalahja */}
+          {eventGift && (
+            <div className="mt-4 neon-panel p-4 flex items-center justify-between border-emerald-500/40">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-emerald-400">Reppujahti · päivän lahja</div>
+                <div className="font-bold">{eventGift.label}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {eventGiftClaimed
+                    ? `Uusiutuu: ${formatCountdown(msUntilUtcMidnight())}`
+                    : "Ilmainen · päättyy 1.9.2026"}
+                </div>
+              </div>
+              <button
+                onClick={claimEventGift}
+                disabled={eventGiftClaimed}
+                className="px-4 py-2 rounded bg-emerald-500 text-black text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+              >
+                <Ticket className="h-4 w-4" /> {eventGiftClaimed ? "Lunastettu" : "Lunasta"}
+              </button>
+            </div>
+          )}
 
           {/* Reppujahti: päivittäinen avaintarjous */}
           <div className="mt-4 neon-panel p-4 flex items-center justify-between border-amber-500/40">
