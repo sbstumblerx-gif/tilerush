@@ -58,6 +58,20 @@ export async function getCommunityLevel(code: string): Promise<CommunityLevel | 
   return data ? normalize(data as Record<string, unknown>) : null;
 }
 
+/** Päivitä oma kenttä (vaatii uuden läpäisytarkistuksen editorissa). */
+export async function updateCommunityLevel(
+  code: string,
+  input: { name: string; size: number; moves: number; grid: string[] },
+): Promise<CommunityLevel | null> {
+  const { data } = await supabase
+    .from("community_levels")
+    .update({ name: input.name, size: input.size, moves: input.moves, grid: input.grid })
+    .eq("code", code)
+    .select("*")
+    .maybeSingle();
+  return data ? normalize(data as Record<string, unknown>) : null;
+}
+
 export async function getCommunityLevels(codes: string[]): Promise<CommunityLevel[]> {
   if (codes.length === 0) return [];
   const { data } = await supabase.from("community_levels").select("*").in("code", codes);
