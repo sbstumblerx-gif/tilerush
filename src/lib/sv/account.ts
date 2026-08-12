@@ -80,8 +80,8 @@ export async function svSyncData(currentTeam?: string | null): Promise<void> {
       friend_code: p.profile.friendCode,
       current_team: currentTeam ?? null,
       stats: {
-        matches: p.stats.gamesPlayed ?? 0,
-        wins: p.completed.length,
+        matches: p.stats.starts ?? 0,
+        wins: p.stats.wins ?? 0,
         score: p.trophies ?? 0,
         trophies: p.trophies ?? 0,
         trophyLevel: trophyLevel(p.trophies ?? 0),
