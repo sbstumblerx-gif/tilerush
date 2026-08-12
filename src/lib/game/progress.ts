@@ -142,6 +142,8 @@ export interface Progress {
   locker?: LockerCell[];
   lastKeyOfferClaim?: string;
   passResetVersion?: string;
+  /** SV Account -linkitys (erillinen Google-kirjautumisesta). */
+  sv?: { userId: string; giftClaimed: boolean };
   tileCup: {
     goals: number;
     volleyUses: number;
