@@ -385,6 +385,12 @@ export function trophyLevel(trophies: number): number {
 
 export function addTrophies(p: Progress, n: number): void {
   p.trophies = Math.max(0, (p.trophies ?? 0) + n);
+  if (n > 0 && typeof window !== "undefined") {
+    // Kirjataan liigaviikon panos omalle joukkueelle (ei estä pelin kulkua).
+    void import("@/lib/cloud/league")
+      .then((m) => m.addLeagueTrophies(n))
+      .catch(() => {});
+  }
 }
 
 export function grantGems(p: Progress, n: number): void {

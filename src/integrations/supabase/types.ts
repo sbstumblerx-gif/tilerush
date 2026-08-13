@@ -116,6 +116,80 @@ export type Database = {
         }
         Relationships: []
       }
+      league_rewards: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          id: string
+          kind: string
+          rarity: string | null
+          reason: string
+          team_id: string | null
+          user_id: string
+          week: number
+        }
+        Insert: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          rarity?: string | null
+          reason?: string
+          team_id?: string | null
+          user_id: string
+          week: number
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          rarity?: string | null
+          reason?: string
+          team_id?: string | null
+          user_id?: string
+          week?: number
+        }
+        Relationships: []
+      }
+      league_scores: {
+        Row: {
+          created_at: string
+          team_id: string
+          trophies: number
+          updated_at: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          created_at?: string
+          team_id: string
+          trophies?: number
+          updated_at?: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          created_at?: string
+          team_id?: string
+          trophies?: number
+          updated_at?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_scores_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matchmaking_queue: {
         Row: {
           created_at: string
@@ -328,9 +402,11 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          league_week: number
           max_members: number
           name: string
           owner_id: string
+          tier: string
           updated_at: string
         }
         Insert: {
@@ -338,9 +414,11 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          league_week?: number
           max_members?: number
           name?: string
           owner_id: string
+          tier?: string
           updated_at?: string
         }
         Update: {
@@ -348,9 +426,11 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          league_week?: number
           max_members?: number
           name?: string
           owner_id?: string
+          tier?: string
           updated_at?: string
         }
         Relationships: []
@@ -372,6 +452,9 @@ export type Database = {
         Args: { _team: string; _user: string }
         Returns: boolean
       }
+      league_add_trophies: { Args: { _amount: number }; Returns: undefined }
+      league_current_week: { Args: never; Returns: number }
+      league_settle: { Args: never; Returns: number }
       matchmaking_join: { Args: never; Returns: string }
       matchmaking_leave: { Args: never; Returns: undefined }
       matchmaking_poll: { Args: never; Returns: string }
