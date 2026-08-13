@@ -218,7 +218,10 @@ function CommunitySection() {
                   <Button size="sm" onClick={() => navigate({ to: "/cplay", search: { pack: pk.code, i: 0 } })}>Pelaa</Button>
                   <button
                     className="text-xs text-muted-foreground hover:text-destructive"
-                    onClick={() => void deleteCommunityPack(pk.code).then(refresh)}
+                    onClick={() => {
+                      if (!window.confirm(`Poistetaanko paketti "${pk.name}"? Muiden ansaitsemat pokaalit säilyvät.`)) return;
+                      void deleteCommunityPack(pk.code).then(refresh);
+                    }}
                   >
                     Poista
                   </button>
@@ -242,9 +245,15 @@ function CommunitySection() {
                   <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/cplay", search: { level: l.code, i: 0 } })}>
                     Pelaa
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate({ to: "/create", search: { edit: l.code } })}>
+                    Muokkaa
+                  </Button>
                   <button
                     className="text-xs text-muted-foreground hover:text-destructive"
-                    onClick={() => void deleteCommunityLevel(l.code).then(refresh)}
+                    onClick={() => {
+                      if (!window.confirm(`Poistetaanko kenttä "${l.name}"? Muiden ansaitsemat pokaalit säilyvät.`)) return;
+                      void deleteCommunityLevel(l.code).then(refresh);
+                    }}
                   >
                     Poista
                   </button>
