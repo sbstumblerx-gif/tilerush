@@ -13,7 +13,6 @@ import {
   PartyPopper,
   Gift,
   Trophy,
-  Swords,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LEVELS } from "@/lib/game/levels";
@@ -30,7 +29,6 @@ export const Route = createFileRoute("/")({
 function Lobby() {
   const navigate = useNavigate();
   const [nextLevel, setNextLevel] = useState(1);
-  const [completedCount, setCompletedCount] = useState(0);
   const [coins, setCoins] = useState(0);
   const [keys, setKeys] = useState(0);
   const [passLevel, setPassLevel] = useState(0);
@@ -45,7 +43,6 @@ function Lobby() {
     const load = () => {
       const p = loadProgress();
       setNextLevel(firstUnfinished(p.completed, LEVELS.map((l) => l.id)));
-      setCompletedCount(p.completed.length);
       setCoins(p.coins);
       setKeys(p.keys ?? 0);
       setPassLevel(p.passLevel);
@@ -156,7 +153,7 @@ function Lobby() {
         </Link>
       </div>
 
-      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 5.5</div>
+      <div className="mt-6 text-xs text-muted-foreground opacity-70">Versio 6.0</div>
     </div>
   );
 }
