@@ -319,27 +319,7 @@ function TeamPage() {
             </div>
           )}
 
-          {tab === "league" && (
-            <div className="mt-3 neon-panel p-4 text-sm">
-              <div className="flex items-center gap-2 font-bold">
-                <Trophy className="h-4 w-4 text-primary" /> Viikkoliiga
-              </div>
-              <p className="mt-2 text-muted-foreground text-xs">
-                Joukkueiden viikoittainen liiga viimeistellään seuraavassa päivityksessä. Tällä hetkellä keräätte
-                yhteispokaaleja jäsentenne suorituksista.
-              </p>
-              <div className="mt-3 space-y-1">
-                {members.slice(0, 10).map((m, i) => (
-                  <div key={m.user_id} className="flex items-center gap-2 text-xs">
-                    <span className="w-5 text-muted-foreground">{i + 1}.</span>
-                    <AvatarBadge avatar={m.profile?.avatar_team} name={m.profile?.username ?? "?"} size={22} />
-                    <span className="flex-1 truncate">{m.profile?.username ?? "Pelaaja"}</span>
-                    <span className="text-muted-foreground">—</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {tab === "league" && <LeagueTab team={team} />}
         </>
       )}
 
