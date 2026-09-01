@@ -13,6 +13,12 @@ import { currentUserId } from "@/lib/cloud/social";
 import { loadProgress, saveProgress, grantKeys, grantBackpack } from "@/lib/game/progress";
 import { presentContainer } from "@/lib/game/containers";
 import type { Rarity } from "@/lib/game/rarity";
+import { formatDaysCountdown } from "@/lib/game/dailyReward";
+import {
+  settleLeague, tierStandings, memberContributions, myLeagueRewards, claimLeagueReward,
+  currentLeagueWeek, msUntilLeagueReset, slots, TIER_LABEL,
+  type Tier, type TeamStanding, type MemberContribution, type LeagueRewardRow,
+} from "@/lib/cloud/league";
 
 export const Route = createFileRoute("/team")({
   head: () => ({
@@ -319,27 +325,7 @@ function TeamPage() {
             </div>
           )}
 
-          {tab === "league" && (
-            <div className="mt-3 neon-panel p-4 text-sm">
-              <div className="flex items-center gap-2 font-bold">
-                <Trophy className="h-4 w-4 text-primary" /> Viikkoliiga
-              </div>
-              <p className="mt-2 text-muted-foreground text-xs">
-                Joukkueiden viikoittainen liiga viimeistellään seuraavassa päivityksessä. Tällä hetkellä keräätte
-                yhteispokaaleja jäsentenne suorituksista.
-              </p>
-              <div className="mt-3 space-y-1">
-                {members.slice(0, 10).map((m, i) => (
-                  <div key={m.user_id} className="flex items-center gap-2 text-xs">
-                    <span className="w-5 text-muted-foreground">{i + 1}.</span>
-                    <AvatarBadge avatar={m.profile?.avatar_team} name={m.profile?.username ?? "?"} size={22} />
-                    <span className="flex-1 truncate">{m.profile?.username ?? "Pelaaja"}</span>
-                    <span className="text-muted-foreground">—</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {tab === "league" && <LeagueTab team={team} />}
         </>
       )}
 
@@ -371,4 +357,114 @@ function giftLabel(g: TeamGiftRow): string {
     case "box": return "📦 Laatikko";
     case "heart": return "💗 Loot-sydän";
   }
+}
+
+function LeagueTab({ team }: { team: TeamRow }) {
+  const [standings, setStandings] = useState<TeamStanding[]>([]);
+  const [contribs, setContribs] = useState<MemberContribution[]>([]);
+  const [rewards, setRewards] = useState<LeagueRewardRow[]>([]);
+  const [left, setLeft] = useState(msUntilLeagueReset());
+  const tier = ((team as unknown as { tier?: string }).tier ?? "puu") as Tier;
+
+  const load = useCallback(async () => {
+    await settleLeague();
+    const [s, c, r] = await Promise.all([tierStandings(tier), memberContributions(team.id), myLeagueRewards()]);
+    setStandings(s);
+    setContribs(c);
+    setRewards(r);
+  }, [tier, team.id]);
+
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const t = setInterval(() => setLeft(msUntilLeagueReset()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const mine = standings.find((s) => s.team_id === team.id);
+  const { up, down } = slots(standings.length);
+
+  const claim = async (r: LeagueRewardRow) => {
+    for (let i = 0; i < r.amount; i++) {
+      presentContainer("box", (r.rarity as Rarity) ?? "common");
+    }
+    await claimLeagueReward(r.id);
+    setRewards(await myLeagueRewards());
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="neon-panel p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-primary">Liigaviikko {currentLeagueWeek()}</div>
+            <div className="text-xl font-black">{TIER_LABEL[tier]}</div>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <Trophy className="h-5 w-5 text-primary ml-auto" />
+            <div className="mt-1">Päättyy {formatDaysCountdown(left)}</div>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Jäsenten viikon aikana keräämät pokaalit ratkaisevat sijoituksen. Nousevat joukkueet saavat 5 laatikkoa
+          jokaiselle jäsenelle — kolmen parhaan joukkueissa laatikot ovat taattuja ultria. Ylimmät {up} nousevat,
+          alimmat {down} putoavat.
+        </p>
+      </div>
+
+      {rewards.length > 0 && (
+        <div className="neon-panel p-3 space-y-2 border-primary/50">
+          <div className="text-xs uppercase tracking-widest text-primary">Liigapalkinnot</div>
+          {rewards.map((r) => (
+            <div key={r.id} className="flex items-center justify-between text-sm">
+              <span>
+                📦 {r.amount}x {r.rarity === "ultra" ? "ultralaatikko" : "laatikko"}
+                <span className="text-muted-foreground text-xs"> · viikko {r.week}</span>
+              </span>
+              <Button size="sm" onClick={() => void claim(r)}>Lunasta</Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="neon-panel p-3">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Divisioonan taulukko</div>
+        {standings.length === 0 && <div className="text-xs text-muted-foreground py-3 text-center">Ei joukkueita.</div>}
+        <div className="space-y-1">
+          {standings.map((s) => (
+            <div
+              key={s.team_id}
+              className={`flex items-center gap-2 text-xs rounded px-2 py-1.5 ${s.team_id === team.id ? "bg-primary/15" : ""}`}
+            >
+              <span className="w-5 text-muted-foreground">{s.rank}.</span>
+              <span className="flex-1 truncate font-semibold">{s.name}</span>
+              <span className="tabular-nums">🏆 {s.trophies}</span>
+              <span className={s.outcome === "up" ? "text-green-400" : s.outcome === "down" ? "text-destructive" : "text-muted-foreground"}>
+                {s.outcome === "up" ? (s.top3 ? "▲ ultra" : "▲") : s.outcome === "down" ? "▼" : "•"}
+              </span>
+            </div>
+          ))}
+        </div>
+        {mine && (
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            Oma sijoitus: {mine.rank}/{standings.length} · {mine.outcome === "up" ? "nousussa" : mine.outcome === "down" ? "putoamassa" : "pysyy tasolla"}
+          </div>
+        )}
+      </div>
+
+      <div className="neon-panel p-3">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Jäsenten panos tällä viikolla</div>
+        {contribs.length === 0 && <div className="text-xs text-muted-foreground py-3 text-center">Ei pokaaleja vielä.</div>}
+        <div className="space-y-1">
+          {contribs.map((c, i) => (
+            <div key={c.user_id} className="flex items-center gap-2 text-xs">
+              <span className="w-5 text-muted-foreground">{i + 1}.</span>
+              <AvatarBadge avatar={c.profile?.avatar_team} name={c.profile?.username ?? "?"} size={22} />
+              <span className="flex-1 truncate">{c.profile?.username ?? "Pelaaja"}</span>
+              <span className="tabular-nums">🏆 {c.trophies}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
