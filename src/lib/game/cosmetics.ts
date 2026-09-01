@@ -41,6 +41,7 @@ export const SHAPES: CosmeticItem[] = [
   { id: "hex", label: "Kuusikulmio", price: 250, rarity: "epic", preview: "⬡" },
   { id: "tiimalasi", label: "Tiimalasi", price: 250, rarity: "epic", preview: "⧗" },
   { id: "kirjankansi", label: "Kirjan kansi", price: 0, rarity: "legendary", exclusive: true, preview: "📕" },
+  { id: "lehti", label: "Lehti", price: 0, rarity: "mythic", exclusive: true, preview: "🍃" },
 ];
 
 export const PATTERNS: CosmeticItem[] = [
@@ -52,6 +53,7 @@ export const PATTERNS: CosmeticItem[] = [
   { id: "raita", label: "Raitakuvio", price: 250, rarity: "epic", preview: "▤" },
   { id: "mosaiikki", label: "Mosaiikki", price: 250, rarity: "epic", preview: "▩" },
   { id: "fifa", label: "FIFA-pallo", price: 0, rarity: "legendary", exclusive: true, preview: "⚽" },
+  { id: "lehtikuvio", label: "Lehti-kuvio", price: 0, rarity: "legendary", exclusive: true, preview: "🍂" },
 ];
 
 export const ACCESSORIES: CosmeticItem[] = [
@@ -64,6 +66,8 @@ export const ACCESSORIES: CosmeticItem[] = [
   { id: "aurinkolasit", label: "Aurinkolasit", price: 250, rarity: "rare", preview: "🕶️" },
   { id: "kruunu", label: "Kruunu", price: 300, rarity: "epic", preview: "👑" },
   { id: "avaruus", label: "Avaruuskypärä", price: 350, rarity: "legendary", preview: "🪐" },
+  { id: "acc-mushroom", label: "Sieni", price: 0, rarity: "legendary", exclusive: true, preview: "🍄" },
+  { id: "acc-leaf", label: "Vaahteranlehti", price: 0, rarity: "legendary", exclusive: true, preview: "🍁" },
   { id: "acc-books", label: "Kirjapino", price: 0, rarity: "epic", exclusive: true, preview: "📚" },
   { id: "acc-notebook", label: "Vihko", price: 0, rarity: "epic", exclusive: true, preview: "📒" },
   { id: "yellowcard", label: "Keltainen kortti", price: 0, rarity: "legendary", exclusive: true, preview: "🟨" },
@@ -92,6 +96,7 @@ export const THEMES: CosmeticItem[] = [
   { id: "cyber", label: "Cyberpunk", price: 250, rarity: "epic" },
   { id: "aavikko", label: "Aavikko", price: 250, rarity: "epic" },
   { id: "koulubussi", label: "Koulubussi", price: 0, rarity: "epic", exclusive: true },
+  { id: "ruska", label: "Ruskan värit", price: 0, rarity: "epic", exclusive: true },
   { id: "jalkapallo", label: "Jalkapallokenttä", price: 0, rarity: "legendary", exclusive: true },
   { id: "team-fr", label: "Ranskan lippu", price: 0, rarity: "mythic", exclusive: true },
   { id: "team-ma", label: "Marokon lippu", price: 0, rarity: "mythic", exclusive: true },
@@ -129,6 +134,8 @@ export const EMOJIS: CosmeticItem[] = [
   { id: "cold", label: "Jäässä", price: 650, rarity: "mythic", preview: "🥶" },
   { id: "nerd", label: "Nörtti", price: 650, rarity: "mythic", preview: "🤓" },
   { id: "poop", label: "Kakka", price: 650, rarity: "mythic", preview: "💩" },
+  { id: "ev-mushroom", label: "Sieni", price: 0, rarity: "epic", exclusive: true, preview: "🍄" },
+  { id: "ev-leaf", label: "Vaahteranlehti", price: 0, rarity: "legendary", exclusive: true, preview: "🍁" },
   { id: "ev-backpack", label: "Reppu", price: 0, rarity: "rare", exclusive: true, preview: "🎒" },
   { id: "ev-books", label: "Kirjapino", price: 0, rarity: "rare", exclusive: true, preview: "📚" },
   { id: "ev-school", label: "Koulu", price: 0, rarity: "rare", exclusive: true, preview: "🏫" },
@@ -160,6 +167,8 @@ export const AVATARS: CosmeticItem[] = [
   { id: "av-skull", label: "Pääkallo", price: 0, rarity: "epic", exclusive: true, preview: "💀" },
   { id: "av-goat", label: "GOAT", price: 0, rarity: "legendary", exclusive: true, preview: "🐐" },
   { id: "av-clown", label: "Pelle", price: 0, rarity: "legendary", exclusive: true, preview: "🤡" },
+  // Sienimetsä-kauden eksklusiivit
+  { id: "av-mushroom", label: "Sieni", price: 0, rarity: "legendary", exclusive: true, preview: "🍄" },
   // Reppujahti-tapahtuman eksklusiivit
   { id: "av-teacher", label: "Opettaja", price: 0, rarity: "epic", exclusive: true, preview: "🧑‍🏫" },
   { id: "av-nerd", label: "Nörtti", price: 0, rarity: "mythic", exclusive: true, preview: "🤓" },
@@ -216,6 +225,7 @@ export function themeBg(themeId: string): string {
     lentaja: "from-[oklch(0.78_0.16_95)] to-[oklch(0.5_0.12_75)]",
     mysteeri: "from-[oklch(0.4_0.18_290)] to-[oklch(0.25_0.15_260)]",
     tumma: "from-[oklch(0.18_0.03_265)] to-[oklch(0.1_0.02_265)]",
+    ruska: "from-[oklch(0.72_0.16_60)] to-[oklch(0.42_0.14_30)]",
     koulubussi: "from-[oklch(0.82_0.16_92)] to-[oklch(0.52_0.13_78)]",
     "team-fr": "from-[#0055A4] via-white to-[#EF4135]",
     "team-ma": "from-[#C1272D] to-[#006233]",
