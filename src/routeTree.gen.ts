@@ -16,6 +16,7 @@ import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PlaymodeRouteImport } from './routes/playmode'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PassRouteImport } from './routes/pass'
 import { Route as OnlineRouteImport } from './routes/online'
@@ -62,6 +63,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaymodeRoute = PlaymodeRouteImport.update({
+  id: '/playmode',
+  path: '/playmode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayRoute = PlayRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/playmode': typeof PlaymodeRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/playmode': typeof PlaymodeRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/online': typeof OnlineRoute
   '/pass': typeof PassRoute
   '/play': typeof PlayRoute
+  '/playmode': typeof PlaymodeRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/online'
     | '/pass'
     | '/play'
+    | '/playmode'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/online'
     | '/pass'
     | '/play'
+    | '/playmode'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/online'
     | '/pass'
     | '/play'
+    | '/playmode'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   OnlineRoute: typeof OnlineRoute
   PassRoute: typeof PassRoute
   PlayRoute: typeof PlayRoute
+  PlaymodeRoute: typeof PlaymodeRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playmode': {
+      id: '/playmode'
+      path: '/playmode'
+      fullPath: '/playmode'
+      preLoaderRoute: typeof PlaymodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play': {
@@ -427,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnlineRoute: OnlineRoute,
   PassRoute: PassRoute,
   PlayRoute: PlayRoute,
+  PlaymodeRoute: PlaymodeRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,

@@ -112,19 +112,17 @@ function Lobby() {
       <div className="w-full max-w-[420px] space-y-3">
         <Button
           size="lg"
-          onClick={() => navigate({ to: "/play", search: { level: nextLevel } })}
+          onClick={() => navigate({ to: "/playmode" })}
           className="h-20 w-full text-lg font-black gap-3 shadow-[var(--glow-primary)] flex-col"
         >
           <span className="flex items-center gap-2">
-            <Play className="h-5 w-5 fill-current" /> PELAA SEURAAVA TASO
+            <Play className="h-5 w-5 fill-current" /> PELAA
           </span>
           <span className="text-xs font-semibold opacity-80">
-            Taso {nextLevel} · {completedCount} / {LEVELS.length} suoritettu
+            Taso {nextLevel} · Online 1v1 · Party
           </span>
         </Button>
 
-        <MenuTile to="/online" icon={<Swords className="h-5 w-5" />} label="Online 1v1 matchmaking" full />
-        <MenuTile to="/multiplayer" icon={<Users className="h-5 w-5" />} label="Online party (max 8)" full />
         <MenuTile to="/event" icon={<PartyPopper className="h-5 w-5" />} label="Tapahtumat" badge="Reppujahti" full />
 
         <div className="grid grid-cols-3 gap-3">
