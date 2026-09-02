@@ -1,12 +1,13 @@
 import type { Reward } from "./lootbox";
 import { CURRENT_SEASON } from "./dailyReward";
 import { PACKS } from "./packs";
+import { generateForest, type ForestCell } from "./mushroom";
 
 const KEY = "tilerush.progress.v3";
 const OLD_KEYS = ["tilerush.progress.v2"];
 
 // Versiointitunniste passi-nollaukselle (vaihtaminen laukaisee passin nollauksen kaikilla pelaajilla)
-const PASS_RESET_VERSION = "v3_force_reset_all";
+const PASS_RESET_VERSION = "v4_sienimetsa_reset";
 
 export interface Stats {
   starts: number;
@@ -138,8 +139,17 @@ export interface Progress {
   promoRedeemed: string[];
   teamOffersPurchased: string[];
   season?: number;
+  /** Sienimetsä: korit (aiemmin avaimet). */
   keys?: number;
   locker?: LockerCell[];
+  /** Sienimetsän 50 sientä, pisteet arvottu etukäteen. */
+  forest?: ForestCell[];
+  /** Kerätyt sienipisteet. */
+  mushroomPoints?: number;
+  /** Lunastetut sienitasot. */
+  claimedMushroom?: number[];
+  /** Lunastetut 400 sienipisteen bonukset. */
+  claimedMushroomBonus?: number;
   lastKeyOfferClaim?: string;
   passResetVersion?: string;
   /** SV Account -linkitys (erillinen Google-kirjautumisesta). */
@@ -220,6 +230,10 @@ const DEFAULT: Progress = {
   season: CURRENT_SEASON,
   keys: 0,
   locker: [],
+  forest: [],
+  mushroomPoints: 0,
+  claimedMushroom: [],
+  claimedMushroomBonus: 0,
   pendingRewards: [],
   settings: { music: 0.4, sfx: 0.7, blockFriendRequests: false, muteChat: false, showEmojis: true },
   profile: { username: "Pelaaja", friendCode: "" },
@@ -283,6 +297,10 @@ export function loadProgress(): Progress {
       officialPacksAwarded: parsed.officialPacksAwarded ?? [],
       playerPackAwards: parsed.playerPackAwards,
       lastEventGiftClaim: parsed.lastEventGiftClaim,
+      forest: parsed.forest,
+      mushroomPoints: parsed.mushroomPoints ?? 0,
+      claimedMushroom: parsed.claimedMushroom ?? [],
+      claimedMushroomBonus: parsed.claimedMushroomBonus ?? 0,
     };
     
     if (!merged.owned.avatars) merged.owned.avatars = ["default"];
@@ -306,6 +324,10 @@ export function loadProgress(): Progress {
       merged.claimedPass = [];
       merged.passSeasonLevels = [];
       merged.passSeasonPacks = [];
+      merged.mushroomPoints = 0;
+      merged.claimedMushroom = [];
+      merged.claimedMushroomBonus = 0;
+      merged.forest = generateForest();
       merged.passResetVersion = PASS_RESET_VERSION;
       saveProgress(merged);
     }
@@ -330,9 +352,12 @@ function migrateSeason(p: Progress): void {
     if (!p.owned.avatars.includes(id)) p.owned.avatars.push(id);
   }
 
-  if (!p.locker || p.locker.length !== 50) p.locker = generateLocker();
   if (typeof p.keys !== "number") p.keys = 0;
   if (!p.inventory.backpacks) p.inventory.backpacks = [];
+  if (!p.forest || p.forest.length !== 50) p.forest = generateForest();
+  if (typeof p.mushroomPoints !== "number") p.mushroomPoints = 0;
+  if (!p.claimedMushroom) p.claimedMushroom = [];
+  if (typeof p.claimedMushroomBonus !== "number") p.claimedMushroomBonus = 0;
 
   // Pokaalipolku: synkronoi jo läpäistyt viralliset paketit pokaaleiksi.
   syncOfficialPackTrophies(p);
@@ -345,6 +370,13 @@ function migrateSeason(p: Progress): void {
     p.claimedPass = [];
     p.passSeasonLevels = [];
     p.passSeasonPacks = [];
+    // Uusi kausi: Sienimetsä alkaa puhtaalta pöydältä.
+    p.forest = generateForest();
+    p.mushroomPoints = 0;
+    p.claimedMushroom = [];
+    p.claimedMushroomBonus = 0;
+    p.locker = [];
+    p.inventory.backpacks = [];
   }
 }
 
@@ -363,8 +395,15 @@ export function generateLocker(): LockerCell[] {
   return pool.map((reward) => ({ reward, opened: false }));
 }
 
+/** Korit (aiemmin avaimet). */
 export function grantKeys(p: Progress, n: number): void {
   p.keys = (p.keys ?? 0) + n;
+}
+
+/** Lisää sienipisteitä (esim. Tile Passin sienistä tai päivän lahjasta). */
+export function grantMushroomPoints(p: Progress, n: number): void {
+  if (n <= 0) return;
+  p.mushroomPoints = (p.mushroomPoints ?? 0) + n;
 }
 
 /* ---------------- Pokaalipolku ---------------- */

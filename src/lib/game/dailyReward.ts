@@ -44,11 +44,14 @@ export function formatCountdown(ms: number): string {
   return `${h}h ${m}m ${ss}s`;
 }
 
-/** Nykyinen kausi (Kausi 2). */
-export const CURRENT_SEASON = 2;
+/** Nykyinen kausi (Kausi 3 · Sienimetsä). */
+export const CURRENT_SEASON = 3;
 
-/** Kausi 2 päättyy / uusi Tile Pass saapuu 1.9.2026 00:00 UTC. */
-export const SEASON_END_UTC = Date.UTC(2026, 8, 1, 0, 0, 0);
+/** Kauden nimi. */
+export const SEASON_NAME = "Sienimetsä";
+
+/** Kausi 3 päättyy / uusi Tile Pass saapuu 1.12.2026 00:00 UTC. */
+export const SEASON_END_UTC = Date.UTC(2026, 11, 1, 0, 0, 0);
 
 export function msUntilSeasonEnd(): number {
   return Math.max(0, SEASON_END_UTC - Date.now());
@@ -70,22 +73,26 @@ export function labelReward(r: DailyReward): string {
     case "box": return `📦 Laatikko`;
   }
 }
-/* -------- Reppujahti: päivittäinen ilmainen tapahtumalahja -------- */
+/* -------- Sienimetsä: päivittäinen ilmainen tapahtumalahja -------- */
 
 /** Päivien lukumäärä epookista (UTC). */
 export function dayIndexUtc(): number {
   return Math.floor(Date.now() / 86_400_000);
 }
 
-/** Onko tapahtuma vielä käynnissä (päättyy 1.9.2026 UTC). */
+/** Onko tapahtuma vielä käynnissä (päättyy 1.12.2026 UTC). */
 export function isEventActive(): boolean {
   return Date.now() < SEASON_END_UTC;
 }
 
-/** Joka kolmas päivä ilmainen reppu, muuten ilmainen avain. Null kun tapahtuma on päättynyt. */
-export function eventGiftForToday(): { kind: "backpack" | "key"; label: string } | null {
+/**
+ * Sienimetsä: joka päivä 3 ilmaista koria, ja joka kolmas päivä lisäksi
+ * bonussieni (65 sienipistettä). Null kun kausi on päättynyt.
+ */
+export function eventGiftForToday(): { baskets: number; mushroomPoints: number; label: string } | null {
   if (!isEventActive()) return null;
-  return dayIndexUtc() % 3 === 0
-    ? { kind: "backpack", label: "🎒 Ilmainen reppu" }
-    : { kind: "key", label: "🔑 Ilmainen avain" };
+  const bonus = dayIndexUtc() % 3 === 0;
+  return bonus
+    ? { baskets: 3, mushroomPoints: 65, label: "🧺 3 koria + 🍄 bonussieni (65 sp)" }
+    : { baskets: 3, mushroomPoints: 0, label: "🧺 3 ilmaista koria" };
 }

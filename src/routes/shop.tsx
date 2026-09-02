@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CATALOGS, type CosmeticCategory, type CosmeticItem } from "@/lib/game/cosmetics";
 import { addPassXp, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
-import { ArrowLeft, Check, Gift, KeyRound, Ticket } from "lucide-react";
+import { ArrowLeft, Check, Gift, ShoppingBasket, Ticket } from "lucide-react";
 import { presentContainer } from "@/lib/game/containers";
 import {
   pickDailyReward, todayUtc, msUntilUtcMidnight, formatCountdown, labelReward,
   msUntilSeasonEnd, formatDaysCountdown, eventGiftForToday,
 } from "@/lib/game/dailyReward";
-import { grantKeys, grantBackpack } from "@/lib/game/progress";
+import { grantKeys, grantMushroomPoints } from "@/lib/game/progress";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({ meta: [{ title: "Kauppa · Tile Rush" }] }),
@@ -26,8 +26,8 @@ const CATS: { key: CosmeticCategory; label: string; emoji: string }[] = [
   { key: "avatars" as CosmeticCategory, label: "Profiilikuvat", emoji: "🧑" },
 ];
 
-const KEY_OFFER_PRICE = 2000;
-const KEY_OFFER_AMOUNT = 5;
+const BASKET_OFFER_PRICE = 2000;
+const BASKET_OFFER_AMOUNT = 5;
 
 /** Promo codes → grant callback. */
 const PROMO_CODES: Record<string, { desc: string; apply: (p: Progress) => void }> = {
@@ -108,19 +108,19 @@ function ShopPage() {
     if (!eventGift) return;
     const cur = loadProgress();
     if (cur.lastEventGiftClaim === today) return;
-    if (eventGift.kind === "key") grantKeys(cur, 1);
-    else grantBackpack(cur);
+    grantKeys(cur, eventGift.baskets);
+    grantMushroomPoints(cur, eventGift.mushroomPoints);
     cur.lastEventGiftClaim = today;
     saveProgress(cur);
     setP(cur);
   };
 
-  const buyKeys = () => {
+  const buyBaskets = () => {
     const cur = loadProgress();
     if (cur.lastKeyOfferClaim === today) return;
-    if (cur.coins < KEY_OFFER_PRICE) return;
-    cur.coins -= KEY_OFFER_PRICE;
-    cur.keys = (cur.keys ?? 0) + KEY_OFFER_AMOUNT;
+    if (cur.coins < BASKET_OFFER_PRICE) return;
+    cur.coins -= BASKET_OFFER_PRICE;
+    cur.keys = (cur.keys ?? 0) + BASKET_OFFER_AMOUNT;
     cur.lastKeyOfferClaim = today;
     saveProgress(cur);
     setP(cur);
@@ -165,14 +165,14 @@ function ShopPage() {
         >
           <ArrowLeft className="h-4 w-4" /> {open ? "Katalogit" : "Takaisin"}
         </button>
-        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
+        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🧺 {p.keys ?? 0}</span>
       </div>
 
       {!open && (
         <>
           <h1 className="mt-4 text-3xl font-black">Kauppa</h1>
           <div className="mt-1 text-xs text-muted-foreground">
-            Kausi 2 päättyy 1.9.2026 (UTC) · {formatDaysCountdown(msUntilSeasonEnd())}
+            Kausi 3 · Sienimetsä päättyy 1.12.2026 (UTC) · {formatDaysCountdown(msUntilSeasonEnd())}
           </div>
 
           <div className="mt-4 neon-panel p-4 flex items-center justify-between">
@@ -196,12 +196,12 @@ function ShopPage() {
           {eventGift && (
             <div className="mt-4 neon-panel p-4 flex items-center justify-between border-emerald-500/40">
               <div>
-                <div className="text-xs uppercase tracking-widest text-emerald-400">Reppujahti · päivän lahja</div>
+                <div className="text-xs uppercase tracking-widest text-emerald-400">Sienimetsä · päivän lahja</div>
                 <div className="font-bold">{eventGift.label}</div>
                 <div className="text-xs text-muted-foreground mt-1">
                   {eventGiftClaimed
                     ? `Uusiutuu: ${formatCountdown(msUntilUtcMidnight())}`
-                    : "Ilmainen · päättyy 1.9.2026"}
+                    : "Ilmainen · päättyy 1.12.2026"}
                 </div>
               </div>
               <button
@@ -214,12 +214,12 @@ function ShopPage() {
             </div>
           )}
 
-          {/* Reppujahti: päivittäinen avaintarjous */}
+          {/* Sienimetsä: päivittäinen koritarjous */}
           <div className="mt-4 neon-panel p-4 flex items-center justify-between border-amber-500/40">
             <div>
-              <div className="text-xs uppercase tracking-widest text-amber-400">Tarjous · Avaimia!</div>
+              <div className="text-xs uppercase tracking-widest text-amber-400">Päivän tarjous · Koreja!</div>
               <div className="font-bold flex items-center gap-2">
-                <KeyRound className="h-4 w-4 text-amber-400" /> {KEY_OFFER_AMOUNT}x avain
+                <ShoppingBasket className="h-4 w-4 text-amber-400" /> {BASKET_OFFER_AMOUNT}x kori
               </div>
               {p.lastKeyOfferClaim === today ? (
                 <div className="text-xs text-muted-foreground mt-1">Uusiutuu: {formatCountdown(msUntilUtcMidnight())}</div>
@@ -228,11 +228,11 @@ function ShopPage() {
               )}
             </div>
             <button
-              onClick={buyKeys}
-              disabled={p.lastKeyOfferClaim === today || p.coins < KEY_OFFER_PRICE}
+              onClick={buyBaskets}
+              disabled={p.lastKeyOfferClaim === today || p.coins < BASKET_OFFER_PRICE}
               className="px-4 py-2 rounded bg-amber-500 text-black text-sm font-black disabled:opacity-40"
             >
-              {p.lastKeyOfferClaim === today ? "Ostettu" : `🪙 ${KEY_OFFER_PRICE}`}
+              {p.lastKeyOfferClaim === today ? "Ostettu" : `🪙 ${BASKET_OFFER_PRICE}`}
             </button>
           </div>
 
