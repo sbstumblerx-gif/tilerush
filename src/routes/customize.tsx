@@ -49,12 +49,28 @@ function CustomizePage() {
     return CATALOGS[cat] || [];
   }, [cat]);
 
-  const sorted = useMemo(() => {
-    if (!p) return [];
-    return [...activeCatalog].sort(
-      (a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity),
+  const isOwnedItem = (item: CosmeticItem) => {
+    if (!p) return false;
+    const ownedList = (p.owned as unknown as Record<string, string[]>)[cat] ?? [];
+    return (
+      item.id === "default" ||
+      ownedList.includes(item.id) ||
+      (cat === "emojis" && !item.exclusive && (item.price ?? 0) === 0)
     );
-  }, [activeCatalog, p]);
+  };
+
+  const byRarity = (a: CosmeticItem, b: CosmeticItem) =>
+    RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity);
+
+  const ownedItems = useMemo(() => {
+    if (!p) return [];
+    return activeCatalog.filter(isOwnedItem).sort(byRarity);
+  }, [activeCatalog, p, cat]);
+
+  const lockedItems = useMemo(() => {
+    if (!p) return [];
+    return activeCatalog.filter((i) => !isOwnedItem(i)).sort(byRarity);
+  }, [activeCatalog, p, cat]);
 
   if (!p) return null;
 
@@ -69,6 +85,18 @@ function CustomizePage() {
     setP(cur);
   };
 
+  const buy = (item: CosmeticItem) => {
+    const cur = loadProgress();
+    const price = item.price ?? 0;
+    if (item.exclusive || price <= 0 || cur.coins < price) return;
+    const list = (cur.owned as unknown as Record<string, string[]>)[cat] ?? [];
+    if (list.includes(item.id)) return;
+    cur.coins -= price;
+    (cur.owned as unknown as Record<string, string[]>)[cat] = [...list, item.id];
+    saveProgress(cur);
+    setP(cur);
+  };
+
   const setEmojiForActiveSlot = (emojiPreview: string) => {
     const cur = loadProgress();
     const arr = (cur.equipped.emojis ?? [...DEFAULT_EMOJIS]).slice();
@@ -79,19 +107,29 @@ function CustomizePage() {
   };
 
   const eq = p.equipped;
-  const colorHex = COLORS.find((c) => c.id === eq.color)?.preview ?? "#22d3ee";
-  const shape = SHAPES.find((s) => s.id === eq.shape)?.preview ?? "●";
-  const pattern = PATTERNS.find((s) => s.id === eq.pattern)?.preview;
 
   const selItem: CosmeticItem | null =
     selected ? activeCatalog.find((i) => i.id === selected) ?? null : null;
 
-  const currentEmojis = eq.emojis ?? DEFAULT_EMOJIS;
-  const activeSlotEmoji = currentEmojis[emojiSlot];
+  // Esikatselu käyttää valittua itemiä (myös lukittua), muuten käytössä olevaa
+  const previewEq: Record<string, string> = {
+    ...(eq as unknown as Record<string, string>),
+  };
+  if (selItem && equipKey) previewEq[equipKey] = selItem.id;
 
-  // Tarkistetaan onko käytössä oleva avatar jokin puolivälieräkuva (alkaa / tai sisältää polun)
-  const activeAvatarItem = AVATAR_ITEMS.find((a) => a.id === eq.avatar);
-  const hasImageAvatar = !!activeAvatarItem?.preview?.startsWith("/");
+  const colorHex = COLORS.find((c) => c.id === previewEq.color)?.preview ?? "#22d3ee";
+  const shape = SHAPES.find((s) => s.id === previewEq.shape)?.preview ?? "●";
+  const pattern = PATTERNS.find((s) => s.id === previewEq.pattern)?.preview;
+
+  const currentEmojis = eq.emojis ?? DEFAULT_EMOJIS;
+  const activeSlotEmoji = cat === "emojis" && selItem?.preview ? selItem.preview : currentEmojis[emojiSlot];
+
+  // Tarkistetaan onko esikatselussa oleva avatar kuva
+  const activeAvatarItem = AVATAR_ITEMS.find((a) => a.id === previewEq.avatar);
+  const hasImageAvatar = cat === "avatars" && !!activeAvatarItem?.preview?.startsWith("/");
+  const selOwned = selItem ? isOwnedItem(selItem) : false;
+  const selPrice = selItem?.price ?? 0;
+
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-[720px] mx-auto">
