@@ -10,7 +10,7 @@ import {
   type TeamRow, type TeamMemberRow, type TeamMessageRow, type TeamGiftRow, type GiftKind,
 } from "@/lib/cloud/teams";
 import { currentUserId } from "@/lib/cloud/social";
-import { loadProgress, saveProgress, grantKeys, grantBackpack } from "@/lib/game/progress";
+import { loadProgress, saveProgress, grantKeys } from "@/lib/game/progress";
 import { presentContainer } from "@/lib/game/containers";
 import type { Rarity } from "@/lib/game/rarity";
 import { formatDaysCountdown } from "@/lib/game/dailyReward";
@@ -35,8 +35,7 @@ export const Route = createFileRoute("/team")({
 });
 
 const GIFTS: { kind: GiftKind; label: string; amount: number; cost: (p: ReturnType<typeof loadProgress>) => boolean }[] = [
-  { kind: "key", label: "🔑 Avain", amount: 1, cost: (p) => (p.keys ?? 0) >= 1 },
-  { kind: "backpack", label: "🎒 Reppu", amount: 1, cost: (p) => (p.inventory.backpacks ?? []).length >= 1 },
+  { kind: "key", label: "🧺 Kori", amount: 1, cost: (p) => (p.keys ?? 0) >= 1 },
   { kind: "coins", label: "🪙 100", amount: 100, cost: (p) => p.coins >= 100 },
 ];
 
@@ -139,7 +138,6 @@ function TeamPage() {
     const p = loadProgress();
     if (!g.cost(p)) { setErr("Sinulla ei ole tätä lahjoitettavaksi."); return; }
     if (g.kind === "key") p.keys = (p.keys ?? 0) - 1;
-    else if (g.kind === "backpack") p.inventory.backpacks = (p.inventory.backpacks ?? []).slice(1);
     else if (g.kind === "coins") p.coins -= g.amount;
     saveProgress(p);
     const res = await sendGift(team.id, giftTarget.user_id, g.kind, g.amount);
@@ -150,7 +148,6 @@ function TeamPage() {
   const claimGift = async (gift: TeamGiftRow) => {
     const p = loadProgress();
     if (gift.kind === "key") grantKeys(p, gift.amount);
-    else if (gift.kind === "backpack") grantBackpack(p);
     else if (gift.kind === "coins") p.coins += gift.amount;
     saveProgress(p);
     if (gift.kind === "box" || gift.kind === "heart") {
@@ -351,8 +348,8 @@ function TeamPage() {
 
 function giftLabel(g: TeamGiftRow): string {
   switch (g.kind) {
-    case "key": return `🔑 ${g.amount}x avain`;
-    case "backpack": return `🎒 ${g.amount}x reppu`;
+    case "key": return `🧺 ${g.amount}x kori`;
+    case "backpack": return `🍄 ${g.amount}x sieni`;
     case "coins": return `🪙 ${g.amount} kolikkoa`;
     case "box": return "📦 Laatikko";
     case "heart": return "💗 Loot-sydän";

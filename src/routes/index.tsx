@@ -68,7 +68,7 @@ function Lobby() {
         <div className="flex items-center gap-2">
           <Link to="/shop" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">🪙 {coins}</Link>
           <Link to="/shop" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">💎 {gems}</Link>
-          <Link to="/event" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">🔑 {keys}</Link>
+          <Link to="/event" className="neon-panel px-3 py-1 font-bold hover:border-primary/70">🧺 {keys}</Link>
           <Link to="/settings" className="neon-panel px-2 py-2 hover:border-primary/70" aria-label="Asetukset">
             <Settings className="h-4 w-4 text-primary" />
           </Link>
@@ -120,7 +120,7 @@ function Lobby() {
           </span>
         </Button>
 
-        <MenuTile to="/event" icon={<PartyPopper className="h-5 w-5" />} label="Tapahtumat" badge="Reppujahti" full />
+        <MenuTile to="/event" icon={<PartyPopper className="h-5 w-5" />} label="Tapahtumat" badge="Sienimetsä" full />
 
         <div className="grid grid-cols-3 gap-3">
           <SquareTile to="/shop" icon={<ShoppingBag className="h-6 w-6" />} label="Kauppa" badge={dailyAvail ? "ilmaista" : undefined} />
@@ -143,7 +143,7 @@ function Lobby() {
             <div>
               <div className="text-[10px] uppercase tracking-[0.3em] text-primary">Tile Pass</div>
               <div className="text-2xl font-black">KAUSI 2</div>
-              <div className="text-xs text-muted-foreground">Taso {passLevel} / 60 · Reppujahti</div>
+              <div className="text-xs text-muted-foreground">Taso {passLevel} / 60 · Sienimetsä</div>
             </div>
             <div className="text-right text-xs text-muted-foreground">
               <Gift className="h-6 w-6 text-primary ml-auto" />

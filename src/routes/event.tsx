@@ -13,7 +13,6 @@ import {
   BONUS_STEP,
   levelThreshold,
   bonusThreshold,
-  reachedLevels,
   reachedBonuses,
   type MushroomLevel,
 } from "@/lib/game/mushroom";

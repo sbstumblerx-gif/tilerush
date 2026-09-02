@@ -35,7 +35,7 @@ function TasksPage() {
     task.claimed = true;
     cur.coins += task.reward;
     addPassXp(cur, 30);
-    // Reppujahti: päivän ensimmäinen tehtävä antaa lisäksi yhden avaimen
+    // Sienimetsä: päivän ensimmäinen tehtävä antaa lisäksi yhden korin
     if (cur.daily?.tasks[0]?.id === id) grantKeys(cur, 1);
     saveProgress(cur);
     setP(cur);
@@ -60,7 +60,7 @@ function TasksPage() {
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
           <ArrowLeft className="h-4 w-4" /> Lobby
         </Link>
-        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
+        <span className="neon-panel px-3 py-1 text-sm font-bold">🪙 {p.coins} · 🧺 {p.keys ?? 0}</span>
       </div>
       <h1 className="mt-4 text-3xl font-black">Päivittäiset tehtävät</h1>
       <p className="text-sm text-muted-foreground flex items-center gap-1">
