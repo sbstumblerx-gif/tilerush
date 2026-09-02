@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { grantKeys, loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
+import { grantKeys, grantMushroomPoints, loadProgress, saveProgress, xpForTier, type Progress } from "@/lib/game/progress";
 import { ArrowLeft, Coins } from "lucide-react";
 import { OpenContainer } from "@/components/game/OpenContainer";
 import { RewardScreen } from "@/components/game/RewardScreen";
@@ -9,7 +9,16 @@ import { presentContainer } from "@/lib/game/containers";
 import { msUntilSeasonEnd, formatDaysCountdown } from "@/lib/game/dailyReward";
 
 export const Route = createFileRoute("/pass")({
-  head: () => ({ meta: [{ title: "Tile Pass · Tile Rush" }] }),
+  head: () => ({
+    meta: [
+      { title: "Tile Pass · Sienimetsä · Tile Rush" },
+      { name: "description", content: "Kausi 3 Tile Pass: 60 tasoa, koreja ja sieniä sienipisteineen Tile Rushin Sienimetsä-kaudella." },
+      { property: "og:title", content: "Tile Pass · Sienimetsä" },
+      { property: "og:description", content: "Kerää XP:tä, lunasta laatikot, korit ja sienet." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: PassPage,
 });
 
@@ -19,8 +28,11 @@ type Reward =
   | { kind: "box"; rarity: Rarity };
 
 const TIER_PRICE = 2000;
-const BACKPACK_TIERS = [5, 15, 25, 35, 45, 55];
-const KEY_TIERS = [3, 13, 23, 33, 43, 53];
+/** Sienimetsä: tietyillä tasoilla sieni (pisteet näkyvät etukäteen) tai kori. */
+const MUSHROOM_TIERS: Record<number, number> = {
+  5: 25, 15: 40, 25: 65, 35: 80, 45: 100, 55: 100,
+};
+const BASKET_TIERS = [3, 13, 23, 33, 43, 53];
 
 function rewardFor(tier: number): Reward {
   // guaranteed at 30/60
@@ -42,14 +54,15 @@ function rewardLabel(r: Reward): string {
 }
 
 function extraLabel(tier: number): string | null {
-  if (BACKPACK_TIERS.includes(tier)) return "🎒 1x reppu";
-  if (KEY_TIERS.includes(tier)) return "🔑 1x avain";
+  const mp = MUSHROOM_TIERS[tier];
+  if (mp) return `🍄 1x sieni · ${mp} sienipistettä`;
+  if (BASKET_TIERS.includes(tier)) return "🧺 1x kori";
   return null;
 }
 
 function PassPage() {
   const [p, setP] = useState<Progress | null>(null);
-  const [opening, setOpening] = useState<{ id: string; kind: "box" | "heart" | "backpack"; rarity: Rarity } | null>(null);
+  const [opening, setOpening] = useState<{ id: string; kind: "box" | "heart"; rarity: Rarity } | null>(null);
 
   useEffect(() => {
     const load = () => setP(loadProgress());
@@ -67,7 +80,7 @@ function PassPage() {
     if (tier > p.passLevel || p.claimedPass.includes(tier)) return;
     const cp = loadProgress();
     const r = rewardFor(tier);
-    const present: { kind: "box" | "heart" | "backpack"; rarity: Rarity }[] = [];
+    const present: { kind: "box" | "heart"; rarity: Rarity }[] = [];
     if (r.kind === "coins") {
       cp.coins += r.amount;
     } else if (r.kind === "heart") {
@@ -75,8 +88,9 @@ function PassPage() {
     } else {
       present.push({ kind: "box", rarity: r.rarity });
     }
-    if (BACKPACK_TIERS.includes(tier)) present.push({ kind: "backpack", rarity: "common" });
-    if (KEY_TIERS.includes(tier)) grantKeys(cp, 1);
+    const mp = MUSHROOM_TIERS[tier];
+    if (mp) grantMushroomPoints(cp, mp);
+    if (BASKET_TIERS.includes(tier)) grantKeys(cp, 1);
     cp.claimedPass.push(tier);
     saveProgress(cp);
     setP(cp);
@@ -106,10 +120,10 @@ function PassPage() {
       <div className="mt-4 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black">Tile Pass</h1>
-          <div className="text-xs uppercase tracking-widest text-primary">Kausi 2 · Reppujahti</div>
+          <div className="text-xs uppercase tracking-widest text-primary">Kausi 3 · Sienimetsä</div>
         </div>
         <span className="text-xs text-muted-foreground text-right">
-          Uusi passi 1.9.2026 (UTC)<br />
+          Uusi passi 1.12.2026 (UTC)<br />
           <span className="text-primary">{formatDaysCountdown(msUntilSeasonEnd())}</span>
         </span>
       </div>
@@ -128,7 +142,7 @@ function PassPage() {
         >
           <Coins className="h-4 w-4" /> Osta seuraava taso · {TIER_PRICE}
         </button>
-        <span className="text-xs text-muted-foreground">🪙 {p.coins} · 🔑 {p.keys ?? 0}</span>
+        <span className="text-xs text-muted-foreground">🪙 {p.coins} · 🧺 {p.keys ?? 0}</span>
       </div>
 
       <div className="mt-6 space-y-2">
@@ -160,7 +174,7 @@ function PassPage() {
         })}
       </div>
 
-      {p.inventory.hearts.length + p.inventory.boxes.length + (p.inventory.backpacks?.length ?? 0) > 0 && (
+      {p.inventory.hearts.length + p.inventory.boxes.length > 0 && (
         <div className="mt-8 neon-panel p-4">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Inventaario</div>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -172,11 +186,6 @@ function PassPage() {
             {p.inventory.hearts.map((h) => (
               <button key={h.id} onClick={() => openContainer("heart", h.rarity, h.id)} className="neon-panel px-2 py-1 text-xs">
                 💗 {RARITY_EMOJI[h.rarity]}
-              </button>
-            ))}
-            {(p.inventory.backpacks ?? []).map((b) => (
-              <button key={b.id} onClick={() => setOpening({ id: b.id, kind: "backpack", rarity: "common" })} className="neon-panel px-2 py-1 text-xs">
-                🎒
               </button>
             ))}
           </div>

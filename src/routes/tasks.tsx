@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { addPassXp, grantKeys, loadProgress, saveProgress, type Progress } from "@/lib/game/progress";
 import { generateDaily, generateWeekly, today, weekKey } from "@/lib/game/tasks";
-import { ArrowLeft, KeyRound } from "lucide-react";
+import { ArrowLeft, ShoppingBasket } from "lucide-react";
 import { RARITY_EMOJI, type Rarity } from "@/lib/game/rarity";
 import { presentContainer } from "@/lib/game/containers";
 
@@ -64,7 +64,7 @@ function TasksPage() {
       </div>
       <h1 className="mt-4 text-3xl font-black">Päivittäiset tehtävät</h1>
       <p className="text-sm text-muted-foreground flex items-center gap-1">
-        Päivittyvät 24 h välein · palkkio + 30 XP · <KeyRound className="h-3.5 w-3.5 text-amber-400" /> ensimmäinen tehtävä antaa avaimen
+        Päivittyvät 24 h välein · palkkio + 30 XP · <ShoppingBasket className="h-3.5 w-3.5 text-amber-400" /> ensimmäinen tehtävä antaa korin
       </p>
       <div className="mt-6 space-y-3">
         {p.daily?.tasks.map((t, ti) => {
@@ -75,7 +75,7 @@ function TasksPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="font-semibold text-sm">{t.label}</div>
                 <div className="text-xs text-muted-foreground whitespace-nowrap">
-                  🪙 {t.reward} · ⭐ 30{ti === 0 ? " · 🔑 1" : ""}
+                  🪙 {t.reward} · ⭐ 30{ti === 0 ? " · 🧺 1" : ""}
                 </div>
               </div>
               <div className="mt-2 h-2 rounded-full bg-background/60 overflow-hidden">
