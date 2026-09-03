@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_codes: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          code: string
+          created_at: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code: string
+          created_at?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       community_levels: {
         Row: {
           author_id: string
@@ -23,6 +44,7 @@ export type Database = {
           id: string
           moves: number
           name: string
+          official: boolean
           size: number
         }
         Insert: {
@@ -33,6 +55,7 @@ export type Database = {
           id?: string
           moves?: number
           name?: string
+          official?: boolean
           size?: number
         }
         Update: {
@@ -43,6 +66,7 @@ export type Database = {
           id?: string
           moves?: number
           name?: string
+          official?: boolean
           size?: number
         }
         Relationships: []
@@ -55,6 +79,8 @@ export type Database = {
           id: string
           level_codes: string[]
           name: string
+          official: boolean
+          theme_rgb: string
           updated_at: string
         }
         Insert: {
@@ -64,6 +90,8 @@ export type Database = {
           id?: string
           level_codes?: string[]
           name?: string
+          official?: boolean
+          theme_rgb?: string
           updated_at?: string
         }
         Update: {
@@ -73,6 +101,8 @@ export type Database = {
           id?: string
           level_codes?: string[]
           name?: string
+          official?: boolean
+          theme_rgb?: string
           updated_at?: string
         }
         Relationships: []
@@ -435,6 +465,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -444,6 +495,15 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      claim_admin_code: { Args: { _code: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
       is_team_member: {
         Args: { _team: string; _user: string }
         Returns: boolean
@@ -461,7 +521,7 @@ export type Database = {
       send_friend_request_by_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -588,6 +648,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
